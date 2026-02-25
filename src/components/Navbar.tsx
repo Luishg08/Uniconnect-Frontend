@@ -47,6 +47,11 @@ export const Navbar = () => {
               <Text style={styles.menuText}>Inicio</Text>
             </TouchableOpacity>
 
+             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)/profile')}>
+              <Ionicons name="person-circle-outline" size={22} color="#007AFF" />
+              <Text style={styles.menuText}>Perfil</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)/community')}>
               <Ionicons name="people-outline" size={22} color="#007AFF" />
               <Text style={styles.menuText}>Comunidad</Text>
