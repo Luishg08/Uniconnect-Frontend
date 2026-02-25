@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, Button, View } from "react-native";
 import { useLogin } from "../hooks/useLogin";
 import * as AuthSession from "expo-auth-session";
+import { TempLoginButton } from "./TempLoginButton";
 
 console.log(AuthSession.makeRedirectUri());
 
@@ -28,6 +29,7 @@ export function GoogleLoginButton() {
   }, [response]);
 
   return (
+    <View>
     <View style={{ marginTop: 20 }}>
       {loginMutation.isPending ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -38,6 +40,8 @@ export function GoogleLoginButton() {
           onPress={() => promptAsync()}
         />
       )}
+    </View>
+    <TempLoginButton />
     </View>
   );
 }

@@ -6,4 +6,10 @@ export const authService = {
     const { data } = await api.post(AUTH_ENDPOINTS.LOGIN_GOOGLE, { access_token: accessToken });
     return data;
   },
+
+  loginWithGoogleSub: async (sub: string) => {
+    const { data } = await api.post(AUTH_ENDPOINTS.ALTERNATIVE_LOGIN, { googleSub:sub });
+    return data;
+  }
+
 };

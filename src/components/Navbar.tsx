@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, Pressable } fro
 import { useAuthStore } from '@/src/features/auth';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useResponsive } from '../hooks/useResponsive';
 
 export const Navbar = () => {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
+  const { isMobile } = useResponsive();
 
   const navigateTo = (path: any) => {
     setMenuVisible(false);
@@ -37,7 +39,7 @@ export const Navbar = () => {
       {/* MODAL DEL MENÚ LATERAL */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menuContent}>
+          <View style={[styles.menuContent, {width: isMobile ? '60%' : '25%'}]}>
             <Text style={styles.menuTitle}>UniConnect</Text>
             
             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)')}>
