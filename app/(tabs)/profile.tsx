@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import { authService } from '../../src/features/auth/services/auth.service';
+import { authService } from "../../src/features/auth/services/auth.service";
 
 import {
   ActivityIndicator,
@@ -19,13 +19,19 @@ import {
   View,
 } from "react-native";
 import { useProfile } from "@/src/features/students/hooks/useProfile";
+import { NewCourseModal } from "@/src/features/courses/components/NewCourse";
+import { useStudentCourses } from "@/src/features/courses/hooks/useStudentCourses";
+import { EditCourseModal } from "@/src/features/courses/components/EditCourse";
 
 export default function ProfileScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
   const { isDesktop, isTablet } = useResponsive();
-
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [addModalVisible, setAddModalVisible] = useState(false);
   const { profile, isLoading, isError, updateProfile } = useProfile();
+  const { deleteCourse, isDeletingCourse, updateCourse, isUpdatingCourse } = useStudentCourses();
 
   const [phone, setPhone] = useState(profile?.phone || "");
   const [program, setProgram] = useState(profile?.program || "");
@@ -35,7 +41,6 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (profile) {
-      console.log("Perfil cargado:", profile);
       setPhone(profile.phone || "");
       setProgram(profile.program || "");
       setSemester(profile.current_semester?.toString() || "");
@@ -45,11 +50,40 @@ export default function ProfileScreen() {
   }, [profile]);
 
   const handleAddCourse = () => {
-    console.log("Agregar curso");
+    setAddModalVisible(true);
+  };
+
+  const handleSaveNewCourse = (courseData: {
+    id_course: string;
+    status: string;
+  }) => {
+    setAddModalVisible(false);
+  };
+
+  const handleDeleteCourse = (courseId: number, courseName: string) => {
+    deleteCourse(courseId);
   };
 
   const handleEditCourse = (courseId: number) => {
-    console.log("Editar curso:", courseId);
+    const course = courses.find((c) => c.id_course === courseId);
+    if (course) {
+      setSelectedCourse(course);
+      setEditModalVisible(true);
+    }
+  };
+
+  const handleUpdateCourse = (newState: string) => {
+    if (selectedCourse) {
+      updateCourse(
+        { courseId: selectedCourse.id_course, state: newState },
+        {
+          onSuccess: () => {
+            setEditModalVisible(false);
+            setSelectedCourse(null);
+          },
+        }
+      );
+    }
   };
 
   const handleSaveChanges = () => {
@@ -76,7 +110,7 @@ export default function ProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
-      base64: true, 
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0].base64) {
@@ -90,7 +124,6 @@ export default function ProfileScreen() {
       }
     }
   };
-
 
   if (isLoading) {
     return (
@@ -260,11 +293,33 @@ export default function ProfileScreen() {
                       <Text style={styles.courseState}>{course.state}</Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleEditCourse(course.id_course)}
-                  >
-                    <Ionicons name="create-outline" size={22} color="#fff" />
-                  </TouchableOpacity>
+
+                  <View style={styles.courseActions}>
+                    <TouchableOpacity
+                      onPress={() => handleEditCourse(course.id_course)}
+                      style={styles.actionButton}
+                    >
+                      <Ionicons name="create-outline" size={22} color="#fff" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleDeleteCourse(course.id_course, course.name)
+                      }
+                      style={styles.actionButton}
+                      disabled={isDeletingCourse}
+                    >
+                      {isDeletingCourse ? (
+                        <ActivityIndicator size="small" color="#ff4d4d" />
+                      ) : (
+                        <Ionicons
+                          name="trash-outline"
+                          size={22}
+                          color="#ff4d4d"
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))
             ) : (
@@ -288,6 +343,22 @@ export default function ProfileScreen() {
           <Text style={styles.saveButtonText}>Guardar cambios</Text>
         </TouchableOpacity>
       </ScrollView>
+      <NewCourseModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+        onSave={handleSaveNewCourse}
+      />
+      <EditCourseModal
+        visible={editModalVisible}
+        courseName={selectedCourse?.name || ""}
+        currentState={selectedCourse?.state || "active"}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedCourse(null);
+        }}
+        onSave={handleUpdateCourse}
+        isLoading={isUpdatingCourse}
+      />
     </View>
   );
 }
@@ -505,5 +576,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",
+  },
+  courseActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  actionButton: {
+    padding: 4,
   },
 });
