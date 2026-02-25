@@ -73,6 +73,11 @@ export const Navbar = () => {
               <Text style={styles.menuText}>Comunidad</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)/groups')}>
+              <Ionicons name="chatbubbles-outline" size={22} color="#007AFF" />
+              <Text style={styles.menuText}>Grupos de estudio</Text>
+            </TouchableOpacity>
+
             <View style={styles.divider} />
             
             <TouchableOpacity style={styles.menuItem} onPress={logout}>
