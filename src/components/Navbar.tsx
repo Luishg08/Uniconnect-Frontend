@@ -16,6 +16,22 @@ export const Navbar = () => {
     router.push(path);
   };
 
+  const getImageUri = (
+      image: string | null | undefined,
+    ): string | undefined => {
+      if (!image) return undefined;
+
+      if (image.startsWith("data:image")) {
+        return image;
+      }
+
+      if (image.startsWith("http://") || image.startsWith("https://")) {
+        return image;
+      }
+
+      return `data:image/jpeg;base64,${image}`;
+    };
+
   return (
     <View style={styles.navbar}>
       <View style={styles.leftSection}>
@@ -25,7 +41,7 @@ export const Navbar = () => {
         
         <View style={styles.userInfo}>
           <Image 
-            source={{ uri: user?.picture || 'https://via.placeholder.com/40' }} 
+            source={{ uri: getImageUri(user?.picture) || 'https://via.placeholder.com/40' }} 
             style={styles.avatar} 
           />
           <Text style={styles.userName}>{user?.full_name?.split(' ')[0]}</Text>
@@ -45,6 +61,11 @@ export const Navbar = () => {
             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)')}>
               <Ionicons name="home-outline" size={22} color="#007AFF" />
               <Text style={styles.menuText}>Inicio</Text>
+            </TouchableOpacity>
+
+             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)/profile')}>
+              <Ionicons name="person-circle-outline" size={22} color="#007AFF" />
+              <Text style={styles.menuText}>Perfil</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/(tabs)/community')}>

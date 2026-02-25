@@ -1,6 +1,7 @@
 export interface Course {
   id_course: number;
   name: string;
+  state?: string;
 }
 
 export interface Enrollment {
@@ -16,4 +17,23 @@ export interface Student {
   id_program?: number;
   program?: { name: string };
   enrollments: Enrollment[];
+}
+
+export interface UserProfile {
+  id: number;
+  full_name: string;
+  email: string;
+  picture?: string;
+  phone?: string;
+  program?: string;
+  current_semester?: string;
+  progress?: number;
+  roleName: string;
+  courses: Course[];
+}
+
+export interface UpdateProfileData {
+  phone?: string;
+  current_semester?: string;
+  image?: string;
 }

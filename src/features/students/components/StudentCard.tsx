@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { Student } from '../types';
+import { authService } from '../../auth/services/auth.service';
 
 interface StudentCardProps {
   student: Student;
 }
 
+
 export const StudentCard = ({ student }: StudentCardProps) => {
   return (
     <View style={styles.card}>
       <Image 
-        source={{ uri: student.picture || 'https://via.placeholder.com/50' }} 
+        source={{ uri: authService.getImageUri(student.picture) || 'https://via.placeholder.com/50' }} 
         style={styles.avatar} 
       />
       

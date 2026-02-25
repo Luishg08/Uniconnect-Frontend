@@ -11,6 +11,7 @@ export default function TabLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="community" />
+        <Stack.Screen name="profile" />
       </Stack>
       
     </SafeAreaView>
