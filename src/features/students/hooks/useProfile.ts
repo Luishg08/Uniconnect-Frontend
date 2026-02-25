@@ -7,40 +7,34 @@ import FlashMessage, { showMessage } from "react-native-flash-message";
 
 export function useProfile() {
   const token = useAuthStore((state) => state.token);
+  const updateUserPicture = useAuthStore((state) => state.updateUserPicture);
   const queryClient = useQueryClient();
 
   // Query para obtener perfil
   const profileQuery = useQuery({
     queryKey: ['profile', token],
     queryFn: () => studentService.getProfile(token!),
-    enabled: !!token, 
+    enabled: !!token,
   });
 
   // Query para obtener cursos
-   const coursesQuery = useQuery({
+  const coursesQuery = useQuery({
     queryKey: ['courses', token],
     queryFn: () => studentService.getCourses(),
-    enabled: !!token, 
+    enabled: !!token,
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: UpdateProfileData) => studentService.updateProfile(data, token!),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      showMessage({
-        message: "¡Perfil actualizado!",
-        description: "Tus cambios se guardaron con éxito",
-        type: "success",
-        icon: "success",
-        });
+      if (data.picture) {
+        updateUserPicture(data.picture);
+      }
+      console.log("Perfil actualizado exitosamente");
     },
-    onError: () => {
-      showMessage({
-        message: "Error al actualizar perfil",
-        description: "No se pudieron guardar los cambios",
-        type: "danger",
-        icon: "danger",
-        });
+    onError: (error) => {
+      console.error("Error al actualizar perfil:", error);
     },
   });
 

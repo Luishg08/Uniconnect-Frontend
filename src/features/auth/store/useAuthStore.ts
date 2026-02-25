@@ -15,6 +15,7 @@ interface AuthState {
   user: User | null;
   setAuth: (token: string, user: User) => void;
   logout: () => void;
+  updateUserPicture: (picture: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -22,6 +23,10 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       user: null,
+      updateUserPicture: (picture: string) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, picture } : null,
+        })),
       setAuth: (token, user) => set({ token, user }),
       logout: () => set({ token: null, user: null }),
     }),

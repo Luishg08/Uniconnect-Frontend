@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { authService } from '../../src/features/auth/services/auth.service';
 
 import {
   ActivityIndicator,
@@ -73,14 +75,22 @@ export default function ProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.5,
+      base64: true, 
     });
 
-    if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
-      console.log("Imagen seleccionada:", result.assets[0].uri);
+    if (!result.canceled && result.assets[0].base64) {
+      try {
+        const base64WithPrefix = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        setProfileImage(base64WithPrefix);
+        console.log("Imagen seleccionada y convertida a base64");
+      } catch (error) {
+        console.error("Error al convertir imagen:", error);
+        Alert.alert("Error", "No se pudo procesar la imagen");
+      }
     }
   };
+
 
   if (isLoading) {
     return (
@@ -128,7 +138,10 @@ export default function ProfileScreen() {
         >
           <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatar} />
+              <Image
+                source={{ uri: authService.getImageUri(profileImage) }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
                 <Ionicons name="person" size={50} color="#666" />
@@ -141,7 +154,9 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.name}>{profile?.full_name || "Nombre no disponible"}</Text>
+          <Text style={styles.name}>
+            {profile?.full_name || "Nombre no disponible"}
+          </Text>
           <Text style={styles.role}>{profile?.roleName || "N/A"}</Text>
         </View>
 
@@ -156,9 +171,7 @@ export default function ProfileScreen() {
 
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={20} color="#fff" />
-            <Text style={styles.infoText}>
-              {user?.email || ""}
-            </Text>
+            <Text style={styles.infoText}>{user?.email || ""}</Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -201,7 +214,12 @@ export default function ProfileScreen() {
           {/* Contenedor de la barra */}
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: `${profile?.progress || 0}%` }]} />
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${profile?.progress || 0}%` },
+                ]}
+              />
             </View>
           </View>
 
