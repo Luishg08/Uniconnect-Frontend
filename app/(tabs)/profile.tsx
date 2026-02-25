@@ -2,10 +2,11 @@ import { useAuthStore } from "@/src/features/auth";
 import { useResponsive } from "@/src/hooks/useResponsive";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import * as ImagePicker from 'expo-image-picker';
+import { useEffect, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -15,25 +16,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useProfile } from "@/src/features/students/hooks/useProfile";
 
 export default function ProfileScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
-
-  const [phone, setPhone] = useState("");
-  const [program, setProgram] = useState("");
-  const [semester, setSemester] = useState("");
-  const [profileImage, setProfileImage] = useState(user?.picture || "");
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      courseName: "Software Engineering III",
-      courseState: "In progress",
-    },
-    { id: 2, courseName: "Database Systems", courseState: "Completed" },
-    { id: 3, courseName: "Web Development", courseState: "In progress" },
-  ]);
   const { isDesktop, isTablet } = useResponsive();
+
+  const { profile, isLoading, isError, updateProfile } = useProfile();
+
+  const [phone, setPhone] = useState(profile?.phone || "");
+  const [program, setProgram] = useState(profile?.program || "");
+  const [semester, setSemester] = useState(profile?.current_semester || "");
+  const [profileImage, setProfileImage] = useState(profile?.picture || "");
+  const [courses, setCourses] = useState(profile?.courses || []);
+
+  useEffect(() => {
+    if (profile) {
+      console.log("Perfil cargado:", profile);
+      setPhone(profile.phone || "");
+      setProgram(profile.program || "");
+      setSemester(profile.current_semester?.toString() || "");
+      setProfileImage(profile.picture || "");
+      setCourses(profile.courses || []);
+    }
+  }, [profile]);
 
   const handleAddCourse = () => {
     console.log("Agregar curso");
@@ -44,29 +51,66 @@ export default function ProfileScreen() {
   };
 
   const handleSaveChanges = () => {
-    console.log("Guardando cambios...", { phone, semester });
+    updateProfile({
+      phone,
+      current_semester: semester ? semester : "0",
+      image: profileImage,
+    });
   };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permiso denegado', 'Necesitamos permisos para acceder a tus fotos');
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permiso denegado",
+        "Necesitamos permisos para acceder a tus fotos",
+      );
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], 
+      aspect: [1, 1],
       quality: 0.8,
     });
 
     if (!result.canceled) {
       setProfileImage(result.assets[0].uri);
-      console.log('Imagen seleccionada:', result.assets[0].uri);
+      console.log("Imagen seleccionada:", result.assets[0].uri);
     }
   };
+
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.wrapper,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color="#4169e1" />
+        <Text style={{ color: "#fff", marginTop: 10 }}>Cargando perfil...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View
+        style={[
+          styles.wrapper,
+          { justifyContent: "center", alignItems: "center", padding: 20 },
+        ]}
+      >
+        <Ionicons name="alert-circle-outline" size={60} color="#ff4d4d" />
+        <Text style={{ color: "#fff", marginTop: 10, textAlign: "center" }}>
+          Error al cargar el perfil
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -82,29 +126,23 @@ export default function ProfileScreen() {
             { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" },
           ]}
         >
-          <TouchableOpacity 
-            style={styles.avatarContainer}
-            onPress={pickImage}
-          >
+          <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
             {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.avatar}
-              />
+              <Image source={{ uri: profileImage }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
                 <Ionicons name="person" size={50} color="#666" />
               </View>
             )}
-            
+
             {/* Ícono de subir imagen */}
             <View style={styles.uploadIconContainer}>
               <Ionicons name="cloud-upload" size={20} color="#fff" />
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.name}>Luis Henao García</Text>
-          <Text style={styles.role}>Student</Text>
+          <Text style={styles.name}>{profile?.full_name || "Nombre no disponible"}</Text>
+          <Text style={styles.role}>{profile?.roleName || "N/A"}</Text>
         </View>
 
         {/* About You */}
@@ -119,7 +157,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={20} color="#fff" />
             <Text style={styles.infoText}>
-              {user?.email || "luis.henao37085@ucaldas.edu.co"}
+              {user?.email || ""}
             </Text>
           </View>
 
@@ -140,7 +178,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="school-outline" size={20} color="#fff" />
             <Text style={styles.infoText}>
-              {program || "Ingeniería de Sistemas"}
+              {program || "Sin programa asignado"}
             </Text>
           </View>
         </View>
@@ -156,14 +194,14 @@ export default function ProfileScreen() {
           <View style={styles.spaceBetween}>
             <Text style={styles.sectionSemiTitle}>Progreso actual</Text>
             <Text style={[styles.sectionSemiTitle, { fontWeight: "bold" }]}>
-              75%
+              {profile?.progress || 0}%
             </Text>
           </View>
 
           {/* Contenedor de la barra */}
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: `${75}%` }]} />
+              <View style={[styles.progressBarFill, { width: `${profile?.progress || 0}%` }]} />
             </View>
           </View>
 
@@ -194,26 +232,30 @@ export default function ProfileScreen() {
             </View>
 
             {/* Lista de cursos */}
-            {/* Lista de cursos */}
-            {courses.map((course) => (
-              <View style={styles.courseItem} key={course.id}>
-                <View style={styles.courseInfo}>
-                  {/* Punto indicador */}
-                  <View style={styles.courseDot} />
-
-                  {/* Información del curso */}
-                  <View style={styles.courseTextContainer}>
-                    <Text style={styles.courseName}>{course.courseName}</Text>
-                    <Text style={styles.courseState}>{course.courseState}</Text>
+            {courses && courses.length > 0 ? (
+              courses.map((course) => (
+                <View style={styles.courseItem} key={course.id_course}>
+                  <View style={styles.courseInfo}>
+                    <View style={styles.courseDot} />
+                    <View style={styles.courseTextContainer}>
+                      <Text style={styles.courseName}>{course.name}</Text>
+                      <Text style={styles.courseState}>{course.state}</Text>
+                    </View>
                   </View>
+                  <TouchableOpacity
+                    onPress={() => handleEditCourse(course.id_course)}
+                  >
+                    <Ionicons name="create-outline" size={22} color="#fff" />
+                  </TouchableOpacity>
                 </View>
-
-                {/* Botón de editar */}
-                <TouchableOpacity onPress={() => handleEditCourse(course.id)}>
-                  <Ionicons name="create-outline" size={22} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            ))}
+              ))
+            ) : (
+              <Text
+                style={{ color: "#aaa", textAlign: "center", marginTop: 10 }}
+              >
+                No tienes cursos registrados
+              </Text>
+            )}
           </View>
         </View>
 
@@ -369,7 +411,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     padding: 0,
-    textAlign: "center", 
+    textAlign: "center",
   },
   spaceBetween: {
     display: "flex",
