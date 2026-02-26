@@ -1,27 +1,41 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { Student } from '../types';
-import { authService } from '../../auth/services/auth.service';
+import React from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { Student } from "../types";
+import { authService } from "../../auth/services/auth.service";
 
 interface StudentCardProps {
   student: Student;
 }
 
-
 export const StudentCard = ({ student }: StudentCardProps) => {
+  const router = useRouter();
+
+  const handlePress = () => {
+  router.push(`/(tabs)/student-profile?id=${student.id_user}`);
+};
+
   return (
-    <View style={styles.card}>
-      <Image 
-        source={{ uri: authService.getImageUri(student.picture) || 'https://via.placeholder.com/50' }} 
-        style={styles.avatar} 
+    <TouchableOpacity
+      style={styles.card}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
+      <Image
+        source={{
+          uri:
+            authService.getImageUri(student.picture) ||
+            "https://via.placeholder.com/50",
+        }}
+        style={styles.avatar}
       />
-      
+
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{student.full_name}</Text>
-        
+
         {/* Programa Académico */}
         <Text style={styles.program}>
-          {student.program?.name || 'Programa no asignado'}
+          {student.program?.name || "Programa no asignado"}
         </Text>
 
         {/* Listado de Materias (Enrollments) */}
@@ -37,21 +51,21 @@ export const StudentCard = ({ student }: StudentCardProps) => {
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 15,
     marginBottom: 12,
     marginHorizontal: 15,
     // Sombra para iOS y Android
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
@@ -60,44 +74,44 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   infoContainer: {
     flex: 1,
     marginLeft: 15,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   name: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontWeight: "bold",
+    color: "#1a1a1a",
   },
   program: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
     marginBottom: 8,
   },
   badgeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   badge: {
-    backgroundColor: '#E3F2FD', 
+    backgroundColor: "#E3F2FD",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#BBDEFB',
+    borderColor: "#BBDEFB",
   },
   badgeText: {
     fontSize: 11,
-    color: '#1976D2',
-    fontWeight: '600',
+    color: "#1976D2",
+    fontWeight: "600",
   },
   noCourses: {
     fontSize: 11,
-    color: '#999',
-    fontStyle: 'italic',
+    color: "#999",
+    fontStyle: "italic",
   },
 });

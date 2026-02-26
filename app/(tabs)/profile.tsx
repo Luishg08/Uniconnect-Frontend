@@ -163,6 +163,11 @@ export default function ProfileScreen() {
       <View style={styles.bottomBackground} />
 
       <ScrollView style={styles.container}>
+        {/* Botón de volver */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
         <View
           style={[
             styles.headerCard,
@@ -385,6 +390,15 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 15,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderRadius: 20,
+    padding: 8,
   },
   headerCard: {
     backgroundColor: "rgba(16, 16, 35, 0.4)",
