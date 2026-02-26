@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { courseService } from "@/src/features/courses/services/courses.service";
 import { Course } from "@/src/features/courses/types";
 import { Group } from "../types";
+import { showToast } from "@/src/lib/toast";
 
 interface EditGroupModalProps {
   visible: boolean;
@@ -60,22 +61,22 @@ export const EditGroupModal = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("Error", "El nombre del grupo es obligatorio");
+      showToast.error("Error", "El nombre del grupo es obligatorio");
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert("Error", "La descripción del grupo es obligatoria");
+      showToast.error("Error", "La descripción del grupo es obligatoria");
       return;
     }
 
     if (!selectedCourseId) {
-      Alert.alert("Error", "Debes seleccionar un curso");
+      showToast.error("Error", "Debes seleccionar un curso");
       return;
     }
 
     if (!group) {
-      Alert.alert("Error", "No se pudo identificar el grupo");
+      showToast.error("Error", "No se pudo identificar el grupo");
       return;
     }
 

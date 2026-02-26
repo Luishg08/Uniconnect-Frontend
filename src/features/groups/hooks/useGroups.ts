@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupService } from '../services/groups.service';
 import { Alert } from 'react-native';
 import { CreateGroupData, UpdateGroupData } from '../types';
+import { showToast } from '@/src/lib/toast';
 
 export const useGroups = () => {
   const queryClient = useQueryClient();
@@ -15,10 +16,10 @@ export const useGroups = () => {
     mutationFn: (data: CreateGroupData) => groupService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      Alert.alert('Éxito', 'Grupo creado correctamente');
+      showToast.success('Éxito', 'Grupo creado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'No se pudo crear el grupo');
+      showToast.error('Error', error.response?.data?.message || 'No se pudo crear el grupo');
     },
   });
 
@@ -27,10 +28,10 @@ export const useGroups = () => {
       groupService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      Alert.alert('Éxito', 'Grupo actualizado correctamente');
+      showToast.success('Éxito', 'Grupo actualizado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'No se pudo actualizar el grupo');
+      showToast.error('Error', error.response?.data?.message || 'No se pudo actualizar el grupo');
     },
   });
 
@@ -38,10 +39,10 @@ export const useGroups = () => {
     mutationFn: (id: number) => groupService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      Alert.alert('Éxito', 'Grupo eliminado correctamente');
+      showToast.success('Éxito', 'Grupo eliminado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'No se pudo eliminar el grupo');
+      showToast.error('Error', error.response?.data?.message || 'No se pudo eliminar el grupo');
     },
   });
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/src/features/auth';
+import { Platform } from 'react-native';
+
 
 const queryClient = new QueryClient();
 

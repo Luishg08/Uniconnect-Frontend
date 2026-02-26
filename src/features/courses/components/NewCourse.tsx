@@ -15,6 +15,7 @@ import { courseService } from "../services/courses.service";
 import { Course } from "../types";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudentCourses } from "../hooks/useStudentCourses";
+import { showToast } from "@/src/lib/toast";
 
 interface NewCourseModal {
   visible: boolean;
@@ -47,7 +48,7 @@ export const NewCourseModal = ({
 
   const handleSave = () => {
     if (!selectedCourse) {
-      Alert.alert("Error", "Debes seleccionar un curso");
+      showToast.error("Error", "Por favor selecciona un curso");
       return;
     }
 
