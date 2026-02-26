@@ -22,6 +22,7 @@ import { useProfile } from "@/src/features/students/hooks/useProfile";
 import { NewCourseModal } from "@/src/features/courses/components/NewCourse";
 import { useStudentCourses } from "@/src/features/courses/hooks/useStudentCourses";
 import { EditCourseModal } from "@/src/features/courses/components/EditCourse";
+import { showToast } from "@/src/lib/toast";
 
 export default function ProfileScreen() {
   const { user } = useAuthStore();
@@ -98,10 +99,7 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== "granted") {
-      Alert.alert(
-        "Permiso denegado",
-        "Necesitamos permisos para acceder a tus fotos",
-      );
+      showToast.error("Permiso denegado", "Necesitamos permisos para acceder a tus fotos");
       return;
     }
 
@@ -119,8 +117,7 @@ export default function ProfileScreen() {
         setProfileImage(base64WithPrefix);
         console.log("Imagen seleccionada y convertida a base64");
       } catch (error) {
-        console.error("Error al convertir imagen:", error);
-        Alert.alert("Error", "No se pudo procesar la imagen");
+        showToast.error("Error", "No se pudo procesar la imagen");
       }
     }
   };

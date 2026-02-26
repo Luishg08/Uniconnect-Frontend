@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { courseService } from "@/src/features/courses/services/courses.service";
 import { Course } from "@/src/features/courses/types";
 import { useAuthStore } from "@/src/features/auth";
+import { showToast } from "@/src/lib/toast";
 
 interface CreateGroupModalProps {
   visible: boolean;
@@ -47,22 +48,22 @@ export const CreateGroupModal = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("Error", "El nombre del grupo es obligatorio");
+      showToast.error("Error", "El nombre del grupo es obligatorio");
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert("Error", "La descripción del grupo es obligatoria");
+      showToast.error("Error", "La descripción del grupo es obligatoria");
       return;
     }
 
     if (!selectedCourseId) {
-      Alert.alert("Error", "Debes seleccionar un curso");
+      showToast.error("Error", "Debes seleccionar un curso");
       return;
     }
 
     if (!user?.id_user) {
-      Alert.alert("Error", "No se pudo identificar al usuario");
+      showToast.error("Error", "No se pudo identificar al usuario");
       return;
     }
 

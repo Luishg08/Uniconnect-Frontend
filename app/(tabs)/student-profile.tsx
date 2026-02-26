@@ -4,12 +4,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStudentProfile } from "@/src/features/students/hooks/useStudentProfile";
 import { authService } from "@/src/features/auth/services/auth.service";
 import { useResponsive } from "@/src/hooks/useResponsive";
+import { useConnections } from "@/src/features/connections/hooks/useConnections";
 
 export default function StudentProfileScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { isDesktop, isTablet } = useResponsive();
   const { data: profile, isLoading, isError } = useStudentProfile(Number(id));
+  const { sendConnectionRequest, isSendingRequest } = useConnections(); 
+
 
   if (isLoading) {
     return (
@@ -31,9 +34,8 @@ export default function StudentProfileScreen() {
     );
   }
 
-  const handleSendConnectionRequest = () => {
-    // TODO: Implementar lógica para enviar solicitud de conexión
-    console.log('Enviando solicitud de conexión a:', profile.id);
+   const handleSendConnectionRequest = () => {
+    sendConnectionRequest({ addressee_id: profile.id });
   };
 
   return (
@@ -125,13 +127,21 @@ export default function StudentProfileScreen() {
         <TouchableOpacity 
           style={[
             styles.connectionButton,
-            { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" }
+            { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" },
+            isSendingRequest && styles.connectionButtonDisabled
           ]}
           onPress={handleSendConnectionRequest}
           activeOpacity={0.8}
+          disabled={isSendingRequest} 
         >
-          <Ionicons name="people-outline" size={20} color="#fff" style={styles.buttonIcon} />
-          <Text style={styles.connectionButtonText}>Enviar Solicitud de Conexión</Text>
+          {isSendingRequest ? ( 
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="people-outline" size={20} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.connectionButtonText}>Enviar Solicitud de Conexión</Text>
+            </>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -297,5 +307,8 @@ const styles = StyleSheet.create({
     color: "#4169e1",
     marginTop: 10,
     fontSize: 16,
+  },
+   connectionButtonDisabled: {
+    opacity: 0.6,
   },
 });

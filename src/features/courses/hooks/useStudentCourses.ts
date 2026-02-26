@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { courseService } from "../services/courses.service";
 import { Alert } from "react-native";
+import { showToast } from "@/src/lib/toast";
 
 export const useStudentCourses = () => {
   const queryClient = useQueryClient();
@@ -11,11 +12,11 @@ export const useStudentCourses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
-      Alert.alert("Éxito", "Curso agregado correctamente");
+      showToast.success("Éxito", "Curso agregado correctamente");
     },
     onError: (error: any) => {
       console.error("Error al agregar curso:", error);
-      Alert.alert(
+      showToast.error(
         "Error",
         error.response?.data?.message || "No se pudo agregar el curso"
       );
@@ -27,11 +28,11 @@ export const useStudentCourses = () => {
       courseService.updateCourseState(courseId, state),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      Alert.alert("Éxito", "Estado del curso actualizado correctamente");
+      showToast.success("Éxito", "Estado del curso actualizado correctamente");
     },
     onError: (error: any) => {
       console.error("Error al actualizar curso:", error);
-      Alert.alert(
+      showToast.error(
         "Error",
         error.response?.data?.message || "No se pudo actualizar el curso"
       );
@@ -45,11 +46,11 @@ export const useStudentCourses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
-      Alert.alert("Éxito", "Curso eliminado correctamente");
+      showToast.success("Éxito", "Curso eliminado correctamente");
     },
     onError: (error: any) => {
       console.error("Error al eliminar curso:", error);
-      Alert.alert(
+      showToast.error(
         "Error",
         error.response?.data?.message || "No se pudo eliminar el curso"
       );
