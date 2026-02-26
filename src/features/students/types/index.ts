@@ -31,6 +31,17 @@ export interface UserProfile {
   roleName: string;
   courses: Course[];
 }
+export interface OtherUserProfile {
+  id: number;
+  full_name: string;
+  email: string;
+  picture?: string;
+  phone?: string;
+  program?: string;
+  current_semester?: string;
+  roleName: string;
+  common_courses: Course[];
+}
 
 export interface UpdateProfileData {
   phone?: string;

@@ -1,6 +1,6 @@
 import { api } from '@/src/constants/api';
 import { STUDENT_ENDPOINTS } from '../api/endpoints';
-import { Student, UpdateProfileData, UserProfile } from '../types';
+import { OtherUserProfile, Student, UpdateProfileData, UserProfile } from '../types';
 import { useAuthStore } from '../../auth';
 
 export const studentService = {
@@ -29,6 +29,11 @@ export const studentService = {
     const response = await api.patch(`${STUDENT_ENDPOINTS.UPDATE_PROFILE}`, data);
     return response.data;
   },
+
+  getStudentProfile: async (userId: number): Promise<OtherUserProfile> => {
+    const response = await api.get(`${STUDENT_ENDPOINTS.GET_STUDENT_PROFILE}/${userId}`);
+    return response.data;
+  }
 
 
 };

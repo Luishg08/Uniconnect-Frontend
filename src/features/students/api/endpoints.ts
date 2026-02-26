@@ -3,4 +3,5 @@ export const STUDENT_ENDPOINTS = {
   GET_COURSES: '/courses',
   GET_PROFILE: '/users/profile',
   UPDATE_PROFILE: '/users/profile',
+  GET_STUDENT_PROFILE: '/users/profile',
 } as const;
