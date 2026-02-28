@@ -35,8 +35,57 @@ export default function StudentProfileScreen() {
   }
 
    const handleSendConnectionRequest = () => {
-    sendConnectionRequest({ addressee_id: profile.id });
+    const status = String(profile.connection_status || 'none').toLowerCase().trim();
+    if (status === 'none') {
+      sendConnectionRequest({ addressee_id: profile.id });
+    }
   };
+
+  const getButtonConfig = () => {
+    // Normalize the connection status to lowercase and trim
+    const status = String(profile.connection_status || 'none').toLowerCase().trim();
+    
+    switch (status) {
+      case 'connected':
+      case 'accepted':
+        return {
+          text: 'Ya son compañeros',
+          icon: 'checkmark-circle',
+          disabled: true,
+          textColor: '#1a1a1a',
+          backgroundColor: '#D9B97E'
+        };
+      case 'pending_sent':
+      case 'pendingsent':
+        return {
+          text: 'Solicitud enviada',
+          icon: 'time-outline',
+          disabled: true,
+          textColor: '#1a1a1a',
+          backgroundColor: '#D9B97E'
+        };
+      case 'pending_received':
+      case 'pendingreceived':
+        return {
+          text: 'Solicitud recibida - Revisa Vínculos',
+          icon: 'mail-unread-outline',
+          disabled: true,
+          textColor: '#1a1a1a',
+          backgroundColor: '#D9B97E'
+        };
+      case 'none':
+      default:
+        return {
+          text: 'Enviar Solicitud de Conexión',
+          icon: 'people-outline',
+          disabled: false,
+          textColor: '#1a1a1a',
+          backgroundColor: '#D9B97E'
+        };
+    }
+  };
+
+  const buttonConfig = getButtonConfig();
 
   return (
     <View style={styles.wrapper}>
@@ -127,19 +176,22 @@ export default function StudentProfileScreen() {
         <TouchableOpacity 
           style={[
             styles.connectionButton,
-            { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" },
-            isSendingRequest && styles.connectionButtonDisabled
+            { 
+              width: isDesktop ? "40%" : isTablet ? "40%" : "80%",
+              backgroundColor: buttonConfig.backgroundColor
+            },
+            (isSendingRequest || buttonConfig.disabled) && styles.connectionButtonDisabled
           ]}
           onPress={handleSendConnectionRequest}
           activeOpacity={0.8}
-          disabled={isSendingRequest} 
+          disabled={isSendingRequest || buttonConfig.disabled} 
         >
           {isSendingRequest ? ( 
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#1a1a1a" />
           ) : (
             <>
-              <Ionicons name="people-outline" size={20} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.connectionButtonText}>Enviar Solicitud de Conexión</Text>
+              <Ionicons name={buttonConfig.icon as any} size={20} color={buttonConfig.textColor} style={styles.buttonIcon} />
+              <Text style={[styles.connectionButtonText, { color: buttonConfig.textColor }]}>{buttonConfig.text}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -156,7 +208,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: "35%",
-    backgroundColor: "#181835",
+    backgroundColor: "#1a1a1a",
   },
   bottomBackground: {
     position: "absolute",
@@ -164,7 +216,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#192331",
+    backgroundColor: "#363636",
   },
   container: { flex: 1 },
   backButton: {
@@ -177,7 +229,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerCard: {
-    backgroundColor: "rgba(16, 16, 35, 0.4)",
+    backgroundColor: "rgba(26, 26, 26, 0.8)",
     marginTop: 75,
     marginHorizontal: 15,
     marginBottom: 15,
@@ -187,6 +239,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     alignItems: "center",
     alignSelf: "center",
+    borderWidth: 2,
+    borderColor: "#D9B97E",
   },
   avatarContainer: {
     position: "absolute",
@@ -197,10 +251,10 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 4,
-    borderColor: "#101023",
+    borderColor: "#D9B97E",
   },
   avatarPlaceholder: {
-    backgroundColor: "#2a2a4a",
+    backgroundColor: "#4a4a4a",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -216,12 +270,14 @@ const styles = StyleSheet.create({
     color: "#aaa",
   },
   section: {
-    backgroundColor: "rgba(16, 16, 35, 0.4)",
+    backgroundColor: "rgba(26, 26, 26, 0.9)",
     marginHorizontal: 15,
     marginBottom: 15,
     borderRadius: 20,
     padding: 20,
     alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   sectionTitle: {
     fontSize: 18,
@@ -258,7 +314,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#4169e1",
+    backgroundColor: "#D9B97E",
     marginRight: 12,
   },
   courseTextContainer: { flex: 1 },
@@ -273,7 +329,7 @@ const styles = StyleSheet.create({
     color: "#aaa",
   },
   connectionButton: {
-    backgroundColor: "#4169e1",
+    backgroundColor: "#D9B97E",
     marginHorizontal: 15,
     marginBottom: 30,
     marginTop: 10,
@@ -291,20 +347,20 @@ const styles = StyleSheet.create({
   connectionButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#1a1a1a",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#192331",
+    backgroundColor: "#363636",
   },
   errorText: {
     color: "#fff",
     marginTop: 10,
   },
   backLink: {
-    color: "#4169e1",
+    color: "#D9B97E",
     marginTop: 10,
     fontSize: 16,
   },

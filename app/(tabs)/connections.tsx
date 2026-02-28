@@ -33,7 +33,7 @@ export default function ConnectionsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#4169e1" />
+        <ActivityIndicator size="large" color="#D9B97E" />
         <Text style={styles.loadingText}>Cargando solicitudes...</Text>
       </View>
     );
@@ -82,8 +82,8 @@ export default function ConnectionsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#4169e1"
-              colors={['#4169e1']}
+              tintColor="#D9B97E"
+              colors={['#D9B97E']}
             />
           }
         />
@@ -103,13 +103,13 @@ export default function ConnectionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#192331',
+    backgroundColor: '#363636',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#192331',
+    backgroundColor: '#363636',
     padding: 20,
   },
   header: {
@@ -118,7 +118,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 60,
-    backgroundColor: '#181835',
+    backgroundColor: '#1a1a1a',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(217, 185, 126, 0.3)',
   },
   title: {
     fontSize: 28,

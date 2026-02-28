@@ -48,30 +48,33 @@ export default function CommunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, backgroundColor: '#f8f9fa' },
+  content: { flex: 1, backgroundColor: '#363636' },
   backButton: {
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a1a',
   },
   backText: {
-    color: '#007AFF',
+    color: '#D9B97E',
     fontSize: 14,
     fontWeight: '600',
   },
   searchContainer: { 
     padding: 15, 
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a1a',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(217, 185, 126, 0.3)',
   },
   searchInput: { 
-    backgroundColor: '#f2f2f2', 
+    backgroundColor: '#2a2a2a', 
     padding: 12, 
     borderRadius: 10,
     fontSize: 15,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: '#D9B97E',
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingBottom: 20 },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#999' }
+  emptyText: { textAlign: 'center', marginTop: 20, color: '#aaa' }
 });

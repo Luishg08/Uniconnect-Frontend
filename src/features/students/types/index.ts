@@ -40,6 +40,7 @@ export interface OtherUserProfile {
   program?: string;
   current_semester?: string;
   roleName: string;
+  connection_status: 'accepted' | 'connected' | 'pending_sent' | 'pending_received' | 'none';
   common_courses: Course[];
 }
 

@@ -49,7 +49,7 @@ export const Navbar = () => {
           onPress={() => setMenuVisible(true)}
           style={styles.menuButton}
         >
-          <Ionicons name="menu" size={28} color="#333" />
+          <Ionicons name="menu" size={28} color="#D9B97E" />
         </TouchableOpacity>
 
         <View style={styles.userInfo}>
@@ -88,7 +88,7 @@ export const Navbar = () => {
               style={styles.menuItem}
               onPress={() => navigateTo("/(tabs)")}
             >
-              <Ionicons name="home-outline" size={22} color="#007AFF" />
+              <Ionicons name="home-outline" size={22} color="#D9B97E" />
               <Text style={styles.menuText}>Inicio</Text>
             </TouchableOpacity>
 
@@ -99,7 +99,7 @@ export const Navbar = () => {
               <Ionicons
                 name="person-circle-outline"
                 size={22}
-                color="#007AFF"
+                color="#D9B97E"
               />
               <Text style={styles.menuText}>Perfil</Text>
             </TouchableOpacity>
@@ -108,7 +108,7 @@ export const Navbar = () => {
               style={styles.menuItem}
               onPress={() => navigateTo("/(tabs)/community")}
             >
-              <Ionicons name="people-outline" size={22} color="#007AFF" />
+              <Ionicons name="people-outline" size={22} color="#D9B97E" />
               <Text style={styles.menuText}>Comunidad</Text>
             </TouchableOpacity>
 
@@ -116,7 +116,7 @@ export const Navbar = () => {
               style={styles.menuItem}
               onPress={() => navigateTo("/(tabs)/groups")}
             >
-              <Ionicons name="chatbubbles-outline" size={22} color="#007AFF" />
+              <Ionicons name="chatbubbles-outline" size={22} color="#D9B97E" />
               <Text style={styles.menuText}>Grupos de estudio</Text>
             </TouchableOpacity>
 
@@ -128,7 +128,7 @@ export const Navbar = () => {
                 <Ionicons
                   name="git-network-outline"
                   size={22}
-                  color="#007AFF"
+                  color="#D9B97E"
                 />
                 {pendingRequests.length > 0 && (
                   <View style={styles.badge}>
@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "rgba(217, 185, 126, 0.3)",
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -190,12 +190,14 @@ const styles = StyleSheet.create({
     height: 35,
     borderRadius: 18,
     marginRight: 8,
-    backgroundColor: "#ddd",
+    backgroundColor: "#4a4a4a",
+    borderWidth: 1,
+    borderColor: "#D9B97E",
   },
   userName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#fff",
   },
   logoutButton: {
     backgroundColor: "#ff4d4d",
@@ -204,36 +206,38 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
   },
   menuContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     width: "25%",
     height: "100%",
     padding: 20,
     paddingTop: 50,
+    borderRightWidth: 1,
+    borderRightColor: "rgba(217, 185, 126, 0.3)",
   },
   menuTitle: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 30,
-    color: "#007AFF",
+    color: "#D9B97E",
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "rgba(217, 185, 126, 0.2)",
   },
   menuText: {
     fontSize: 18,
     marginLeft: 15,
-    color: "#333",
+    color: "#fff",
   },
   divider: {
     height: 1,
-    backgroundColor: "#eee",
+    backgroundColor: "rgba(217, 185, 126, 0.3)",
     marginVertical: 20,
   },
    badge: {

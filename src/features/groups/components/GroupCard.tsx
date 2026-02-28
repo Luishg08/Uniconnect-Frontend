@@ -18,7 +18,7 @@ export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Ionicons name="people" size={24} color="#007AFF" />
+          <Ionicons name="people" size={24} color="#D9B97E" />
           <View style={styles.headerInfo}>
             <Text style={styles.groupName}>{group.name}</Text>
             <Text style={styles.courseName}>{group.course.name}</Text>
@@ -35,7 +35,7 @@ export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false
             style={styles.actionButton}
             disabled={isDeleting}
           >
-            <Ionicons name="create-outline" size={22} color="#666" />
+            <Ionicons name="create-outline" size={22} color="#D9B97E" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={(e) => {
@@ -74,7 +74,7 @@ export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(26, 26, 26, 0.9)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -83,6 +83,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   header: {
     flexDirection: "row",
@@ -102,18 +104,18 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#fff",
     marginBottom: 4,
   },
   courseName: {
     fontSize: 14,
-    color: "#007AFF",
+    color: "#D9B97E",
     fontWeight: "600",
     marginBottom: 2,
   },
   programName: {
     fontSize: 12,
-    color: "#999",
+    color: "#aaa",
   },
   actions: {
     flexDirection: "row",
@@ -124,13 +126,13 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: "#666",
+    color: "#aaa",
     marginBottom: 12,
     lineHeight: 20,
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    borderTopColor: "rgba(217, 185, 126, 0.2)",
     paddingTop: 12,
   },
   membersInfo: {
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   },
   membersText: {
     fontSize: 13,
-    color: "#666",
+    color: "#aaa",
     fontWeight: "500",
   },
 });

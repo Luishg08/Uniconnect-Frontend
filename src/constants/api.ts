@@ -31,8 +31,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error("Sesión expirada o no autorizada.");
-      useAuthStore.getState().logout(); 
+      const token = useAuthStore.getState().token;
+      
+      // Solo mostrar error y hacer logout si el usuario estaba autenticado
+      if (token) {
+        console.error("Sesión expirada o no autorizada.");
+        useAuthStore.getState().logout(); 
+      }
+      // Si no hay token, silenciosamente rechazar (primera vez sin login)
     }
     return Promise.reject(error);
   }

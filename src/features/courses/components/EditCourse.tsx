@@ -53,7 +53,7 @@ export const EditCourseModal = ({
           <View style={styles.header}>
             <Text style={styles.title}>Editar Estado</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#333" />
+              <Ionicons name="close" size={24} color="#D9B97E" />
             </TouchableOpacity>
           </View>
 
@@ -128,9 +128,11 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: "90%",
     maxWidth: 400,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: "#D9B97E",
   },
   header: {
     flexDirection: "row",
@@ -141,11 +143,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#fff",
   },
   courseName: {
     fontSize: 16,
-    color: "#666",
+    color: "#aaa",
     marginBottom: 20,
     fontWeight: "500",
   },
@@ -153,18 +155,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 12,
-    color: "#333",
+    color: "#fff",
   },
   stateOption: {
     borderWidth: 2,
-    borderColor: "#ddd",
+    borderColor: "rgba(217, 185, 126, 0.3)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
+    backgroundColor: "#2a2a2a",
   },
   stateOptionSelected: {
-    borderColor: "#007AFF",
-    backgroundColor: "#f0f8ff",
+    borderColor: "#D9B97E",
+    backgroundColor: "rgba(217, 185, 126, 0.2)",
   },
   stateOptionContent: {
     flexDirection: "row",
@@ -173,11 +176,11 @@ const styles = StyleSheet.create({
   },
   stateOptionText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fff",
   },
   stateOptionTextSelected: {
     fontWeight: "600",
-    color: "#007AFF",
+    color: "#D9B97E",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -192,20 +195,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "#2a2a2a",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   cancelButtonText: {
-    color: "#333",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#D9B97E",
   },
   saveButtonText: {
-    color: "#fff",
+    color: "#1a1a1a",
     fontSize: 16,
     fontWeight: "600",
   },

@@ -7,6 +7,11 @@ export const courseService = {
     return data;
   },
 
+  getOwnActiveCourses: async () => {
+    const { data } = await api.get(COURSES_ENDPOINTS.GET_OWNER_ACTIVE_COURSES);
+    return data;
+  },
+
   addCourseToStudent: async (data: { id_course: string; status: string }) => {
     const response = await api.post(COURSES_ENDPOINTS.ADD_COURSE_TO_STUDENT, 
       {

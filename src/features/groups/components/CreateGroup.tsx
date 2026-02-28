@@ -41,8 +41,8 @@ export const CreateGroupModal = ({
 
   // Obtener cursos disponibles
   const { data: courses, isLoading: loadingCourses } = useQuery<Course[]>({
-    queryKey: ["courses-by-student"],
-    queryFn: courseService.getByStudent,
+    queryKey: ["owner-active-courses"],
+    queryFn: courseService.getOwnActiveCourses,
     enabled: visible,
   });
 
@@ -238,9 +238,11 @@ const styles = StyleSheet.create({
     width: "90%",
     maxWidth: 500,
     maxHeight: "85%",
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     borderRadius: 16,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#D9B97E",
   },
   header: {
     flexDirection: "row",
@@ -248,12 +250,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "rgba(217, 185, 126, 0.3)",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#fff",
   },
   body: {
     padding: 20,
@@ -264,17 +266,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
+    color: "#fff",
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D9B97E",
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
-    color: "#333",
-    backgroundColor: "#f9f9f9",
+    color: "#fff",
+    backgroundColor: "#2a2a2a",
   },
   textArea: {
     minHeight: 100,
@@ -285,25 +287,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D9B97E",
     borderRadius: 10,
     padding: 12,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#2a2a2a",
   },
   dropdownText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fff",
     flex: 1,
   },
   placeholder: {
-    color: "#999",
+    color: "#888",
   },
   dropdownList: {
     marginTop: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D9B97E",
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#2a2a2a",
     maxHeight: 200,
     elevation: 3,
     shadowColor: "#000",
@@ -320,29 +322,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "rgba(217, 185, 126, 0.2)",
   },
   dropdownItemText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fff",
     flex: 1,
   },
   loadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#2a2a2a",
     borderRadius: 10,
     gap: 10,
   },
   loadingText: {
     fontSize: 14,
-    color: "#666",
+    color: "#aaa",
   },
   emptyText: {
     padding: 20,
     textAlign: "center",
-    color: "#999",
+    color: "#888",
     fontSize: 14,
   },
   footer: {
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: "rgba(217, 185, 126, 0.3)",
     gap: 10,
   },
   button: {
@@ -360,20 +362,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "#2a2a2a",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   cancelButtonText: {
-    color: "#333",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#D9B97E",
   },
   saveButtonText: {
-    color: "#fff",
+    color: "#1a1a1a",
     fontSize: 16,
     fontWeight: "600",
   },

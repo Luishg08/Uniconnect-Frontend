@@ -109,10 +109,12 @@ export const ConnectionRequestCard = ({
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(16, 16, 35, 0.6)',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 185, 126, 0.2)',
   },
   leftSection: {
     marginRight: 12,
@@ -124,7 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
   },
   avatarPlaceholder: {
-    backgroundColor: '#2a2a4a',
+    backgroundColor: '#4a4a4a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,10 +165,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   acceptButton: {
-    backgroundColor: '#4169e1',
+    backgroundColor: '#D9B97E',
   },
   acceptText: {
-    color: '#fff',
+    color: '#1a1a1a',
     fontSize: 14,
     fontWeight: '600',
   },

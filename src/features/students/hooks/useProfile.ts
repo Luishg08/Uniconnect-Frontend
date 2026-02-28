@@ -3,6 +3,7 @@ import { useAuthStore } from "../../auth";
 import { studentService } from "../services/student.service";
 import { UpdateProfileData } from "../types";
 import FlashMessage, { showMessage } from "react-native-flash-message";
+import { showToast } from "@/src/lib/toast";
 
 
 export function useProfile() {
@@ -31,10 +32,11 @@ export function useProfile() {
       if (data.picture) {
         updateUserPicture(data.picture);
       }
-      console.log("Perfil actualizado exitosamente");
+      showToast.success("Perfil actualizado", "Los cambios se guardaron correctamente");
     },
     onError: (error) => {
       console.error("Error al actualizar perfil:", error);
+      showToast.error("Error", "No se pudieron guardar los cambios");
     },
   });
 
@@ -44,5 +46,6 @@ export function useProfile() {
     isLoading: profileQuery.isLoading || coursesQuery.isLoading,
     isError: profileQuery.isError || coursesQuery.isError,
     updateProfile: updateProfileMutation.mutate,
+    isUpdatingProfile: updateProfileMutation.isPending,
   };
 }

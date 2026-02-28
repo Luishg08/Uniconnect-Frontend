@@ -21,24 +21,24 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa', padding: 20 },
+  container: { flex: 1, backgroundColor: '#363636', padding: 20 },
   welcomeSection: { marginBottom: 25, marginTop: 10 },
-  greeting: { fontSize: 28, fontWeight: 'bold', color: '#1a1a1a' },
-  subtitle: { fontSize: 16, color: '#666' },
+  greeting: { fontSize: 28, fontWeight: 'bold', color: '#fff' },
+  subtitle: { fontSize: 16, color: '#aaa' },
   statusCard: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
     padding: 20,
     borderRadius: 15,
     borderLeftWidth: 5,
-    borderLeftColor: '#007AFF',
+    borderLeftColor: '#D9B97E',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     marginBottom: 20,
   },
-  statusTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  statusText: { color: '#444' },
-  infoBox: { padding: 15, backgroundColor: '#e1f5fe', borderRadius: 10 },
-  infoText: { color: '#01579b', fontSize: 13, textAlign: 'center' }
+  statusTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: '#fff' },
+  statusText: { color: '#aaa' },
+  infoBox: { padding: 15, backgroundColor: 'rgba(217, 185, 126, 0.2)', borderRadius: 10, borderWidth: 1, borderColor: '#D9B97E' },
+  infoText: { color: '#D9B97E', fontSize: 13, textAlign: 'center', fontWeight: '600' }
 });

@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  FlatList,
 } from "react-native";
 import { courseService } from "../services/courses.service";
 import { Course } from "../types";
@@ -125,11 +124,10 @@ export const NewCourseModal = ({
 
               {showCourseDropdown && (
                 <View style={styles.dropdownList}>
-                  <FlatList
-                    data={courses}
-                    keyExtractor={(item) => item.id_course.toString()}
-                    renderItem={({ item }) => (
+                  <ScrollView style={styles.flatList}>
+                    {courses?.map((item: Course) => (
                       <TouchableOpacity
+                        key={item.id_course.toString()}
                         style={styles.dropdownItem}
                         onPress={() => selectCourse(item)}
                       >
@@ -138,9 +136,8 @@ export const NewCourseModal = ({
                           <Ionicons name="checkmark" size={20} color="#007AFF" />
                         )}
                       </TouchableOpacity>
-                    )}
-                    style={styles.flatList}
-                  />
+                    ))}
+                  </ScrollView>
                 </View>
               )}
 
@@ -223,17 +220,19 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: "90%",
     maxWidth: 400,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     borderRadius: 16,
     padding: 20,
     maxHeight: "80%",
+    borderWidth: 1,
+    borderColor: "#D9B97E",
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
-    color: "#1a1a1a",
+    color: "#fff",
   },
   loader: {
     marginVertical: 40,
@@ -242,32 +241,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 8,
-    color: "#333",
+    color: "#fff",
   },
   dropdown: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D9B97E",
     borderRadius: 10,
     padding: 15,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#2a2a2a",
   },
   dropdownText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fff",
     flex: 1,
   },
   placeholder: {
-    color: "#999",
+    color: "#888",
   },
   dropdownList: {
     marginTop: 5,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D9B97E",
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#2a2a2a",
     maxHeight: 200,
     elevation: 3,
     shadowColor: "#000",
@@ -284,11 +283,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "rgba(217, 185, 126, 0.2)",
   },
   dropdownItemText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fff",
     flex: 1,
   },
   buttonContainer: {
@@ -304,20 +303,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "#2a2a2a",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   cancelButtonText: {
-    color: "#333",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#D9B97E",
   },
   saveButtonText: {
-    color: "#fff",
+    color: "#1a1a1a",
     fontSize: 16,
     fontWeight: "600",
   },

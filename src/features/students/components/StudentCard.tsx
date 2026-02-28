@@ -58,7 +58,7 @@ export const StudentCard = ({ student }: StudentCardProps) => {
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(26, 26, 26, 0.9)",
     borderRadius: 12,
     padding: 15,
     marginBottom: 12,
@@ -69,12 +69,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
+    borderWidth: 1,
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#eee",
+    backgroundColor: "#4a4a4a",
+    borderWidth: 2,
+    borderColor: "#D9B97E",
   },
   infoContainer: {
     flex: 1,
@@ -84,11 +88,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#fff",
   },
   program: {
     fontSize: 13,
-    color: "#666",
+    color: "#aaa",
     marginBottom: 8,
   },
   badgeContainer: {
@@ -97,21 +101,21 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   badge: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "rgba(217, 185, 126, 0.2)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#BBDEFB",
+    borderColor: "#D9B97E",
   },
   badgeText: {
     fontSize: 11,
-    color: "#1976D2",
+    color: "#D9B97E",
     fontWeight: "600",
   },
   noCourses: {
     fontSize: 11,
-    color: "#999",
+    color: "#888",
     fontStyle: "italic",
   },
 });

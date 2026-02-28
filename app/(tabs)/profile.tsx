@@ -31,7 +31,7 @@ export default function ProfileScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [addModalVisible, setAddModalVisible] = useState(false);
-  const { profile, isLoading, isError, updateProfile } = useProfile();
+  const { profile, isLoading, isError, updateProfile, isUpdatingProfile } = useProfile();
   const { deleteCourse, isDeletingCourse, updateCourse, isUpdatingCourse } = useStudentCourses();
 
   const [phone, setPhone] = useState(profile?.phone || "");
@@ -115,7 +115,6 @@ export default function ProfileScreen() {
       try {
         const base64WithPrefix = `data:image/jpeg;base64,${result.assets[0].base64}`;
         setProfileImage(base64WithPrefix);
-        console.log("Imagen seleccionada y convertida a base64");
       } catch (error) {
         showToast.error("Error", "No se pudo procesar la imagen");
       }
@@ -130,7 +129,7 @@ export default function ProfileScreen() {
           { justifyContent: "center", alignItems: "center" },
         ]}
       >
-        <ActivityIndicator size="large" color="#4169e1" />
+        <ActivityIndicator size="large" color="#D9B97E" />
         <Text style={{ color: "#fff", marginTop: 10 }}>Cargando perfil...</Text>
       </View>
     );
@@ -185,7 +184,7 @@ export default function ProfileScreen() {
 
             {/* Ícono de subir imagen */}
             <View style={styles.uploadIconContainer}>
-              <Ionicons name="cloud-upload" size={20} color="#fff" />
+              <Ionicons name="cloud-upload" size={20} color="#1a1a1a" />
             </View>
           </TouchableOpacity>
 
@@ -217,9 +216,10 @@ export default function ProfileScreen() {
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Ingresa tu teléfono"
-                placeholderTextColor="#666"
+                placeholderTextColor="#888"
                 keyboardType="phone-pad"
               />
+              <Ionicons name="create-outline" size={16} color="#D9B97E" />
             </View>
           </View>
 
@@ -265,10 +265,11 @@ export default function ProfileScreen() {
                 style={styles.semesterInput}
                 value={semester}
                 onChangeText={setSemester}
-                placeholder="Semestre"
-                placeholderTextColor="#666"
+                placeholder="0"
+                placeholderTextColor="#888"
                 keyboardType="numeric"
               />
+              <Ionicons name="create-outline" size={14} color="#D9B97E" style={{ marginLeft: 4 }} />
             </View>
           </View>
 
@@ -280,7 +281,7 @@ export default function ProfileScreen() {
                 onPress={handleAddCourse}
                 style={{ marginBottom: 10 }}
               >
-                <Ionicons name="add-circle-outline" size={28} color="#fff" />
+                <Ionicons name="add-circle-outline" size={28} color="#D9B97E" />
               </TouchableOpacity>
             </View>
 
@@ -301,7 +302,7 @@ export default function ProfileScreen() {
                       onPress={() => handleEditCourse(course.id_course)}
                       style={styles.actionButton}
                     >
-                      <Ionicons name="create-outline" size={22} color="#fff" />
+                      <Ionicons name="create-outline" size={22} color="#D9B97E" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -339,10 +340,17 @@ export default function ProfileScreen() {
           style={[
             styles.saveButton,
             { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" },
+            isUpdatingProfile && styles.saveButtonDisabled,
           ]}
           onPress={handleSaveChanges}
+          disabled={isUpdatingProfile}
+          activeOpacity={0.8}
         >
-          <Text style={styles.saveButtonText}>Guardar cambios</Text>
+          {isUpdatingProfile ? (
+            <ActivityIndicator size="small" color="#1a1a1a" />
+          ) : (
+            <Text style={styles.saveButtonText}>Guardar cambios</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
       <NewCourseModal
@@ -375,7 +383,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: "35%",
-    backgroundColor: "#181835",
+    backgroundColor: "#1a1a1a",
   },
   bottomBackground: {
     position: "absolute",
@@ -383,7 +391,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#192331",
+    backgroundColor: "#363636",
   },
   container: {
     flex: 1,
@@ -398,7 +406,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerCard: {
-    backgroundColor: "rgba(16, 16, 35, 0.4)",
+    backgroundColor: "rgba(26, 26, 26, 0.8)",
     marginTop: 75,
     marginHorizontal: 15,
     marginBottom: 15,
@@ -408,6 +416,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     alignItems: "center",
     alignSelf: "center",
+    borderWidth: 2,
+    borderColor: "#D9B97E",
   },
   avatarContainer: {
     position: "absolute",
@@ -418,10 +428,10 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 4,
-    borderColor: "#101023",
+    borderColor: "#D9B97E",
   },
   avatarPlaceholder: {
-    backgroundColor: "#2a2a4a",
+    backgroundColor: "#4a4a4a",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -429,14 +439,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#101023",
+    backgroundColor: "#D9B97E",
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#101023",
+    borderColor: "#D9B97E",
   },
   name: {
     fontSize: 20,
@@ -450,13 +460,15 @@ const styles = StyleSheet.create({
     color: "#aaa",
   },
   section: {
-    backgroundColor: "rgba(16, 16, 35, 0.4)",
+    backgroundColor: "rgba(26, 26, 26, 0.9)",
     marginHorizontal: 15,
     marginBottom: 15,
     borderRadius: 20,
     padding: 20,
     alignSelf: "center",
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(217, 185, 126, 0.3)",
   },
   sectionTitle: {
     fontSize: 18,
@@ -483,35 +495,43 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginLeft: 10,
-    backgroundColor: "#1e2230",
+    backgroundColor: '#2a2a2a',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#1e2230",
-    paddingHorizontal: 5,
-    paddingVertical: 5,
+    borderWidth: 1.5,
+    borderColor: '#D9B97E',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 180,
+    maxWidth: 250,
   },
   infoInput: {
     flex: 1,
     fontSize: 14,
-    color: "#fff",
+    color: '#fff',
     padding: 0,
+    marginRight: 8,
   },
   semesterInputContainer: {
-    backgroundColor: "#1e2230",
+    backgroundColor: '#2a2a2a',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#1e2230",
+    borderWidth: 1.5,
+    borderColor: '#D9B97E',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    minWidth: 60,
-    alignItems: "center",
+    paddingVertical: 10,
+    minWidth: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
   },
   semesterInput: {
     fontSize: 14,
-    color: "#fff",
+    color: '#fff',
     padding: 0,
-    textAlign: "center",
+    textAlign: 'center',
+    minWidth: 60,
   },
   spaceBetween: {
     display: "flex",
@@ -536,7 +556,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#4169e1",
+    backgroundColor: "#D9B97E",
     borderRadius: 4,
   },
   courseItem: {
@@ -556,7 +576,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#aaa",
+    backgroundColor: "#D9B97E",
     marginRight: 12,
   },
   courseTextContainer: {
@@ -573,7 +593,7 @@ const styles = StyleSheet.create({
     color: "#aaa",
   },
   saveButton: {
-    backgroundColor: "#4169e1",
+    backgroundColor: "#D9B97E",
     marginHorizontal: 15,
     marginBottom: 30,
     marginTop: 10,
@@ -583,10 +603,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "center",
   },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
   saveButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#1a1a1a",
   },
   courseActions: {
     flexDirection: "row",

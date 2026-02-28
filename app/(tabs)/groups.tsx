@@ -157,13 +157,13 @@ export default function GroupsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#363636",
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#363636",
     padding: 20,
   },
   header: {
@@ -171,22 +171,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "rgba(217, 185, 126, 0.3)",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#fff",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "#aaa",
     marginTop: 4,
   },
   addButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#D9B97E",
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#666",
+    color: "#aaa",
   },
   errorText: {
     marginTop: 12,
@@ -221,19 +221,19 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#666",
+    color: "#aaa",
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#999",
+    color: "#888",
     marginTop: 8,
     textAlign: "center",
   },
   createButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#007AFF",
+    backgroundColor: "#D9B97E",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   createButtonText: {
-    color: "#fff",
+    color: "#1a1a1a",
     fontSize: 16,
     fontWeight: "600",
   },
