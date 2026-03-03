@@ -153,11 +153,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.wrapper}>
-      {/* Fondo superior */}
-      <View style={styles.topBackground} />
-      {/* Fondo inferior */}
-      <View style={styles.bottomBackground} />
-
       <ScrollView style={styles.container}>
         {/* Botón de volver */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -376,22 +371,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-  },
-  topBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "35%",
-    backgroundColor: "#1a1a1a",
-  },
-  bottomBackground: {
-    position: "absolute",
-    top: "35%",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#363636",
+    backgroundColor: "#363636", 
   },
   container: {
     flex: 1,
