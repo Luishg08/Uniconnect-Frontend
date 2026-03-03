@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { showToast } from '@/src/lib/toast';
 import { useAuthStore } from '@/src/features/auth/store/useAuthStore'; 
 
 if (!process.env.EXPO_PUBLIC_API_URL) {
@@ -30,15 +31,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      const token = useAuthStore.getState().token;
-      
-      // Solo mostrar error y hacer logout si el usuario estaba autenticado
-      if (token) {
-        console.error("Sesión expirada o no autorizada.");
-        useAuthStore.getState().logout(); 
-      }
-      // Si no hay token, silenciosamente rechazar (primera vez sin login)
+    const status = error.response?.status;
+
+    // sólo actuamos si la petición llevaba un Authorization
+    const isAuthRequest = Boolean(error.config?.headers?.Authorization);
+
+    if (isAuthRequest && (status === 401 || status === 403)) {
+      showToast.error('Sesión expirada o no autorizada.');
     }
     return Promise.reject(error);
   }
