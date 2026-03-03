@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, Image, Dimensions, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { GoogleLoginButton } from '@/src/features/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -6,36 +6,38 @@ const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   return (
-    <LinearGradient
-      colors={['#1a1a1a', '#363636', '#2a2a2a']}
-      style={styles.container}
-    >
-      <View style={styles.contentContainer}>
-        {/* Logo de la Universidad */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/Logo_de_la_Universidad_de_Caldas.svg.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient
+        colors={['#1a1a1a', '#363636', '#2a2a2a']}
+        style={styles.container}
+      >
+        <View style={styles.contentContainer}>
+          {/* Logo de la Universidad */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/Logo_de_la_Universidad_de_Caldas.svg.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* Título */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>UniConnect</Text>
-          <Text style={styles.subtitle}>Universidad de Caldas</Text>
-          <View style={styles.divider} />
-        </View>
+          {/* Título */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>UniConnect</Text>
+            <Text style={styles.subtitle}>Universidad de Caldas</Text>
+            <View style={styles.divider} />
+          </View>
 
-        {/* Botón de Login */}
-        <View style={styles.loginContainer}>
-          <GoogleLoginButton />
-        </View>
+          {/* Botón de Login */}
+          <View style={styles.loginContainer}>
+            <GoogleLoginButton />
+          </View>
 
-        {/* Footer */}
-        <Text style={styles.footer}>Inicia sesión con tu cuenta institucional</Text>
-      </View>
-    </LinearGradient>
+          {/* Footer */}
+          <Text style={styles.footer}>Inicia sesión con tu cuenta institucional</Text>
+        </View>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 }
 
