@@ -1,5 +1,5 @@
 import { View, StyleSheet, Text, Image, Dimensions, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { GoogleLoginButton } from '@/src/features/auth';
+import { Auth0LoginContainer } from '@/src/features/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
           {/* Botón de Login */}
           <View style={styles.loginContainer}>
-            <GoogleLoginButton />
+            <Auth0LoginContainer />
           </View>
 
           {/* Footer */}

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "../../auth";
+import { authStore } from "../../auth";
 import { studentService } from "../services/student.service";
 import { UpdateProfileData } from "../types";
 import FlashMessage, { showMessage } from "react-native-flash-message";
@@ -7,8 +7,7 @@ import { showToast } from "@/src/lib/toast";
 
 
 export function useProfile() {
-  const token = useAuthStore((state) => state.token);
-  const updateUserPicture = useAuthStore((state) => state.updateUserPicture);
+  const token = authStore.accessToken;
   const queryClient = useQueryClient();
 
   // Query para obtener perfil
@@ -30,7 +29,8 @@ export function useProfile() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       if (data.picture) {
-        updateUserPicture(data.picture);
+        // Update the user in AuthStore
+        authStore.updateUser({ ...authStore.user, picture: data.picture });
       }
       showToast.success("Perfil actualizado", "Los cambios se guardaron correctamente");
     },

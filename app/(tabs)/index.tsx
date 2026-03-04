@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useAuthStore } from '@/src/features/auth';
+import { authStore } from '@/src/features/auth';
 
 export default function HomeScreen() {
-  const { user } = useAuthStore();
+  const user = authStore.user;
   const firstName = user?.full_name?.split(' ')[0] || 'Usuario';
 
   return (

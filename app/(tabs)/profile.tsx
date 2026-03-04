@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/src/features/auth";
+import { authStore } from "@/src/features/auth";
 import { useResponsive } from "@/src/hooks/useResponsive";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -25,7 +25,7 @@ import { EditCourseModal } from "@/src/features/courses/components/EditCourse";
 import { showToast } from "@/src/lib/toast";
 
 export default function ProfileScreen() {
-  const { user } = useAuthStore();
+  const user = authStore.user;
   const router = useRouter();
   const { isDesktop, isTablet } = useResponsive();
   const [editModalVisible, setEditModalVisible] = useState(false);

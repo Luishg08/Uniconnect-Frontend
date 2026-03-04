@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { courseService } from "@/src/features/courses/services/courses.service";
 import { Course } from "@/src/features/courses/types";
-import { useAuthStore } from "@/src/features/auth";
+import { authStore } from "@/src/features/auth";
 import { showToast } from "@/src/lib/toast";
 
 interface CreateGroupModalProps {
@@ -33,7 +33,7 @@ export const CreateGroupModal = ({
   onClose,
   onSave,
 }: CreateGroupModalProps) => {
-  const { user } = useAuthStore();
+  const user = authStore.user;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);

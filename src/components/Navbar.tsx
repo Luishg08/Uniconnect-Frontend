@@ -8,7 +8,7 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { useAuthStore } from "@/src/features/auth";
+import { authStore, authController } from "@/src/features/auth";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useResponsive } from "../hooks/useResponsive";
@@ -19,7 +19,7 @@ import { NOTIFICATIONS_ENDPOINTS } from "src/features/notifications/api/endpoint
 import { api } from "../constants/api";
 
 export const Navbar = () => {
-  const { user, logout } = useAuthStore();
+  const user = authStore.user;
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
   const { isMobile } = useResponsive();
@@ -28,6 +28,10 @@ export const Navbar = () => {
   // Estado de notificaciones
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+
+  const handleLogout = () => {
+    authController.logout();
+  };
 
   const navigateTo = (path: any) => {
     setMenuVisible(false);
@@ -101,7 +105,7 @@ export const Navbar = () => {
         />
 
         {/* Botón de logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -173,7 +177,7 @@ export const Navbar = () => {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuItem} onPress={logout}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
               <Ionicons name="exit-outline" size={22} color="#ff4d4d" />
               <Text style={[styles.menuText, { color: "#ff4d4d" }]}>Cerrar Sesión</Text>
             </TouchableOpacity>

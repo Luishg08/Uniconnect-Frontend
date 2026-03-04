@@ -1,7 +1,7 @@
 import { api } from '@/src/constants/api';
 import { STUDENT_ENDPOINTS } from '../api/endpoints';
 import { OtherUserProfile, Student, UpdateProfileData, UserProfile } from '../types';
-import { useAuthStore } from '../../auth';
+import { authStore } from '../../auth';
 
 export const studentService = {
 

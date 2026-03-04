@@ -1,22 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from '@/src/features/auth';
-import { Platform } from 'react-native';
+import { authStore } from '@/src/features/auth';
+import { AppRoot } from '@/src/components/AppRoot';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
 const queryClient = new QueryClient();
 
 function RootNavigation() {
-  const { token, logout } = useAuthStore();
+  const [token, setToken] = useState(authStore.accessToken);
   const segments = useSegments();
   const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
 
+  // Simple reactive update for token changes
   useEffect(() => {
-    logout();
+    const interval = setInterval(() => {
+      setToken(authStore.accessToken);
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     setIsMounted(true);
   }, []);
 
@@ -72,7 +80,9 @@ function RootNavigation() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RootNavigation />
+      <AppRoot>
+        <RootNavigation />
+      </AppRoot>
     </QueryClientProvider>
   );
 }

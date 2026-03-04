@@ -1,11 +1,11 @@
 import { api } from '@/src/constants/api';
 import { GROUPS_ENDPOINTS } from '../api/endpoints';
 import { CreateGroupData, UpdateGroupData } from '../types';
-import { useAuthStore } from '../../auth';
+import { authStore } from '../../auth';
 
 export const groupService = {
   getAll: async () => {
-    const {user} =  useAuthStore.getState();
+    const user = authStore.user;
     const { data } = await api.get(`${GROUPS_ENDPOINTS.GET_BY_STUDENT}/${user?.id_user}`);
     return data;
   },
