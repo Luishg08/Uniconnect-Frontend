@@ -13,6 +13,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useResponsive } from "../hooks/useResponsive";
 import { useConnections } from "../features/connections/hooks/useConnections";
+import { NotificationIcon } from "src/features/notifications/components/NotificationIcon";
+import { useEffect } from "react";
+import { NOTIFICATIONS_ENDPOINTS } from "src/features/notifications/api/endpoints";
+import { api } from "../constants/api";
 
 export const Navbar = () => {
   const { user, logout } = useAuthStore();
@@ -21,26 +25,50 @@ export const Navbar = () => {
   const { isMobile } = useResponsive();
   const { pendingRequests } = useConnections();
 
+  // Estado de notificaciones
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+
   const navigateTo = (path: any) => {
     setMenuVisible(false);
     router.push(path);
   };
 
-  const getImageUri = (
-    image: string | null | undefined,
-  ): string | undefined => {
+  const getImageUri = (image: string | null | undefined): string | undefined => {
     if (!image) return undefined;
-
-    if (image.startsWith("data:image")) {
-      return image;
-    }
-
-    if (image.startsWith("http://") || image.startsWith("https://")) {
-      return image;
-    }
-
+    if (image.startsWith("data:image")) return image;
+    if (image.startsWith("http://") || image.startsWith("https://")) return image;
     return `data:image/jpeg;base64,${image}`;
   };
+
+  // ─── Obtener notificaciones del backend ─────────────────────────────────
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = useAuthStore.getState().token; // obtiene el token del store
+        if (!token) return; // si no hay token, salir
+
+        const res = await api.get(NOTIFICATIONS_ENDPOINTS.GET_MY_NOTIFICATIONS, {
+          headers: {
+            Authorization: `Bearer ${token}`, // enviar token
+          },
+        });
+
+        const data = res.data || [];
+        setNotifications(data);
+
+        // Contar solo las no leídas
+        const unreadCount = data.filter((n: any) => !n.is_read).length;
+        setUnreadNotifications(unreadCount);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setNotifications([]);
+        setUnreadNotifications(0);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <View style={styles.navbar}>
@@ -64,9 +92,19 @@ export const Navbar = () => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Ionicons name="log-out-outline" size={20} color="#fff" />
-      </TouchableOpacity>
+      <View style={styles.rightSection}>
+        {/* Botón de notificaciones */}
+        <NotificationIcon
+          count={unreadNotifications}
+          onPress={() => navigateTo("/(tabs)/notifications")}
+          color="#D9B97E"
+        />
+
+        {/* Botón de logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* MODAL DEL MENÚ LATERAL */}
       <Modal
@@ -96,11 +134,7 @@ export const Navbar = () => {
               style={styles.menuItem}
               onPress={() => navigateTo("/(tabs)/profile")}
             >
-              <Ionicons
-                name="person-circle-outline"
-                size={22}
-                color="#D9B97E"
-              />
+              <Ionicons name="person-circle-outline" size={22} color="#D9B97E" />
               <Text style={styles.menuText}>Perfil</Text>
             </TouchableOpacity>
 
@@ -125,17 +159,11 @@ export const Navbar = () => {
               onPress={() => navigateTo("/(tabs)/connections")}
             >
               <View style={{ position: "relative" }}>
-                <Ionicons
-                  name="git-network-outline"
-                  size={22}
-                  color="#D9B97E"
-                />
+                <Ionicons name="git-network-outline" size={22} color="#D9B97E" />
                 {pendingRequests.length > 0 && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>
-                      {pendingRequests.length > 99
-                        ? "99+"
-                        : pendingRequests.length}
+                      {pendingRequests.length > 99 ? "99+" : pendingRequests.length}
                     </Text>
                   </View>
                 )}
@@ -147,9 +175,7 @@ export const Navbar = () => {
 
             <TouchableOpacity style={styles.menuItem} onPress={logout}>
               <Ionicons name="exit-outline" size={22} color="#ff4d4d" />
-              <Text style={[styles.menuText, { color: "#ff4d4d" }]}>
-                Cerrar Sesión
-              </Text>
+              <Text style={[styles.menuText, { color: "#ff4d4d" }]}>Cerrar Sesión</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -174,17 +200,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
-  leftSection: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  menuButton: {
-    marginRight: 15,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  leftSection: { flexDirection: "row", alignItems: "center" },
+  rightSection: { flexDirection: "row", alignItems: "center", gap: 10 },
+  menuButton: { marginRight: 15 },
+  userInfo: { flexDirection: "row", alignItems: "center" },
   avatar: {
     width: 35,
     height: 35,
@@ -194,20 +213,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D9B97E",
   },
-  userName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
+  userName: { fontSize: 16, fontWeight: "600", color: "#fff" },
   logoutButton: {
     backgroundColor: "#ff4d4d",
     padding: 8,
     borderRadius: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-  },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)" },
   menuContent: {
     backgroundColor: "#1a1a1a",
     width: "25%",
@@ -217,12 +229,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: "rgba(217, 185, 126, 0.3)",
   },
-  menuTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 30,
-    color: "#D9B97E",
-  },
+  menuTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 30, color: "#D9B97E" },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -230,31 +237,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(217, 185, 126, 0.2)",
   },
-  menuText: {
-    fontSize: 18,
-    marginLeft: 15,
-    color: "#fff",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(217, 185, 126, 0.3)",
-    marginVertical: 20,
-  },
-   badge: {
-    position: 'absolute',
+  menuText: { fontSize: 18, marginLeft: 15, color: "#fff" },
+  divider: { height: 1, backgroundColor: "rgba(217, 185, 126, 0.3)", marginVertical: 20 },
+  badge: {
+    position: "absolute",
     top: -4,
     right: -8,
-    backgroundColor: '#ff4d4d',
+    backgroundColor: "#ff4d4d",
     borderRadius: 10,
     minWidth: 18,
     height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 4,
   },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
+  badgeText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
 });
