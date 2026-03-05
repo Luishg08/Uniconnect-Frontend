@@ -41,6 +41,7 @@ export interface OtherUserProfile {
   current_semester?: string;
   roleName: string;
   connection_status: 'accepted' | 'connected' | 'pending_sent' | 'pending_received' | 'none';
+  connection_id: number;
   common_courses: Course[];
 }
 

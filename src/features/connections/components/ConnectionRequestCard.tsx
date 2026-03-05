@@ -1,26 +1,20 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ConnectionRequest } from '../types';
 import { authService } from '@/src/features/auth/services/auth.service';
 import { useRouter } from 'expo-router';
+import { connectionService } from '../services/connections.service';
 
 interface ConnectionRequestCardProps {
   request: ConnectionRequest;
-  onAccept: () => void;
-  onReject: () => void;
-  isAccepting: boolean;
-  isRejecting: boolean;
+  onUpdated?: () => void; // Llamado después de aceptar/rechazar
 }
 
-export const ConnectionRequestCard = ({
-  request,
-  onAccept,
-  onReject,
-  isAccepting,
-  isRejecting,
-}: ConnectionRequestCardProps) => {
+export const ConnectionRequestCard = ({ request, onUpdated }: ConnectionRequestCardProps) => {
   const router = useRouter();
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -39,6 +33,34 @@ export const ConnectionRequestCard = ({
 
   const handleViewProfile = () => {
     router.push(`/(tabs)/student-profile?id=${request.requester.id_user}`);
+  };
+
+  const handleAccept = async () => {
+    try {
+      setIsAccepting(true);
+      await connectionService.acceptConnectionRequest(request.id_connection);
+      Alert.alert('¡Solicitud aceptada!', `${request.requester.full_name} ahora es tu conexión.`);
+      onUpdated?.();
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo aceptar la solicitud.');
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      setIsRejecting(true);
+      await connectionService.rejectConnectionRequest(request.id_connection);
+      Alert.alert('Solicitud rechazada', `Has rechazado la solicitud de ${request.requester.full_name}.`);
+      onUpdated?.();
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo rechazar la solicitud.');
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   return (
@@ -71,7 +93,7 @@ export const ConnectionRequestCard = ({
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionButton, styles.acceptButton]}
-            onPress={onAccept}
+            onPress={handleAccept}
             disabled={isAccepting || isRejecting}
             activeOpacity={0.7}
           >
@@ -87,7 +109,7 @@ export const ConnectionRequestCard = ({
 
           <TouchableOpacity
             style={[styles.actionButton, styles.rejectButton]}
-            onPress={onReject}
+            onPress={handleReject}
             disabled={isAccepting || isRejecting}
             activeOpacity={0.7}
           >
