@@ -33,3 +33,9 @@ npm start
 - `npm run android` - Ejecuta en Android
 - `npm run ios` - Ejecuta en iOS
 - `npm run web` - Ejecuta en navegador web
+
+## Instalación librería notificaciones 
+```bash
+npx expo install expo-notifications expo-device
+npx expo install expo-dev-client
+```

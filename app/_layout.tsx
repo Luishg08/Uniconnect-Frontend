@@ -9,13 +9,14 @@ import * as Device from 'expo-device';
 const queryClient = new QueryClient();
 
 function RootNavigation() {
-  const { token } = useAuthStore();
+  const { token, logout } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    logout();
     setIsMounted(true);
   }, []);
 
