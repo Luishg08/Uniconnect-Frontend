@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { notificationsService } from '../services/notifications.service';
 import { Notification } from '../types';
-import { useAuthStore } from '@/src/features/auth';
+import { authStore } from '@/src/features/auth';
 import { useNotificationsStore } from '../store/notifications.store';
 
 export function NotificationsList() {
-    const { token: authToken } = useAuthStore();
+    const authToken = authStore.accessToken;
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);

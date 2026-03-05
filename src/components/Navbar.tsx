@@ -49,7 +49,7 @@ export const Navbar = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const token = useAuthStore.getState().token; // obtiene el token del store
+        const token = authStore.accessToken; // obtiene el token del store
         if (!token) return; // si no hay token, salir
 
         const res = await api.get(NOTIFICATIONS_ENDPOINTS.GET_MY_NOTIFICATIONS, {
@@ -99,7 +99,6 @@ export const Navbar = () => {
       <View style={styles.rightSection}>
         {/* Botón de notificaciones */}
         <NotificationIcon
-          count={unreadNotifications}
           onPress={() => navigateTo("/(tabs)/notifications")}
           color="#D9B97E"
         />
