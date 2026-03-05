@@ -1,26 +1,36 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNotificationsStore } from '../store/notifications.store';
 
 interface NotificationIconProps {
-  count: number;          // Número de notificaciones sin leer
-  onPress: () => void;    // Acción al tocar el ícono
-  color?: string;         // Color dinámico del ícono
-  size?: number;          // Tamaño del ícono
+  onPress: () => void;
+  color?: string;
+  size?: number;
 }
 
 export const NotificationIcon = ({
-  count,
   onPress,
   color = '#fff',
   size = 28,
 }: NotificationIconProps) => {
+  const unreadCount = useNotificationsStore(
+    (state) => state.unreadCount
+  );
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      <Ionicons name="notifications-outline" size={size} color={color} />
-      {count > 0 && (
+      <Ionicons
+        name="notifications-outline"
+        size={size}
+        color={color}
+      />
+
+      {unreadCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
+          <Text style={styles.badgeText}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Text>
         </View>
       )}
     </TouchableOpacity>
