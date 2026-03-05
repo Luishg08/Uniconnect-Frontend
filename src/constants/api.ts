@@ -12,7 +12,6 @@ export const api = axios.create({
   },
 });
 
-// TSK-4.2: Enhanced request interceptor with token refresh
 api.interceptors.request.use(
   async (config) => {
     const token = authStore.accessToken;
@@ -45,7 +44,6 @@ api.interceptors.request.use(
   }
 );
 
-// TSK-4.2: Enhanced response interceptor with token refresh retry
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

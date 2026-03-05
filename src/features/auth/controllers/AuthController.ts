@@ -3,41 +3,31 @@ import { authService } from '../services/auth.service';
 import { showToast } from '@/src/lib/toast';
 import { router } from 'expo-router';
 
-/**
- * AuthController - MVC Local Controller (Kiro Framework)
- * 
- * Handles business logic for authentication operations.
- * Coordinates between Auth0 service layer and AuthStore (Model).
- * 
- * Foundation for TSK-3.2: BFF Integration
- */
 export class AuthController {
   
-  /**
-   * TSK-3.2: Handle Authorization Code Exchange via BFF
-   * 
-   * Sends the authorization code to the BFF endpoint,
-   * receives the FEN-formatted response with user profile,
-   * and updates the AuthStore with the authentication data
-   * 
-   * @param authorizationCode - The code received from Auth0 Universal Login
-   * @param redirectUri - The redirect URI used in the auth request
-   */
-  async handleAuthorizationCode(authorizationCode: string, redirectUri: string): Promise<void> {
+  async handleAuthorizationCode(authorizationCode: string, redirectUri: string, codeVerifier: string): Promise<void> {
     try {
       authStore.setLoading(true);
       authStore.clearError();
 
-      console.log('AuthController: Processing authorization code via BFF', {
-        code: authorizationCode,
+      console.log('AuthController: Starting authorization code exchange', {
+        code: authorizationCode.substring(0, 20) + '...',
         redirectUri,
+        codeVerifier: codeVerifier.substring(0, 20) + '...',
       });
 
-      // TSK-3.2: Call BFF endpoint to exchange authorization code
-      const fenResponse = await authService.exchangeAuthorizationCode(authorizationCode, redirectUri);
+      console.log('Calling authService.exchangeAuthorizationCode...');
+      const fenResponse = await authService.exchangeAuthorizationCode(authorizationCode, redirectUri, codeVerifier);
       
+      console.log('BFF Response received:', {
+        success: fenResponse.success,
+        statusCode: fenResponse.statusCode,
+        hasData: !!fenResponse.data,
+      });
+
       // Validate FEN response format
       if (!fenResponse.success || fenResponse.statusCode !== 200) {
+        console.error('BFF returned error:', fenResponse.message);
         throw new Error(fenResponse.message || 'Authentication failed');
       }
 
@@ -45,15 +35,19 @@ export class AuthController {
       const { access_token, user, auth0_tokens } = fenResponse.data;
       
       if (!access_token || !user) {
+        console.error('Invalid FEN response - missing access_token or user:', {
+          hasAccessToken: !!access_token,
+          hasUser: !!user,
+        });
         throw new Error('Invalid response format from BFF');
       }
 
+      console.log('Valid FEN response received, updating AuthStore...');
       // Update AuthStore with the received data (MVC Local pattern)
       authStore.setAuth(access_token, user, auth0_tokens);
       
       // Store Auth0 tokens for potential future use (refresh tokens, etc.)
-      // Note: In a production app, you might want to store these securely
-      console.log('Auth0 tokens received:', {
+      console.log('Auth0 tokens stored:', {
         hasAccessToken: !!auth0_tokens?.access_token,
         hasIdToken: !!auth0_tokens?.id_token,
         hasRefreshToken: !!auth0_tokens?.refresh_token,
@@ -62,34 +56,30 @@ export class AuthController {
 
       showToast.success('¡Éxito!', 'Autenticación completada correctamente');
       
+      console.log('Navigating to authenticated area...');
       // Navigate to authenticated area
       router.replace('/(tabs)');
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error en la autenticación';
+      console.error('AuthController: Authentication error', {
+        message: errorMessage,
+        error: error instanceof Error ? error.stack : error,
+      });
       authStore.setError(errorMessage);
       showToast.error('Error', errorMessage);
-      
-      console.error('AuthController: Authentication error', error);
     } finally {
       authStore.setLoading(false);
     }
   }
 
-  /**
-   * Handle user logout
-   * Clears the authentication state and shows success message
-   */
   async logout(): Promise<void> {
     try {
       authStore.setLoading(true);
       
       // Clear local authentication state
       authStore.clearAuth();
-      
-      // TODO: TSK-4.2 - Implement Auth0 logout URL redirection
-      // TODO: Invalidate refresh tokens if implemented
-      
+
       showToast.success('Sesión cerrada', 'Has cerrado sesión correctamente');
       
     } catch (error) {
@@ -101,12 +91,6 @@ export class AuthController {
     }
   }
 
-  /**
-   * TSK-4.2: Refresh authentication tokens
-   * 
-   * Attempts to refresh the user's session using the stored refresh token
-   * Updates AuthStore with new tokens if successful
-   */
   async refreshTokens(): Promise<boolean> {
     try {
       // Check if we have a refresh token
@@ -159,11 +143,6 @@ export class AuthController {
     }
   }
 
-  /**
-   * TSK-4.2: Check if tokens need refresh and refresh if necessary
-   * 
-   * Should be called periodically or before making API requests
-   */
   async ensureValidTokens(): Promise<boolean> {
     // If not authenticated, no need to refresh
     if (!authStore.isAuthenticated) {
@@ -180,11 +159,6 @@ export class AuthController {
     return await this.refreshTokens();
   }
 
-  /**
-   * TSK-4.2: Initialize authentication state from storage
-   * 
-   * Should be called when the app starts
-   */
   async initializeAuth(): Promise<void> {
     // Wait for AuthStore to initialize from storage
     while (!authStore.isInitialized) {

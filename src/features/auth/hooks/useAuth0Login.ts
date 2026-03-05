@@ -1,21 +1,19 @@
 import { useAuthRequest, makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Constants from 'expo-constants';
 import { AUTH0_CONFIG } from '../constants/auth0';
 import { authStore } from '../store/AuthStore';
 import { authController } from '../controllers/AuthController';
 import { showToast } from '@/src/lib/toast';
+import { generatePKCEPair } from '../utils/pkce';
 
 // Complete the auth session for web browsers
 WebBrowser.maybeCompleteAuthSession();
 
-/**
- * TSK-2.3: Auth0 Universal Login Hook
- * Implements Authorization Code with PKCE flow for Auth0 authentication
- * Following Kiro Framework MVC Local pattern
- */
 export function useAuth0Login() {
+  const [pkce, setPkce] = useState<{ codeVerifier: string; codeChallenge: string } | null>(null);
+
   const isExpoGo =
     Constants.executionEnvironment === 'storeClient' ||
     Constants.appOwnership === 'expo' ||
@@ -26,8 +24,8 @@ export function useAuth0Login() {
   const projectFullName = appOwner && appSlug ? `@${appOwner}/${appSlug}` : null;
 
   const nativeReturnUrl = makeRedirectUri({
-    scheme: 'uniconnect', // Exactamente como está en el app.json del Director
-    path: 'callback',
+    scheme: 'uniconnect', 
+    path: 'login',
   });
 
   const expoProxyRedirectUri = projectFullName
@@ -37,9 +35,19 @@ export function useAuth0Login() {
   const redirectUri = isExpoGo && expoProxyRedirectUri ? expoProxyRedirectUri : nativeReturnUrl;
 
   console.log('\n======================================================');
-  console.log('✅ URL DEFINITIVA (LÓGICA DEL PROFESOR):');
+  console.log('URL DEFINITIVA (LÓGICA YANET PROFE POSDATA: GRACIAS):');
   console.log(redirectUri);
   console.log('======================================================\n');
+
+  // Generate PKCE pair on mount
+  useEffect(() => {
+    const initializePKCE = async () => {
+      const pkceData = await generatePKCEPair();
+      setPkce(pkceData);
+      console.log('PKCE pair generated for Auth0 authorization');
+    };
+    initializePKCE();
+  }, []);
 
   // Configure Auth0 authorization request
   const [request, response, promptAsync] = useAuthRequest(
@@ -48,11 +56,16 @@ export function useAuth0Login() {
       scopes: AUTH0_CONFIG.scopes,
       responseType: 'code', // Authorization Code flow
       redirectUri,
-      extraParams: {
-        audience: AUTH0_CONFIG.audience, // Move audience to extraParams
-        // Enable PKCE for security
-        code_challenge_method: 'S256',
-      },
+      extraParams: pkce
+        ? {
+            audience: AUTH0_CONFIG.audience, // Move audience to extraParams
+            // Use PKCE with code_challenge from our generated pair
+            code_challenge: pkce.codeChallenge,
+            code_challenge_method: 'S256',
+          }
+        : {
+            audience: AUTH0_CONFIG.audience,
+          },
     },
     {
       authorizationEndpoint: `https://${AUTH0_CONFIG.domain}/authorize`,
@@ -61,22 +74,43 @@ export function useAuth0Login() {
 
   // Handle the authentication response
   useEffect(() => {
+    console.log('useAuth0Login: Response received', {
+      type: response?.type,
+      params: response?.type === 'success' || response?.type === 'error' ? response?.params : undefined,
+      redirectUri,
+    });
+
     if (response?.type === 'success') {
       const { code } = response.params;
       
-      if (code) {
-        // Delegate to AuthController (MVC Local pattern)
-        authController.handleAuthorizationCode(code, redirectUri);
+      console.log('Authorization code received:', code);
+      
+      if (code && pkce?.codeVerifier) {
+        console.log('Sending code and code_verifier to AuthController...');
+        // Delegate to AuthController (MVC Local pattern), passing code_verifier
+        authController.handleAuthorizationCode(code, redirectUri, pkce.codeVerifier);
+      } else {
+        const missingItems = [];
+        if (!code) missingItems.push('code');
+        if (!pkce?.codeVerifier) missingItems.push('code_verifier');
+        console.error('Missing required parameters:', missingItems);
+        authStore.setError(`Missing required parameters: ${missingItems.join(', ')}`);
+        showToast.error('Error', 'No se recibieron los parámetros necesarios para la autenticación');
       }
     } else if (response?.type === 'error') {
-      const errorMessage = response.params?.error_description || 'Error en la autenticación';
+      const errorMessage = response.params?.error_description || response.params?.error || 'Error en la autenticación';
+      console.error('Auth0 Error:', {
+        error: response.params?.error,
+        error_description: response.params?.error_description,
+      });
       authStore.setError(errorMessage);
-      showToast.error('Error', errorMessage);
+      showToast.error('Error de Auth0', errorMessage);
     } else if (response?.type === 'cancel') {
+      console.log('User cancelled authentication');
       authStore.setLoading(false);
       showToast.error('Cancelado', 'Autenticación cancelada por el usuario');
     }
-  }, [response, redirectUri]);
+  }, [response, redirectUri, pkce?.codeVerifier]);
 
   // Return the prompt function and loading state
   return {
@@ -86,6 +120,6 @@ export function useAuth0Login() {
       promptAsync();
     },
     isLoading: authStore.isLoading,
-    isReady: !!request,
+    isReady: !!request && !!pkce,
   };
 }

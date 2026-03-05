@@ -2,12 +2,6 @@ import { useEffect, useRef } from 'react';
 import { authController } from '../controllers/AuthController';
 import { authStore } from '../store/AuthStore';
 
-/**
- * TSK-4.2: Token Refresh Hook
- * 
- * Automatically refreshes tokens when they're about to expire
- * Sets up periodic checks and handles token refresh logic
- */
 export function useTokenRefresh() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 

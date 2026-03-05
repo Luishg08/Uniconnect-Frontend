@@ -4,16 +4,6 @@ import { AuthButton } from '@/src/components/elements';
 import { useAuth0Login } from '../hooks/useAuth0Login';
 import { authController } from '../controllers/AuthController';
 
-/**
- * Auth0LoginContainer - Smart Container Component
- * 
- * Handles business logic and state management for Auth0 authentication
- * Injects pure actions into WebForge Elements (AuthButton)
- * 
- * TSK-4.1: WebForge Elements Pattern Implementation
- * - Container: Handles logic, state, and data
- * - Element: Pure UI component with no dependencies
- */
 export const Auth0LoginContainer: React.FC = () => {
   const { promptAsync, isLoading, isReady } = useAuth0Login();
   

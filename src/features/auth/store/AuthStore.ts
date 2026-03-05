@@ -1,25 +1,12 @@
 import { makeAutoObservable } from 'mobx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-/**
- * AuthStore - MobX-based authentication store following Kiro Framework standards
- * 
- * TSK-4.2: Enhanced with session persistence and refresh token management
- * 
- * Migration pending for:
- * - src/features/students/services/student.service.ts
- * - src/features/auth/hooks/useTempLogin.ts  
- * - src/features/students/hooks/useProfile.ts
- * - src/constants/api.ts
- * - src/features/groups/services/groups.service.ts
- */
 export class AuthStore {
   accessToken: string | null = null;
   user: any | null = null; // Will be replaced with UserProfile interface in Phase 4
   isLoading: boolean = false;
   error: string | null = null;
   
-  // TSK-4.2: Enhanced Auth0 tokens management
   auth0Tokens: {
     access_token?: string;
     id_token?: string;
@@ -28,7 +15,6 @@ export class AuthStore {
     expires_at?: number; // Calculated expiration timestamp
   } | null = null;
 
-  // TSK-4.2: Session persistence state
   isInitialized: boolean = false;
 
   constructor() {
@@ -49,9 +35,6 @@ export class AuthStore {
     return !!this.auth0Tokens?.refresh_token;
   }
 
-  /**
-   * TSK-4.2: Enhanced setAuth to handle FEN response data and persistence
-   */
   setAuth(token: string, userData: any, auth0TokensData?: any) {
     this.accessToken = token;
     this.user = userData;
@@ -102,9 +85,6 @@ export class AuthStore {
     this.persistToStorage();
   }
 
-  /**
-   * TSK-4.2: Initialize auth state from AsyncStorage
-   */
   private async initializeFromStorage() {
     try {
       const storedAuth = await AsyncStorage.getItem('uniconnect-auth');
@@ -125,9 +105,6 @@ export class AuthStore {
     }
   }
 
-  /**
-   * TSK-4.2: Persist auth state to AsyncStorage
-   */
   private async persistToStorage() {
     try {
       const authData = {
@@ -143,9 +120,6 @@ export class AuthStore {
     }
   }
 
-  /**
-   * TSK-4.2: Clear auth state from AsyncStorage
-   */
   private async clearFromStorage() {
     try {
       await AsyncStorage.removeItem('uniconnect-auth');

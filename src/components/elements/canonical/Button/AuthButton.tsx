@@ -4,16 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, ButtonProps } from './Button';
 
 export interface AuthButtonProps extends Omit<ButtonProps, 'title' | 'variant'> {
-  authType: 'auth0' | 'google' | 'logout';
+  authType: 'auth0'| 'logout';
   customTitle?: string;
 }
 
-/**
- * AuthButton - WebForge Elements Specialized Component
- * 
- * Extends the canonical Button with auth-specific styling and icons
- * Maintains absolute decoupling - no business logic, only UI presentation
- */
 export const AuthButton: React.FC<AuthButtonProps> = ({
   authType,
   customTitle,
@@ -25,17 +19,11 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     switch (authType) {
       case 'auth0':
         return {
-          title: customTitle || 'Ingresar con Auth0',
+          title: customTitle || 'Ingresar con Google',
           variant: 'primary' as const,
           style: StyleSheet.flatten([styles.auth0Button, style]),
           textStyle: StyleSheet.flatten([styles.auth0Text, textStyle]),
-        };
-      case 'google':
-        return {
-          title: customTitle || 'Ingresar con Google',
-          variant: 'secondary' as const,
-          style: StyleSheet.flatten([styles.googleButton, style]),
-          textStyle: StyleSheet.flatten([styles.googleText, textStyle]),
+          icon: <Ionicons name="logo-google" size={22} color="#1a1a1a" style={styles.googleIcon} />
         };
       case 'logout':
         return {
@@ -63,6 +51,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       variant={config.variant}
       style={config.style}
       textStyle={config.textStyle}
+      icon={config.icon}
     />
   );
 };
@@ -82,6 +71,12 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  iconSpacing: {
+    marginRight: 8,
+  },
+  googleIcon: {
+    marginRight: 8,
   },
   googleButton: {
     backgroundColor: '#4285f4',

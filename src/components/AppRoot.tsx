@@ -6,19 +6,11 @@ interface AppRootProps {
   children: React.ReactNode;
 }
 
-/**
- * AppRoot - TSK-4.2: App Initialization Component
- * 
- * Handles app startup authentication state restoration and token refresh setup
- * Should wrap the main app content
- */
 export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
   const { isInitializing, initializationError } = useAppInitialization();
   
-  // Set up automatic token refresh
   useTokenRefresh();
 
-  // Show loading screen during initialization
   if (isInitializing) {
     return (
       <View style={styles.loadingContainer}>
@@ -28,7 +20,6 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
     );
   }
 
-  // Show error screen if initialization failed
   if (initializationError) {
     return (
       <View style={styles.errorContainer}>
@@ -41,7 +32,6 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
     );
   }
 
-  // Render main app content
   return <>{children}</>;
 };
 

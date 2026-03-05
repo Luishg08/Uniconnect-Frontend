@@ -66,12 +66,6 @@ export const ElementsDemo: React.FC = () => {
         />
         
         <AuthButton
-          authType="google"
-          onPress={() => handlePress('Google')}
-          style={styles.buttonSpacing}
-        />
-        
-        <AuthButton
           authType="logout"
           onPress={() => handlePress('Logout')}
           style={styles.buttonSpacing}
