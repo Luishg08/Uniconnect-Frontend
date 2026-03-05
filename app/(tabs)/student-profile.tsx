@@ -11,7 +11,7 @@ export default function StudentProfileScreen() {
   const router = useRouter();
   const { isDesktop, isTablet } = useResponsive();
   const { data: profile, isLoading, isError } = useStudentProfile(Number(id));
-  const { sendConnectionRequest, isSendingRequest } = useConnections(); 
+  const { sendConnectionRequest, isSendingRequest } = useConnections();
 
 
   if (isLoading) {
@@ -34,7 +34,7 @@ export default function StudentProfileScreen() {
     );
   }
 
-   const handleSendConnectionRequest = () => {
+  const handleSendConnectionRequest = () => {
     const status = String(profile.connection_status || 'none').toLowerCase().trim();
     if (status === 'none') {
       sendConnectionRequest({ addressee_id: profile.id });
@@ -44,9 +44,8 @@ export default function StudentProfileScreen() {
   const getButtonConfig = () => {
     // Normalize the connection status to lowercase and trim
     const status = String(profile.connection_status || 'none').toLowerCase().trim();
-    
+
     switch (status) {
-      case 'connected':
       case 'accepted':
         return {
           text: 'Ya son compañeros',
@@ -56,7 +55,6 @@ export default function StudentProfileScreen() {
           backgroundColor: '#D9B97E'
         };
       case 'pending_sent':
-      case 'pendingsent':
         return {
           text: 'Solicitud enviada',
           icon: 'time-outline',
@@ -65,7 +63,6 @@ export default function StudentProfileScreen() {
           backgroundColor: '#D9B97E'
         };
       case 'pending_received':
-      case 'pendingreceived':
         return {
           text: 'Solicitud recibida - Revisa Vínculos',
           icon: 'mail-unread-outline',
@@ -73,7 +70,6 @@ export default function StudentProfileScreen() {
           textColor: '#1a1a1a',
           backgroundColor: '#D9B97E'
         };
-      case 'none':
       default:
         return {
           text: 'Enviar Solicitud de Conexión',
@@ -157,7 +153,7 @@ export default function StudentProfileScreen() {
             <Text style={styles.subtitle}>
               {profile.common_courses.length} {profile.common_courses.length === 1 ? 'materia' : 'materias'} compartidas
             </Text>
-            
+
             {profile.common_courses.map((course: any) => (
               <View style={styles.courseItem} key={course.id_course}>
                 <View style={styles.courseDot} />
@@ -173,10 +169,10 @@ export default function StudentProfileScreen() {
         )}
 
         {/* Botón de Enviar Solicitud de Conexión */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.connectionButton,
-            { 
+            {
               width: isDesktop ? "40%" : isTablet ? "40%" : "80%",
               backgroundColor: buttonConfig.backgroundColor
             },
@@ -184,9 +180,9 @@ export default function StudentProfileScreen() {
           ]}
           onPress={handleSendConnectionRequest}
           activeOpacity={0.8}
-          disabled={isSendingRequest || buttonConfig.disabled} 
+          disabled={isSendingRequest || buttonConfig.disabled}
         >
-          {isSendingRequest ? ( 
+          {isSendingRequest ? (
             <ActivityIndicator size="small" color="#1a1a1a" />
           ) : (
             <>
@@ -364,7 +360,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
   },
-   connectionButtonDisabled: {
+  connectionButtonDisabled: {
     opacity: 0.6,
   },
 });
