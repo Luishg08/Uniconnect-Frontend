@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Student } from "../types";
+import { Student, CommonCourse } from "../types";
 import { authService } from "../../auth/services/auth.service";
 
 interface StudentCardProps {
@@ -38,16 +38,16 @@ export const StudentCard = ({ student }: StudentCardProps) => {
           {student.program?.name || "Programa no asignado"}
         </Text>
 
-        {/* Listado de Materias (Enrollments) */}
+        {/* Materias en común */}
         <View style={styles.badgeContainer}>
-          {student.enrollments?.length > 0 ? (
-            student.enrollments.map((enroll) => (
-              <View key={enroll.id_enrollment} style={styles.badge}>
-                <Text style={styles.badgeText}>{enroll.course.name}</Text>
+          {student.common_courses && student.common_courses.length > 0 ? (
+            student.common_courses.map((course: CommonCourse) => (
+              <View key={course.id_course} style={styles.badge}>
+                <Text style={styles.badgeText}>{course.name}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.noCourses}>Sin materias inscritas</Text>
+            <Text style={styles.noCourses}>Sin materias en común</Text>
           )}
         </View>
       </View>

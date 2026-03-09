@@ -5,6 +5,6 @@ export const useStudents = (search?: string) => {
   return useQuery({
     queryKey: ['students', search],
     queryFn: () => studentService.getStudents({ search }),
-    placeholderData: (previousData) => previousData,
+    staleTime: 0,
   });
 };

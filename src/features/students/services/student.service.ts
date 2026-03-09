@@ -11,6 +11,10 @@ export const studentService = {
     id_course?: number 
   }): Promise<Student[]> => {
     const { data } = await api.get(STUDENT_ENDPOINTS.GET_ALL, { params: filters });
+    if (__DEV__) {
+      console.log('[getStudents] raw response count:', data?.length);
+      console.log('[getStudents] first item:', JSON.stringify(data?.[0]));
+    }
     return data;
   },
 

@@ -9,6 +9,11 @@ export interface Enrollment {
   course: Course;
 }
 
+export interface CommonCourse {
+  id_course: number;
+  name: string;
+}
+
 export interface Student {
   id_user: number;
   full_name: string;
@@ -17,6 +22,7 @@ export interface Student {
   id_program?: number;
   program?: { name: string };
   enrollments: Enrollment[];
+  common_courses?: CommonCourse[];
 }
 
 export interface UserProfile {
