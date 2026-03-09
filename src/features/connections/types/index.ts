@@ -31,3 +31,9 @@ export interface AcceptRejectResponse {
     respondend_at: string;
   };
 }
+
+export interface ConnectionStatus {
+  id_connection: number | null;
+  status: 'none' | 'pending' | 'accepted' | 'rejected';
+  is_requester?: boolean;
+}

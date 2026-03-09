@@ -4,14 +4,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStudentProfile } from "@/src/features/students/hooks/useStudentProfile";
 import { authService } from "@/src/features/auth/services/auth.service";
 import { useResponsive } from "@/src/hooks/useResponsive";
-import { useConnections } from "@/src/features/connections/hooks/useConnections";
+import { useConnectionStatus } from "@/src/features/connections/hooks/useConnections";
 
 export default function StudentProfileScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { isDesktop, isTablet } = useResponsive();
   const { data: profile, isLoading, isError } = useStudentProfile(Number(id));
-  const { sendConnectionRequest, isSendingRequest } = useConnections();
+  const {
+    connectionStatus,
+    isLoadingStatus,
+    sendConnectionRequest,
+    acceptConnectionRequest,
+    rejectConnectionRequest,
+    isSendingRequest,
+    isAccepting,
+    isRejecting,
+  } = useConnectionStatus(Number(id));
 
 
   if (isLoading) {
@@ -35,40 +44,45 @@ export default function StudentProfileScreen() {
   }
 
   const handleSendConnectionRequest = () => {
-    const status = String(profile.connection_status || 'none').toLowerCase().trim();
-    if (status === 'none') {
-      sendConnectionRequest({ addressee_id: profile.id });
+    const status = connectionStatus?.status || 'none';
+    if (status === 'none' || status === 'rejected') {
+      sendConnectionRequest({ addressee_id: Number(id) });
     }
   };
 
   const getButtonConfig = () => {
-    // Normalize the connection status to lowercase and trim
-    const status = String(profile.connection_status || 'none').toLowerCase().trim();
+    const status = connectionStatus?.status || 'none';
+    const isRequester = connectionStatus?.is_requester;
 
     switch (status) {
       case 'accepted':
         return {
-          text: 'Ya son compañeros',
+          text: 'Ya somos amigos',
           icon: 'checkmark-circle',
           disabled: true,
           textColor: '#1a1a1a',
-          backgroundColor: '#D9B97E'
+          backgroundColor: '#D9B97E',
+          showAcceptReject: false,
         };
-      case 'pending_sent':
+      case 'pending':
+        if (isRequester) {
+          return {
+            text: 'Solicitud pendiente',
+            icon: 'time-outline',
+            disabled: true,
+            textColor: '#1a1a1a',
+            backgroundColor: '#D9B97E',
+            showAcceptReject: false,
+          };
+        }
+        // is_requester === false: show accept/reject inline
         return {
-          text: 'Solicitud enviada',
-          icon: 'time-outline',
+          text: '',
+          icon: '',
           disabled: true,
           textColor: '#1a1a1a',
-          backgroundColor: '#D9B97E'
-        };
-      case 'pending_received':
-        return {
-          text: 'Solicitud recibida - Revisa Vínculos',
-          icon: 'mail-unread-outline',
-          disabled: true,
-          textColor: '#1a1a1a',
-          backgroundColor: '#D9B97E'
+          backgroundColor: '#D9B97E',
+          showAcceptReject: true,
         };
       default:
         return {
@@ -76,7 +90,8 @@ export default function StudentProfileScreen() {
           icon: 'people-outline',
           disabled: false,
           textColor: '#1a1a1a',
-          backgroundColor: '#D9B97E'
+          backgroundColor: '#D9B97E',
+          showAcceptReject: false,
         };
     }
   };
@@ -168,29 +183,59 @@ export default function StudentProfileScreen() {
           </View>
         )}
 
-        {/* Botón de Enviar Solicitud de Conexión */}
-        <TouchableOpacity
-          style={[
-            styles.connectionButton,
-            {
-              width: isDesktop ? "40%" : isTablet ? "40%" : "80%",
-              backgroundColor: buttonConfig.backgroundColor
-            },
-            (isSendingRequest || buttonConfig.disabled) && styles.connectionButtonDisabled
-          ]}
-          onPress={handleSendConnectionRequest}
-          activeOpacity={0.8}
-          disabled={isSendingRequest || buttonConfig.disabled}
-        >
-          {isSendingRequest ? (
-            <ActivityIndicator size="small" color="#1a1a1a" />
-          ) : (
-            <>
-              <Ionicons name={buttonConfig.icon as any} size={20} color={buttonConfig.textColor} style={styles.buttonIcon} />
-              <Text style={[styles.connectionButtonText, { color: buttonConfig.textColor }]}>{buttonConfig.text}</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {/* Botón de Conexión */}
+        {buttonConfig.showAcceptReject ? (
+          <View style={[
+            styles.acceptRejectContainer,
+            { width: isDesktop ? "40%" : isTablet ? "40%" : "80%" }
+          ]}>
+            <TouchableOpacity
+              style={[styles.acceptButton, isAccepting && styles.connectionButtonDisabled]}
+              onPress={() => acceptConnectionRequest(connectionStatus!.id_connection!)}
+              disabled={isAccepting || isRejecting}
+              activeOpacity={0.8}
+            >
+              {isAccepting
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.acceptButtonText}>Aceptar solicitud</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.rejectButton, isRejecting && styles.connectionButtonDisabled]}
+              onPress={() => rejectConnectionRequest(connectionStatus!.id_connection!)}
+              disabled={isAccepting || isRejecting}
+              activeOpacity={0.8}
+            >
+              {isRejecting
+                ? <ActivityIndicator size="small" color="#666" />
+                : <Text style={styles.rejectButtonText}>Rechazar</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.connectionButton,
+              {
+                width: isDesktop ? "40%" : isTablet ? "40%" : "80%",
+                backgroundColor: buttonConfig.backgroundColor
+              },
+              (isSendingRequest || buttonConfig.disabled) && styles.connectionButtonDisabled
+            ]}
+            onPress={handleSendConnectionRequest}
+            activeOpacity={0.8}
+            disabled={isSendingRequest || buttonConfig.disabled}
+          >
+            {isSendingRequest ? (
+              <ActivityIndicator size="small" color="#1a1a1a" />
+            ) : (
+              <>
+                <Ionicons name={buttonConfig.icon as any} size={20} color={buttonConfig.textColor} style={styles.buttonIcon} />
+                <Text style={[styles.connectionButtonText, { color: buttonConfig.textColor }]}>{buttonConfig.text}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -362,5 +407,43 @@ const styles = StyleSheet.create({
   },
   connectionButtonDisabled: {
     opacity: 0.6,
+  },
+  acceptRejectContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginHorizontal: 15,
+    marginBottom: 30,
+    marginTop: 10,
+    alignSelf: 'center',
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: '#2e7d32',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  acceptButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  rejectButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#666',
+    flexDirection: 'row',
+  },
+  rejectButtonText: {
+    color: '#aaa',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
