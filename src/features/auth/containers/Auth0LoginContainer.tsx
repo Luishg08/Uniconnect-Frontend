@@ -59,7 +59,7 @@ export const Auth0LoginContainer: React.FC = observer(() => {
       />
       
       <Text style={styles.infoText}>
-        ¿Atrapado? Presiona el botón anterior y luego el botón atrás en el navegador para cambiar de cuenta.
+        Solo cuenta institucional de la Universidad de Caldas
       </Text>
     </View>
   );
