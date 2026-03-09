@@ -16,6 +16,7 @@ export class AuthStore {
   } | null = null;
 
   isInitialized: boolean = false;
+  isRefreshing: boolean = false; // Guard against simultaneous refresh attempts
 
   constructor() {
     makeAutoObservable(this);
@@ -42,12 +43,19 @@ export class AuthStore {
     
     // Store Auth0 tokens with expiration calculation
     if (auth0TokensData) {
+      // Ensure expires_in has a reasonable default (24 hours = 86400 seconds)
+      const expiresIn = auth0TokensData.expires_in || 86400;
+      
+      // Validate that expires_in is a reasonable duration (at least 60 seconds, at most 30 days)
+      const validExpiresIn = Math.max(60, Math.min(expiresIn, 30 * 24 * 60 * 60));
+      
       this.auth0Tokens = {
         ...auth0TokensData,
-        expires_at: auth0TokensData.expires_in 
-          ? Date.now() + (auth0TokensData.expires_in * 1000)
-          : undefined
+        expires_in: validExpiresIn,
+        expires_at: Date.now() + (validExpiresIn * 1000)
       };
+      
+      console.log(`Token expiration set to ${validExpiresIn} seconds from now`);
     }
 
     // Persist to storage
@@ -72,6 +80,7 @@ export class AuthStore {
     this.user = null;
     this.error = null;
     this.auth0Tokens = null;
+    this.isRefreshing = false; // Reset refresh guard
     
     // Clear from storage
     this.clearFromStorage();

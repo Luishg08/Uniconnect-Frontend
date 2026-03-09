@@ -1,25 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { observer } from 'mobx-react-lite';
 import { AuthButton } from '@/src/components/elements';
 import { useAuth0Login } from '../hooks/useAuth0Login';
 import { authController } from '../controllers/AuthController';
 
-export const Auth0LoginContainer: React.FC = () => {
+export const Auth0LoginContainer: React.FC = observer(() => {
   const { promptAsync, isLoading, isReady } = useAuth0Login();
   
-  // State management for reactive UI updates
-  const [isAuthenticated, setIsAuthenticated] = useState(authController.isAuthenticated);
-  const [currentUser, setCurrentUser] = useState(authController.currentUser);
-  
-  useEffect(() => {
-    // Reactive state updates (will be replaced with MobX observer when TS issues resolved)
-    const interval = setInterval(() => {
-      setIsAuthenticated(authController.isAuthenticated);
-      setCurrentUser(authController.currentUser);
-    }, 100);
-    
-    return () => clearInterval(interval);
-  }, []);
+  // MobX observer handles reactive updates automatically
+  const isAuthenticated = authController.isAuthenticated;
+  const currentUser = authController.currentUser;
 
   // Business logic handlers
   const handleAuth0Login = () => {
@@ -61,7 +52,7 @@ export const Auth0LoginContainer: React.FC = () => {
       </Text>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -5,23 +5,31 @@ import { authStore } from '@/src/features/auth';
 import { AppRoot } from '@/src/components/AppRoot';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import { observer } from 'mobx-react-lite';
+import { reaction } from 'mobx';
 
 const queryClient = new QueryClient();
 
-function RootNavigation() {
+const RootNavigationWrapper = observer(() => {
   const [token, setToken] = useState(authStore.accessToken);
   const segments = useSegments();
   const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
 
-  // Simple reactive update for token changes
+  // Subscribe to auth state changes using MobX
   useEffect(() => {
-    const interval = setInterval(() => {
-      setToken(authStore.accessToken);
-    }, 100);
-    
-    return () => clearInterval(interval);
+    const disposer = reaction(
+      () => authStore.accessToken,
+      (nextToken) => {
+        setToken(nextToken);
+      },
+      { fireImmediately: true }
+    );
+
+    return () => {
+      disposer();
+    };
   }, []);
 
   useEffect(() => {
@@ -75,13 +83,13 @@ function RootNavigation() {
   }, []);
 
   return <Stack screenOptions={{ headerShown: false }} />;
-}
+});
 
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppRoot>
-        <RootNavigation />
+        <RootNavigationWrapper />
       </AppRoot>
     </QueryClientProvider>
   );

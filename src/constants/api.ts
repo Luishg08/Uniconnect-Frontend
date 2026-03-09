@@ -21,7 +21,8 @@ api.interceptors.request.use(
 
     if (token) {
       // Check if token is expired and try to refresh
-      if (authStore.isTokenExpired && authStore.hasRefreshToken) {
+      // But only if we're not already refreshing (prevents circular/infinite refresh attempts)
+      if (authStore.isTokenExpired && authStore.hasRefreshToken && !authStore.isRefreshing) {
         console.log('Token expired, attempting refresh before request...');
         
         // Import authController dynamically to avoid circular dependency
@@ -68,7 +69,8 @@ api.interceptors.response.use(
       const token = authStore.accessToken;
       
       // Only attempt refresh if user was authenticated and has refresh token
-      if (token && authStore.hasRefreshToken) {
+      // AND if we're not already refreshing (prevents circular/infinite refresh attempts)
+      if (token && authStore.hasRefreshToken && !authStore.isRefreshing) {
         originalRequest._retry = true;
         
         console.log('Received 401, attempting token refresh...');

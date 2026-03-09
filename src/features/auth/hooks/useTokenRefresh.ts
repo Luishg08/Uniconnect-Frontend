@@ -4,9 +4,17 @@ import { authStore } from '../store/AuthStore';
 
 export function useTokenRefresh() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshingRef = useRef<boolean>(false); // Guard against concurrent refreshes
+  const lastRefreshTimestamp = useRef<number>(0); // Prevent rapid refreshes
 
   useEffect(() => {
     const checkAndRefreshTokens = async () => {
+      // Prevent concurrent refresh attempts
+      if (isRefreshingRef.current) {
+        console.log('Refresh already in progress, skipping...');
+        return;
+      }
+
       // Only check if user is authenticated
       if (!authStore.isAuthenticated) {
         return;
@@ -19,16 +27,29 @@ export function useTokenRefresh() {
         : false;
 
       if (shouldRefresh && authStore.hasRefreshToken) {
+        // Prevent refreshing more than once per minute (safety measure)
+        const timeSinceLastRefresh = Date.now() - lastRefreshTimestamp.current;
+        if (timeSinceLastRefresh < 60 * 1000) {
+          console.log('Refresh attempted too soon, skipping...');
+          return;
+        }
+
         console.log('Tokens expiring soon, refreshing...');
-        await authController.refreshTokens();
+        isRefreshingRef.current = true;
+        try {
+          await authController.refreshTokens();
+          lastRefreshTimestamp.current = Date.now();
+        } finally {
+          isRefreshingRef.current = false;
+        }
       }
     };
 
     // Check immediately
     checkAndRefreshTokens();
 
-    // Set up periodic checks every 2 minutes
-    intervalRef.current = setInterval(checkAndRefreshTokens, 2 * 60 * 1000);
+    // Set up periodic checks every 5 minutes (instead of 2 minutes for better performance)
+    intervalRef.current = setInterval(checkAndRefreshTokens, 5 * 60 * 1000);
 
     return () => {
       if (intervalRef.current) {

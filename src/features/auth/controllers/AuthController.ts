@@ -93,6 +93,12 @@ export class AuthController {
 
   async refreshTokens(): Promise<boolean> {
     try {
+      // Check if already refreshing to prevent simultaneous refresh attempts
+      if (authStore.isRefreshing) {
+        console.log('Already refreshing tokens, skipping duplicate refresh attempt');
+        return false;
+      }
+
       // Check if we have a refresh token
       if (!authStore.hasRefreshToken || !authStore.auth0Tokens?.refresh_token || !authStore.user?.id_user) {
         console.log('No refresh token available or user data missing');
@@ -100,6 +106,7 @@ export class AuthController {
       }
 
       console.log('Attempting to refresh tokens...');
+      authStore.isRefreshing = true;
       authStore.setLoading(true);
       authStore.clearError();
 
@@ -139,6 +146,7 @@ export class AuthController {
       
       return false;
     } finally {
+      authStore.isRefreshing = false;
       authStore.setLoading(false);
     }
   }
