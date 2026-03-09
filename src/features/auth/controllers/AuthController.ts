@@ -2,6 +2,9 @@ import { authStore } from '../store/AuthStore';
 import { authService } from '../services/auth.service';
 import { showToast } from '@/src/lib/toast';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { AUTH0_CONFIG } from '../constants/auth0';
+import { makeRedirectUri } from 'expo-auth-session';
 
 export class AuthController {
   
@@ -77,10 +80,31 @@ export class AuthController {
     try {
       authStore.setLoading(true);
       
-      // Clear local authentication state
+      // Clear local authentication state first
       authStore.clearAuth();
 
-      showToast.success('Sesión cerrada', 'Has cerrado sesión correctamente');
+      // Close Auth0 session on their servers to allow account switching
+      try {
+        const redirectUri = makeRedirectUri({
+          scheme: 'uniconnect',
+          path: 'login',
+        });
+        
+        const logoutUrl = `https://${AUTH0_CONFIG.domain}/v2/logout?client_id=${AUTH0_CONFIG.clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
+        
+        // Open Auth0 logout URL in browser (clears Auth0 session cookies)
+        await WebBrowser.openBrowserAsync(logoutUrl);
+        
+        console.log('Auth0 session terminated successfully');
+      } catch (auth0Error) {
+        // Log but don't fail if Auth0 logout has issues
+        console.log('Note: Auth0 logout URL could not be opened, but local session cleared');
+      }
+
+      showToast.success('Sesión cerrada', 'Has cerrado sesión correctamente. Ya puedes cambiar de cuenta.');
+      
+      // Navigate to login screen
+      router.replace('/(auth)/login');
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al cerrar sesión';

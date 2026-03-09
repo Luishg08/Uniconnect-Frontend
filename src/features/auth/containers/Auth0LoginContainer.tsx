@@ -6,7 +6,7 @@ import { useAuth0Login } from '../hooks/useAuth0Login';
 import { authController } from '../controllers/AuthController';
 
 export const Auth0LoginContainer: React.FC = observer(() => {
-  const { promptAsync, isLoading, isReady } = useAuth0Login();
+  const { promptAsync, switchAccount, isLoading, isReady } = useAuth0Login();
   
   // MobX observer handles reactive updates automatically
   const isAuthenticated = authController.isAuthenticated;
@@ -15,6 +15,10 @@ export const Auth0LoginContainer: React.FC = observer(() => {
   // Business logic handlers
   const handleAuth0Login = () => {
     promptAsync();
+  };
+
+  const handleSwitchAccount = () => {
+    switchAccount();
   };
 
   const handleLogout = () => {
@@ -33,6 +37,13 @@ export const Auth0LoginContainer: React.FC = observer(() => {
           onPress={handleLogout}
           disabled={isLoading}
         />
+        <AuthButton
+          authType="auth0"
+          onPress={handleSwitchAccount}
+          disabled={isLoading}
+          customTitle="Cambiar de cuenta"
+          style={styles.switchButton}
+        />
       </View>
     );
   }
@@ -48,7 +59,7 @@ export const Auth0LoginContainer: React.FC = observer(() => {
       />
       
       <Text style={styles.infoText}>
-        Autenticación segura con Auth0 Universal Login
+        ¿Atrapado? Presiona el botón anterior y luego el botón atrás en el navegador para cambiar de cuenta.
       </Text>
     </View>
   );
@@ -65,11 +76,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
+  switchButton: {
+    marginTop: 12,
+    opacity: 0.8,
+  },
   infoText: {
-    color: '#666',
+    color: '#D9B97E',
     fontSize: 12,
-    marginTop: 8,
+    marginTop: 12,
     textAlign: 'center',
     fontStyle: 'italic',
+    fontWeight: '600',
+    lineHeight: 18,
   },
 });

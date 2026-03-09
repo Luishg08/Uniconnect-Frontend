@@ -58,13 +58,14 @@ export function useAuth0Login() {
       redirectUri,
       extraParams: pkce
         ? {
-            audience: AUTH0_CONFIG.audience, // Move audience to extraParams
-            // Use PKCE with code_challenge from our generated pair
+            audience: AUTH0_CONFIG.audience,
             code_challenge: pkce.codeChallenge,
             code_challenge_method: 'S256',
+            prompt: 'login', // Force login screen, allows changing account
           }
         : {
             audience: AUTH0_CONFIG.audience,
+            prompt: 'login',
           },
     },
     {
@@ -112,6 +113,44 @@ export function useAuth0Login() {
     }
   }, [response, redirectUri, pkce?.codeVerifier]);
 
+  // Function to logout and clear Auth0 session
+  const logoutFromAuth0 = async () => {
+    try {
+      // Close Auth0 session on their servers
+      const logoutUrl = `https://${AUTH0_CONFIG.domain}/v2/logout?client_id=${AUTH0_CONFIG.clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
+      
+      // Open the logout URL in a browser
+      await WebBrowser.openBrowserAsync(logoutUrl);
+      
+      console.log('Auth0 logout initiated');
+    } catch (error) {
+      console.error('Error during Auth0 logout:', error);
+      // Continue with local logout even if Auth0 logout fails
+    }
+  };
+
+  // Function to switch account by clearing Auth0 session and restarting login
+  const switchAccount = async () => {
+    try {
+      authStore.setLoading(true);
+      authStore.clearError();
+      
+      // Clear Auth0 session and redirect to login screen
+      const logoutUrl = `https://${AUTH0_CONFIG.domain}/v2/logout?client_id=${AUTH0_CONFIG.clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
+      
+      // Open logout URL to clear cookies
+      await WebBrowser.openBrowserAsync(logoutUrl);
+      
+      // After logout, open login with fresh session
+      setTimeout(() => {
+        promptAsync();
+      }, 500);
+    } catch (error) {
+      console.error('Error switching account:', error);
+      authStore.setLoading(false);
+    }
+  };
+
   // Return the prompt function and loading state
   return {
     promptAsync: () => {
@@ -119,6 +158,8 @@ export function useAuth0Login() {
       authStore.clearError();
       promptAsync();
     },
+    switchAccount,
+    logoutFromAuth0,
     isLoading: authStore.isLoading,
     isReady: !!request && !!pkce,
   };
