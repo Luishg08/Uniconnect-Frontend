@@ -17,6 +17,7 @@ export default function ConnectionsScreen() {
     pendingRequests,
     isLoading,
     isError,
+    refetch,
   } = useConnections();
   const queryClient = useQueryClient();
 
@@ -24,9 +25,9 @@ export default function ConnectionsScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // React Query automáticamente refetch cuando se invalida
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   if (isLoading) {
     return (
