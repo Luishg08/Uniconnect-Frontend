@@ -4,6 +4,7 @@ import {
     AcceptRejectResponse,
     ConnectionRequest,
     ConnectionResponse,
+    ConnectionStatus,
     SendConnectionRequestDto,
 } from '../types';
 
@@ -56,6 +57,13 @@ class ConnectionService {
     async deleteConnection(connectionId: number): Promise<AcceptRejectResponse> {
         const response = await api.delete<AcceptRejectResponse>(
             CONNECTION_ENDPOINTS.DELETE_CONNECTION.replace(':id', connectionId.toString())
+        );
+        return response.data;
+    }
+
+    async getConnectionStatus(userId: number): Promise<ConnectionStatus> {
+        const response = await api.get<ConnectionStatus>(
+            `${CONNECTION_ENDPOINTS.GET_STATUS}/${userId}`
         );
         return response.data;
     }

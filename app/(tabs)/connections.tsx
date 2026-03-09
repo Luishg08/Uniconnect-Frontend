@@ -10,25 +10,24 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useConnections } from '@/src/features/connections/hooks/useConnections';
 import { ConnectionRequestCard } from '@/src/features/connections/components/ConnectionRequestCard';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ConnectionsScreen() {
   const {
     pendingRequests,
     isLoading,
     isError,
-    acceptConnectionRequest,
-    rejectConnectionRequest,
-    isAccepting,
-    isRejecting,
+    refetch,
   } = useConnections();
+  const queryClient = useQueryClient();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // React Query automáticamente refetch cuando se invalida
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -70,10 +69,7 @@ export default function ConnectionsScreen() {
           renderItem={({ item }) => (
             <ConnectionRequestCard
               request={item}
-              onAccept={() => acceptConnectionRequest(item.id_connection)}
-              onReject={() => rejectConnectionRequest(item.id_connection)}
-              isAccepting={isAccepting}
-              isRejecting={isRejecting}
+              onUpdated={() => queryClient.invalidateQueries({ queryKey: ['pending-connections'] })}
             />
           )}
           contentContainerStyle={styles.listContent}
