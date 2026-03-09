@@ -11,6 +11,7 @@ export const Auth0LoginContainer: React.FC = observer(() => {
   // MobX observer handles reactive updates automatically
   const isAuthenticated = authController.isAuthenticated;
   const currentUser = authController.currentUser;
+  const error = authController.error;
 
   // Business logic handlers
   const handleAuth0Login = () => {
@@ -58,6 +59,14 @@ export const Auth0LoginContainer: React.FC = observer(() => {
         disabled={!isReady}
       />
       
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            ❌ {error}
+          </Text>
+        </View>
+      )}
+      
       <Text style={styles.infoText}>
         Solo cuenta institucional de la Universidad de Caldas
       </Text>
@@ -79,6 +88,22 @@ const styles = StyleSheet.create({
   switchButton: {
     marginTop: 12,
     opacity: 0.8,
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    borderLeftColor: '#d32f2f',
+    borderLeftWidth: 4,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginVertical: 16,
+    maxWidth: 300,
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
   infoText: {
     color: '#D9B97E',

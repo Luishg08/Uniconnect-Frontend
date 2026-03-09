@@ -25,13 +25,17 @@ export class AuthController {
       console.log('BFF Response received:', {
         success: fenResponse.success,
         statusCode: fenResponse.statusCode,
+        message: fenResponse.message,
         hasData: !!fenResponse.data,
       });
 
       // Validate FEN response format
       if (!fenResponse.success || fenResponse.statusCode !== 200) {
         console.error('BFF returned error:', fenResponse.message);
-        throw new Error(fenResponse.message || 'Authentication failed');
+        const errorDetail = fenResponse.message || 'Autenticación fallida';
+        authStore.setError(errorDetail);
+        showToast.error('Error de autenticación', errorDetail);
+        return; // No lanzar excepción, solo mostrar el error
       }
 
       // Extract data from FEN response
@@ -226,6 +230,13 @@ export class AuthController {
    */
   get currentUser() {
     return authStore.user;
+  }
+
+  /**
+   * Get current error message
+   */
+  get error() {
+    return authStore.error;
   }
 }
 
