@@ -1,12 +1,15 @@
 import axios from 'axios';
 import { authStore } from '@/src/features/auth/store/AuthStore';
 
-if (!process.env.EXPO_PUBLIC_API_URL) {
-  console.warn("Falta configurar EXPO_PUBLIC_API_URL en el archivo .env");
+const envApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+const resolvedBaseUrl = (envApiUrl || 'http://10.0.2.2:8007/api').replace(/\/+$/, '');
+
+if (!envApiUrl) {
+  console.warn(`Falta configurar EXPO_PUBLIC_API_URL en .env, usando fallback: ${resolvedBaseUrl}`);
 }
 
 export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.41:3000/api",
+  baseURL: resolvedBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,9 +50,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error?.config;
+    const requestPath = String(error?.config?.url || '');
+    const isNotifications404 =
+      error?.response?.status === 404 && /\/notifications(\/|$)/.test(requestPath);
+
+    if (error?.response?.status === 404 && !isNotifications404) {
+      console.error('API 404', {
+        baseURL: error?.config?.baseURL,
+        path: error?.config?.url,
+        fullUrl: `${error?.config?.baseURL || ''}${error?.config?.url || ''}`,
+        response: error?.response?.data,
+      });
+    }
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error?.response?.status === 401 && originalRequest && !originalRequest._retry) {
       const token = authStore.accessToken;
       
       // Only attempt refresh if user was authenticated and has refresh token

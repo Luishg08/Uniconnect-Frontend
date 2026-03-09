@@ -39,7 +39,7 @@ export default function CommunityScreen() {
           renderItem={({ item }) => <StudentCard student={item} />}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No se encontraron estudiantes</Text>
+            <Text style={styles.emptyText}>No se encontraron compañeros con esas materias.</Text>
           }
         />
       )}

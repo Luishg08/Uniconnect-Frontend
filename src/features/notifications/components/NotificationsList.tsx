@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     RefreshControl,
 } from 'react-native';
+import axios from 'axios';
 import { notificationsService } from '../services/notifications.service';
 import { Notification } from '../types';
 import { authStore } from '@/src/features/auth';
@@ -36,6 +37,13 @@ export function NotificationsList() {
             setUnreadCount(unread);
 
         } catch (error) {
+            // Backend without notifications endpoint should not break the screen.
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                setNotifications([]);
+                setUnreadCount(0);
+                return;
+            }
+
             console.error('Error cargando notificaciones', error);
             setNotifications([]);
             setUnreadCount(0);

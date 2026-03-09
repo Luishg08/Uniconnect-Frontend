@@ -17,6 +17,7 @@ import { NotificationIcon } from "src/features/notifications/components/Notifica
 import { useEffect } from "react";
 import { NOTIFICATIONS_ENDPOINTS } from "src/features/notifications/api/endpoints";
 import { api } from "../constants/api";
+import axios from 'axios';
 
 export const Navbar = () => {
   const user = authStore.user;
@@ -65,6 +66,13 @@ export const Navbar = () => {
         const unreadCount = data.filter((n: any) => !n.is_read).length;
         setUnreadNotifications(unreadCount);
       } catch (err) {
+        // Avoid LogBox noise if backend route is not implemented yet.
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setNotifications([]);
+          setUnreadNotifications(0);
+          return;
+        }
+
         console.error("Error fetching notifications:", err);
         setNotifications([]);
         setUnreadNotifications(0);
