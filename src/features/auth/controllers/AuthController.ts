@@ -52,20 +52,17 @@ export class AuthController {
       console.log('Valid FEN response received, updating AuthStore...');
       // Update AuthStore with the received data (MVC Local pattern)
       authStore.setAuth(access_token, user, auth0_tokens);
-      
-      // Store Auth0 tokens for potential future use (refresh tokens, etc.)
-      console.log('Auth0 tokens stored:', {
-        hasAccessToken: !!auth0_tokens?.access_token,
-        hasIdToken: !!auth0_tokens?.id_token,
-        hasRefreshToken: !!auth0_tokens?.refresh_token,
-        expiresIn: auth0_tokens?.expires_in
-      });
 
       showToast.success('¡Éxito!', 'Autenticación completada correctamente');
-      
-      console.log('Navigating to authenticated area...');
-      // Navigate to authenticated area
-      router.replace('/(tabs)');
+
+      // Route based on onboarding status from the backend
+      if (user.needsOnboarding) {
+        console.log('User needs onboarding, navigating to onboarding screen...');
+        router.replace('/(auth)/onboarding');
+      } else {
+        console.log('Navigating to authenticated area...');
+        router.replace('/(tabs)');
+      }
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error en la autenticación';
@@ -215,6 +212,51 @@ export class AuthController {
       } else {
         console.log('Stored session is valid');
       }
+
+      // Fetch fresh profile to get up-to-date needsOnboarding status
+      if (authStore.isAuthenticated) {
+        try {
+          const profile = await authService.getUserProfile();
+          authStore.setNeedsOnboarding(profile.needsOnboarding ?? false);
+        } catch {
+          // Use persisted needsOnboarding — don't fail initialization
+        }
+      }
+    }
+  }
+
+  async completeOnboarding(id_program: number, current_semester: number): Promise<void> {
+    try {
+      authStore.setLoading(true);
+      authStore.clearError();
+      await authService.completeOnboarding(id_program, current_semester);
+      authStore.setNeedsOnboarding(false);
+      showToast.success('¡Listo!', 'Perfil académico guardado correctamente');
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 400) {
+        const msg = error?.response?.data?.message || 'Verifica los datos ingresados.';
+        authStore.setError(msg);
+        throw error;
+      } else if (status === 404) {
+        authStore.setError('Programa no válido, selecciona otro.');
+        throw error;
+      } else if (status === 409) {
+        // Already completed — treat as success
+        authStore.setNeedsOnboarding(false);
+        router.replace('/(tabs)');
+      } else if (status === 401) {
+        authStore.clearAuth();
+        router.replace('/(auth)/login');
+      } else {
+        const msg = error instanceof Error ? error.message : 'Error al guardar el perfil';
+        authStore.setError(msg);
+        showToast.error('Error', msg);
+        throw error;
+      }
+    } finally {
+      authStore.setLoading(false);
     }
   }
 

@@ -12,6 +12,7 @@ const queryClient = new QueryClient();
 
 const RootNavigationWrapper = observer(() => {
   const [token, setToken] = useState(authStore.accessToken);
+  const [needsOnboarding, setNeedsOnboarding] = useState(authStore.needsOnboarding);
   const segments = useSegments();
   const router = useRouter();
 
@@ -20,9 +21,10 @@ const RootNavigationWrapper = observer(() => {
   // Subscribe to auth state changes using MobX
   useEffect(() => {
     const disposer = reaction(
-      () => authStore.accessToken,
-      (nextToken) => {
+      () => ({ token: authStore.accessToken, needsOnboarding: authStore.needsOnboarding }),
+      ({ token: nextToken, needsOnboarding: nextNeeds }) => {
         setToken(nextToken);
+        setNeedsOnboarding(nextNeeds);
       },
       { fireImmediately: true }
     );
@@ -40,16 +42,19 @@ const RootNavigationWrapper = observer(() => {
     if (!isMounted) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inOnboarding = inAuthGroup && (segments as string[])[1] === 'onboarding';
 
     setTimeout(() => {
       if (!token && !inAuthGroup) {
         router.replace('/(auth)/login');
-      } else if (token && inAuthGroup) {
+      } else if (token && needsOnboarding && !inOnboarding) {
+        router.replace('/(auth)/onboarding');
+      } else if (token && !needsOnboarding && inAuthGroup) {
         router.replace('/(tabs)');
       }
     }, 1);
 
-  }, [token, segments, isMounted]);
+  }, [token, needsOnboarding, segments, isMounted]);
 
   useEffect(() => {
     async function getExpoToken() {

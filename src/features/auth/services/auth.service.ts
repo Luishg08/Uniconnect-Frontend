@@ -1,4 +1,5 @@
 import { api } from '@/src/constants/api';
+import { AUTH_ENDPOINTS } from '../api/endpoints';
 
 export const authService = {
   
@@ -67,5 +68,21 @@ export const authService = {
     }
 
     return `data:image/jpeg;base64,${image}`;
-  }
+  },
+
+  getUserProfile: async (): Promise<{
+    id: number;
+    full_name: string;
+    email: string;
+    picture?: string;
+    needsOnboarding: boolean;
+    [key: string]: any;
+  }> => {
+    const { data } = await api.get(AUTH_ENDPOINTS.USER_PROFILE);
+    return data;
+  },
+
+  completeOnboarding: async (id_program: number, current_semester: number): Promise<void> => {
+    await api.post(AUTH_ENDPOINTS.ONBOARDING, { id_program, current_semester });
+  },
 };
