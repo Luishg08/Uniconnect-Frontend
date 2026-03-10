@@ -6,6 +6,7 @@ export class AuthStore {
   user: any | null = null; // Will be replaced with UserProfile interface in Phase 4
   isLoading: boolean = false;
   error: string | null = null;
+  needsOnboarding: boolean = false;
   
   auth0Tokens: {
     access_token?: string;
@@ -40,6 +41,7 @@ export class AuthStore {
     this.accessToken = token;
     this.user = userData;
     this.error = null;
+    this.needsOnboarding = userData?.needsOnboarding ?? false;
     
     // Store Auth0 tokens with expiration calculation
     if (auth0TokensData) {
@@ -80,6 +82,7 @@ export class AuthStore {
     this.user = null;
     this.error = null;
     this.auth0Tokens = null;
+    this.needsOnboarding = false;
     this.isRefreshing = false; // Reset refresh guard
     
     // Clear from storage
@@ -94,6 +97,11 @@ export class AuthStore {
     this.persistToStorage();
   }
 
+  setNeedsOnboarding(value: boolean) {
+    this.needsOnboarding = value;
+    this.persistToStorage();
+  }
+
   private async initializeFromStorage() {
     try {
       const storedAuth = await AsyncStorage.getItem('uniconnect-auth');
@@ -104,6 +112,7 @@ export class AuthStore {
         this.accessToken = authData.accessToken;
         this.user = authData.user;
         this.auth0Tokens = authData.auth0Tokens;
+        this.needsOnboarding = authData.needsOnboarding ?? false;
         
         console.log('Auth state restored from storage');
       }
@@ -120,6 +129,7 @@ export class AuthStore {
         accessToken: this.accessToken,
         user: this.user,
         auth0Tokens: this.auth0Tokens,
+        needsOnboarding: this.needsOnboarding,
       };
       
       await AsyncStorage.setItem('uniconnect-auth', JSON.stringify(authData));

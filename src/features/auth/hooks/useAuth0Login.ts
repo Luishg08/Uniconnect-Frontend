@@ -14,8 +14,9 @@ WebBrowser.maybeCompleteAuthSession();
 export function useAuth0Login() {
   const [pkce, setPkce] = useState<{ codeVerifier: string; codeChallenge: string } | null>(null);
 
+  // Solo Expo Go usa appOwnership === 'expo' o 'guest'.
+  // Dev client y builds nativas usan el scheme propio (uniconnect://).
   const isExpoGo =
-    Constants.executionEnvironment === 'storeClient' ||
     Constants.appOwnership === 'expo' ||
     Constants.appOwnership === 'guest';
 
