@@ -1,23 +1,18 @@
 import { API_BASE_URL } from '@/src/constants/api';
 
 export const notificationsEndpoints = {
-  // Obtener todas las notificaciones del usuario
-  getUserNotifications: (userId: number, isRead?: boolean) => {
-    const url = `${API_BASE_URL}/notifications/user/${userId}`;
-    return isRead !== undefined ? `${url}?is_read=${isRead}` : url;
-  },
+  // Obtener todas las notificaciones del usuario (usa JWT para identificar usuario)
+  getUserNotifications: () => `${API_BASE_URL}/notifications`,
   
-  // Contar notificaciones no leídas
-  getUnreadCount: (userId: number) =>
-    `${API_BASE_URL}/notifications/user/${userId}/unread-count`,
+  // Contar notificaciones no leídas (usa JWT para identificar usuario)
+  getUnreadCount: () => `${API_BASE_URL}/notifications/unread-count`,
   
   // Marcar notificación como leída
   markAsRead: (notificationId: number) =>
     `${API_BASE_URL}/notifications/${notificationId}/read`,
   
-  // Marcar todas como leídas
-  markAllAsRead: (userId: number) =>
-    `${API_BASE_URL}/notifications/user/${userId}/read-all`,
+  // Marcar todas como leídas (usa JWT para identificar usuario)
+  markAllAsRead: () => `${API_BASE_URL}/notifications/read-all`,
   
   // Expo Push Token (mantener compatibilidad)
   registerExpoPushToken: () =>

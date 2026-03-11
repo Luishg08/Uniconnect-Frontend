@@ -52,6 +52,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     groupId,
     userId,
     token,
+    userFullName,
     serverUrl,
   });
 

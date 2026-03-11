@@ -14,16 +14,18 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 }) => {
   const getIcon = () => {
     switch (notification.notification_type) {
+      case 'connection_request':
+        return { name: 'person-add' as const, color: '#D9B97E' };
+      case 'message':
+        return { name: 'chatbubble' as const, color: '#10B981' };
       case 'group_invitation':
         return { name: 'mail' as const, color: '#3B82F6' };
-      case 'new_message':
-        return { name: 'chatbubble' as const, color: '#10B981' };
-      case 'invitation_accepted':
+      case 'group_invitation_accepted':
         return { name: 'checkmark-circle' as const, color: '#8B5CF6' };
-      case 'new_member':
-        return { name: 'person-add' as const, color: '#F59E0B' };
+      case 'user_joined_group':
+        return { name: 'people' as const, color: '#F59E0B' };
       default:
-        return { name: 'notifications' as const, color: '#6B7280' };
+        return { name: 'notifications' as const, color: '#D9B97E' };
     }
   };
 
@@ -81,14 +83,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#2a2a2a',
   },
   unread: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: '#2a2a2a',
   },
   iconContainer: {
     width: 48,
@@ -103,7 +105,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 15,
-    color: '#111827',
+    color: '#FFFFFF',
     lineHeight: 20,
     marginBottom: 4,
   },
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#D9B97E',
     marginLeft: 8,
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { useAppInitialization, useTokenRefresh } from '@/src/features/auth';
+import { useAppInitialization, useTokenRefresh, authStore } from '@/src/features/auth';
+import { useInitNotifications } from '@/src/features/notifications/hooks/useInitNotifications';
 
 interface AppRootProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
   const { isInitializing, initializationError } = useAppInitialization();
   
   useTokenRefresh();
+  useInitNotifications(authStore.accessToken);
 
   if (isInitializing) {
     return (

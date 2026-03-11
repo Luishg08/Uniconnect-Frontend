@@ -14,10 +14,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useResponsive } from "../hooks/useResponsive";
 import { useConnections } from "../features/connections/hooks/useConnections";
 import { NotificationIcon } from "src/features/notifications/components/NotificationIcon";
-import { useEffect } from "react";
-import { notificationsEndpoints } from "src/features/notifications/api/endpoints";
-import { api } from "../constants/api";
-import axios from 'axios';
 
 export const Navbar = () => {
   const user = authStore.user;
@@ -25,10 +21,6 @@ export const Navbar = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const { isMobile } = useResponsive();
   const { pendingRequests } = useConnections();
-
-  // Estado de notificaciones
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
 
   const handleLogout = () => {
     authController.logout();
@@ -45,42 +37,6 @@ export const Navbar = () => {
     if (image.startsWith("http://") || image.startsWith("https://")) return image;
     return `data:image/jpeg;base64,${image}`;
   };
-
-  // ─── Obtener notificaciones del backend ─────────────────────────────────
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = authStore.accessToken; // obtiene el token del store
-        if (!token) return; // si no hay token, salir
-
-        const res = await api.get(notificationsEndpoints.getUserNotifications(user.id_user), {
-          headers: {
-            Authorization: `Bearer ${token}`, // enviar token
-          },
-        });
-
-        const data = res.data || [];
-        setNotifications(data);
-
-        // Contar solo las no leídas
-        const unreadCount = data.filter((n: any) => !n.is_read).length;
-        setUnreadNotifications(unreadCount);
-      } catch (err) {
-        // Avoid LogBox noise if backend route is not implemented yet.
-        if (axios.isAxiosError(err) && err.response?.status === 404) {
-          setNotifications([]);
-          setUnreadNotifications(0);
-          return;
-        }
-
-        console.error("Error fetching notifications:", err);
-        setNotifications([]);
-        setUnreadNotifications(0);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
 
   return (
     <View style={styles.navbar}>

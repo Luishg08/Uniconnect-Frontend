@@ -7,16 +7,18 @@ interface UseChatOptions {
   groupId: number;
   userId: number;
   token: string;
+  userFullName: string;
   serverUrl?: string;
 }
 
-export const useChat = ({ groupId, userId, token, serverUrl }: UseChatOptions) => {
+export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: UseChatOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [typingUsers, setTypingUsers] = useState<TypingData[]>([]);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingMessagesRef = useRef<Set<string>>(new Set()); // Para rastrear mensajes optimistas
 
   // Cargar mensajes iniciales
   const loadMessages = useCallback(async () => {
@@ -53,7 +55,41 @@ export const useChat = ({ groupId, userId, token, serverUrl }: UseChatOptions) =
 
     // Escuchar nuevos mensajes
     const handleNewMessage = (message: Message) => {
-      setMessages((prev) => [...prev, message]);
+      
+      // Si es un mensaje que ya agregamos optimísticamente, no lo duplicamos
+      if (pendingMessagesRef.current.has(message.text_content.trim())) {
+        pendingMessagesRef.current.delete(message.text_content.trim());
+        // Reemplazar el mensaje temporal con el del servidor (tiene id_message real)
+        setMessages((prev) => {
+          const tempIndex = prev.findIndex(
+            (msg) => msg.id_message < 0 && msg.text_content === message.text_content
+          );
+          if (tempIndex >= 0) {
+            const newMessages = [...prev];
+            // Asegurar que el mensaje del servidor tenga la info correcta de membership
+            const confirmedMessage = {
+              ...message,
+              membership: message.membership || {
+                user: {
+                  id_user: userId,
+                  full_name: userFullName,
+                  picture: '',
+                },
+                group: {
+                  id_group: groupId,
+                  name: '',
+                },
+              },
+            };
+            newMessages[tempIndex] = confirmedMessage;
+            return newMessages;
+          }
+          return [...prev, message];
+        });
+      } else {
+        // Mensaje de otro usuario o mensaje que no fue optimista
+        setMessages((prev) => [...prev, message]);
+      }
     };
 
     // Escuchar ediciones
@@ -114,8 +150,37 @@ export const useChat = ({ groupId, userId, token, serverUrl }: UseChatOptions) =
       attachments,
     };
 
+    // Crear mensaje optimista para mostrar inmediatamente en la UI
+    const optimisticMessage: Message = {
+      id_message: -Date.now(), // ID temporal negativo
+      id_membership: -1, // Temporal
+      text_content: text.trim(),
+      attachments,
+      send_at: new Date().toISOString(),
+      is_edited: false,
+      edited_at: null,
+      membership: {
+        user: {
+          id_user: userId,
+          full_name: userFullName,
+          picture: '', // No tenemos la foto, pero no es crítico
+        },
+        group: {
+          id_group: groupId,
+          name: '', // No es necesario para el renderizado
+        },
+      },
+    };
+
+    // Agregar mensaje optimista a la UI inmediatamente
+    setMessages((prev) => [...prev, optimisticMessage]);
+    
+    // Marcar este mensaje como pendiente
+    pendingMessagesRef.current.add(text.trim());
+
+    // Enviar al servidor
     websocketService.sendMessage(messageData);
-  }, []);
+  }, [userId, userFullName, groupId]);
 
   // Editar mensaje
   const editMessage = useCallback((messageId: number, newText: string) => {

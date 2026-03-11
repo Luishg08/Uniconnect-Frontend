@@ -1,15 +1,16 @@
 import axios from 'axios';
 import { api } from '@/src/constants/api';
 import { notificationsEndpoints } from '../api/endpoints';
-import { Notification, NotificationCount, PushTokenPayload } from '../types';
+import { notificationObserver } from './notification-observer.service';
+import { Notification, UnreadCountResponse, MarkAsReadResponse, MarkAllAsReadResponse, PushTokenPayload } from '../types';
 
 class NotificationsService {
   /**
-   * Obtener todas las notificaciones del usuario
+   * Obtener todas las notificaciones del usuario autenticado
    */
-  async getUserNotifications(userId: number, token: string, isRead?: boolean): Promise<Notification[]> {
+  async getNotifications(token: string): Promise<Notification[]> {
     try {
-      const response = await axios.get(notificationsEndpoints.getUserNotifications(userId, isRead), {
+      const response = await axios.get(notificationsEndpoints.getUserNotifications(), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -24,9 +25,9 @@ class NotificationsService {
   /**
    * Contar notificaciones no leídas
    */
-  async getUnreadCount(userId: number, token: string): Promise<NotificationCount> {
+  async getUnreadCount(token: string): Promise<UnreadCountResponse> {
     try {
-      const response = await axios.get(notificationsEndpoints.getUnreadCount(userId), {
+      const response = await axios.get(notificationsEndpoints.getUnreadCount(), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -41,13 +42,17 @@ class NotificationsService {
   /**
    * Marcar notificación como leída
    */
-  async markAsRead(notificationId: number, token: string): Promise<Notification> {
+  async markAsRead(notificationId: number, token: string): Promise<MarkAsReadResponse> {
     try {
       const response = await axios.patch(notificationsEndpoints.markAsRead(notificationId), {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      // Notificar al observer que hay cambios
+      notificationObserver.notify();
+      
       return response.data;
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
@@ -58,25 +63,25 @@ class NotificationsService {
   /**
    * Marcar todas las notificaciones como leídas
    */
-  async markAllAsRead(userId: number, token: string): Promise<void> {
+  async markAllAsRead(token: string): Promise<MarkAllAsReadResponse> {
     try {
-      await axios.patch(notificationsEndpoints.markAllAsRead(userId), {}, {
+      const response = await axios.patch(notificationsEndpoints.markAllAsRead(), {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      // Notificar al observer que hay cambios
+      notificationObserver.notify();
+      
+      return response.data;
     } catch (error) {
       console.error('Error al marcar todas las notificaciones como leídas:', error);
       throw error;
     }
   }
 
-  // Mantener compatibilidad con métodos antiguos usando api instance
-  async getMyNotifications(): Promise<Notification[]> {
-    const { data } = await api.get('/notifications');
-    return data;
-  }
-
+  // Mantener compatibilidad con api instance para push tokens
   async registerExpoPushToken(payload: PushTokenPayload) {
     const { data } = await api.post(notificationsEndpoints.registerExpoPushToken(), payload);
     return data;

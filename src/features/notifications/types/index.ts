@@ -5,23 +5,29 @@ export type PushTokenPayload = {
 };
 
 export type NotificationType =
-  | 'group_invitation'
-  | 'invitation_accepted'
-  | 'new_member'
-  | 'new_message'
   | 'connection_request'
-  | 'connection_accepted';
+  | 'message'
+  | 'group_invitation'
+  | 'group_invitation_accepted'
+  | 'user_joined_group';
 
 export type Notification = {
   id_notification: number;
-  id_user: number;
   message: string;
   is_read: boolean;
   created_at: string;
-  related_entity_id?: number;
   notification_type: NotificationType;
-  push_sent?: boolean;
+  related_entity_id: number;
 };
+
+export interface MarkAsReadResponse {
+  success: boolean;
+}
+
+export interface MarkAllAsReadResponse {
+  success: boolean;
+  updated: number;
+}
 
 export interface UnreadCountResponse {
   count: number;
