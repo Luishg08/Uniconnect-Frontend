@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { messagesEndpoints } from '../api/endpoints';
-import { Message, MessageEditRequest, MessageCount, SearchMessagesResponse } from '../types';
+import { Message, MessageEditRequest, MessageCount, MessageSearchResponse } from '../types';
 
 class MessagesService {
   /**
@@ -23,7 +23,7 @@ class MessagesService {
   /**
    * Buscar mensajes en un grupo
    */
-  async searchMessages(groupId: number, query: string, token: string): Promise<SearchMessagesResponse> {
+  async searchMessages(groupId: number, query: string, token: string): Promise<MessageSearchResponse> {
     try {
       const response = await axios.get(messagesEndpoints.searchMessages(groupId, query), {
         headers: {

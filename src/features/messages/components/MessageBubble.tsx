@@ -38,18 +38,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             'Confirmar eliminación',
             '¿Estás seguro de que deseas eliminar este mensaje?',
             [
-              { text: 'Cancelar', style: 'cancel' },
-              { text: 'Eliminar', onPress: onDelete, style: 'destructive' },
+              { text: 'Cancelar', style: 'cancel' as const },
+              { text: 'Eliminar', onPress: onDelete, style: 'destructive' as const },
             ]
           );
         },
-        style: 'destructive',
+        style: 'destructive' as const,
       });
     }
     
     options.push({
       text: 'Cancelar',
-      style: 'cancel',
+      style: 'cancel' as const,
     });
     
     if (options.length > 1) {

@@ -6,9 +6,9 @@ import {
   MessageDeleteData,
   TypingData,
   MessagesHistoryData,
-  MessagesHistoryResponse,
+  MessageHistoryResponse,
   SearchMessagesData,
-  SearchMessagesResponse,
+  MessageSearchResponse,
   SessionStatsResponse,
   AuthenticateData
 } from '../types';
@@ -234,14 +234,14 @@ class WebSocketService {
   /**
    * Escuchar respuesta de historial
    */
-  onHistoryReceived(callback: (data: MessagesHistoryResponse) => void) {
+  onHistoryReceived(callback: (data: MessageHistoryResponse) => void) {
     this.socket?.on('messages:history', callback);
   }
 
   /**
    * Escuchar resultados de búsqueda
    */
-  onSearchResults(callback: (data: SearchMessagesResponse) => void) {
+  onSearchResults(callback: (data: MessageSearchResponse) => void) {
     this.socket?.on('messages:search', callback);
   }
 
