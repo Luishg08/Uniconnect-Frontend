@@ -87,7 +87,6 @@ export default function GroupChatScreen() {
       <ChatScreen
         groupId={groupId}
         userId={userId}
-        membershipId={membershipId}
         token={token}
         isAdmin={isAdmin}
         userFullName={userFullName}

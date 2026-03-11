@@ -19,7 +19,6 @@ import { Message } from '../types';
 interface ChatScreenProps {
   groupId: number;
   userId: number;
-  membershipId: number;
   token: string;
   isAdmin: boolean;
   userFullName: string;
@@ -29,7 +28,6 @@ interface ChatScreenProps {
 export const ChatScreen: React.FC<ChatScreenProps> = ({
   groupId,
   userId,
-  membershipId,
   token,
   isAdmin,
   userFullName,
@@ -53,7 +51,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   } = useChat({
     groupId,
     userId,
-    membershipId,
     token,
     serverUrl,
   });

@@ -90,18 +90,9 @@ export default function GroupChatScreen() {
     );
   }
 
-  // Obtener la información de la membresía del usuario
+  // Obtener información de admin (si está disponible)
   const userMembership = group.user_membership;
-  
-  // Si no hay membership info, asumir que es miembro regular
-  // (esto puede pasar si el backend no incluye user_membership en la respuesta)
-  const membershipId = userMembership?.id_membership ?? 0;
-  const isAdmin = userMembership?.id_role === 1 || userMembership?.role === 'admin';
-
-  // Si el membershipId es 0, mostrar advertencia pero permitir continuar
-  if (membershipId === 0) {
-    console.warn('Warning: No membership ID found for user in group. Using fallback value.');
-  }
+  const isAdmin = userMembership?.id_role === 1 || userMembership?.role === 'admin' || false;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -126,7 +117,6 @@ export default function GroupChatScreen() {
       <ChatScreen
         groupId={group.id_group}
         userId={userId!}
-        membershipId={membershipId}
         token={token}
         isAdmin={isAdmin}
         userFullName={authStore.user?.full_name || 'Usuario'}

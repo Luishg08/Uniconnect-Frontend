@@ -99,7 +99,7 @@ class WebSocketService {
   authenticate(data: AuthenticateData) {
     // Guardar los datos para uso futuro
     this.currentUserId = data.id_user;
-    this.currentMembershipId = data.id_membership;
+    this.currentMembershipId = data.id_membership ?? null;
     this.currentGroupId = data.id_group;
 
     if (!this.socket?.connected) {
@@ -110,6 +110,17 @@ class WebSocketService {
 
     console.log('Emitiendo autenticación al servidor...');
     this.socket.emit('authenticate', data);
+    
+    // Escuchar respuesta de autenticación una sola vez
+    this.socket.once('authenticate', (response: { success: boolean; id_membership?: number; error?: string }) => {
+      if (response.success && response.id_membership) {
+        console.log('Autenticado correctamente, membership ID:', response.id_membership);
+        this.currentMembershipId = response.id_membership;
+      } else {
+        console.error('Error de autenticación:', response.error || 'No eres miembro de este grupo');
+      }
+    });
+    
     this.pendingAuthData = null;
   }
 

@@ -6,12 +6,11 @@ import { Message, MessageSendData, TypingData } from '../types';
 interface UseChatOptions {
   groupId: number;
   userId: number;
-  membershipId: number;
   token: string;
   serverUrl?: string;
 }
 
-export const useChat = ({ groupId, userId, membershipId, token, serverUrl }: UseChatOptions) => {
+export const useChat = ({ groupId, userId, token, serverUrl }: UseChatOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +39,9 @@ export const useChat = ({ groupId, userId, membershipId, token, serverUrl }: Use
       websocketService.connect(serverUrl);
     }
 
-    // Autenticar
+    // Autenticar (el backend busca automáticamente el id_membership)
     websocketService.authenticate({
       id_user: userId,
-      id_membership: membershipId,
       id_group: groupId,
     });
 
@@ -105,20 +103,19 @@ export const useChat = ({ groupId, userId, membershipId, token, serverUrl }: Use
       websocketService.off('message:deleted', handleMessageDeleted);
       websocketService.off('user:typing', handleUserTyping);
     };
-  }, [groupId, userId, membershipId, token, serverUrl, loadMessages]);
+  }, [groupId, userId, token, serverUrl, loadMessages]);
 
-  // Enviar mensaje
+  // Enviar mensaje (ya no necesita id_membership, el backend lo toma de la sesión)
   const sendMessage = useCallback((text: string, attachments: string = '') => {
     if (!text.trim()) return;
 
     const messageData: MessageSendData = {
-      id_membership: membershipId,
       text_content: text.trim(),
       attachments,
     };
 
     websocketService.sendMessage(messageData);
-  }, [membershipId]);
+  }, []);
 
   // Editar mensaje
   const editMessage = useCallback((messageId: number, newText: string) => {

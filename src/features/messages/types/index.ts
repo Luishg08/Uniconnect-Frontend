@@ -51,7 +51,6 @@ export interface TypingIndicator {
 // Tipos adicionales para WebSocket
 
 export interface MessageSendData {
-  id_membership: number;
   text_content: string;
   attachments?: string;
 }
@@ -82,8 +81,8 @@ export interface SearchMessagesData {
 
 export interface AuthenticateData {
   id_user: number;
-  id_membership: number;
   id_group: number;
+  id_membership?: number; // Opcional: el backend lo busca automáticamente
 }
 
 export interface SessionStatsResponse {
