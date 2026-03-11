@@ -26,3 +26,7 @@ export type Notification = {
 export interface UnreadCountResponse {
   count: number;
 }
+
+export interface NotificationCount {
+  count: number;
+}

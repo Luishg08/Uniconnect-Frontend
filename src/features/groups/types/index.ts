@@ -4,7 +4,7 @@ export interface Group {
   description: string;
   id_course: number;
   owner_id: number;
-  created_at?: string;
+  created_at: string;
   course: Course;
   owner?: {
     id_user: number;
@@ -14,6 +14,7 @@ export interface Group {
   _count?: {
     memberships: number;
   };
+  member_count?: number;
   members_count?: number;
   last_message?: {
     text_content: string;
@@ -93,4 +94,25 @@ export interface SendInvitationDto {
 
 export interface RespondInvitationDto {
   response: 'accepted' | 'rejected';
+}
+
+// Tipos adicionales para servicios
+
+export interface GroupCreateRequest {
+  name: string;
+  description: string;
+  id_course: number;
+  owner_id: number;
+}
+
+export interface GroupInvitationRequest {
+  id_group: number;
+  inviter_id: number;
+  invitee_id: number;
+}
+
+export interface GroupInvitationResponse {
+  message: string;
+  invitation?: GroupInvitation;
+  membership?: GroupMembership;
 }
