@@ -134,7 +134,7 @@ export default function GroupsScreenWithTabs() {
           <GroupCard
             group={item}
             onPress={() => handleGroupPress(item.id_group)}
-            showActions={true}
+            onEdit={() => console.log('Edit group', item.id_group)}
             onDelete={() => handleDeleteGroup(item.id_group)}
           />
         )}
@@ -188,6 +188,8 @@ export default function GroupsScreenWithTabs() {
             <GroupCard
               group={item}
               onPress={() => handleGroupPress(item.id_group)}
+              onEdit={() => {}}
+              onDelete={() => {}}
             />
             <TouchableOpacity
               style={styles.joinButton}

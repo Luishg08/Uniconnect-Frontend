@@ -47,9 +47,8 @@ export default function ConnectionsScreenWithTabs() {
   // Hook para solicitudes de conexión (el que ya existe)
   const {
     pendingRequests,
-    loading: loadingConnections,
-    respondToRequest,
-    reloadRequests,
+    isLoading: loadingConnections,
+    refetch: refetchConnections,
   } = useConnections(); // Usar tu hook existente
 
   const handleAcceptInvitation = async (invitationId: number) => {
@@ -114,13 +113,12 @@ export default function ConnectionsScreenWithTabs() {
         renderItem={({ item }) => (
           <ConnectionRequestCard
             request={item}
-            onAccept={() => respondToRequest(item.id_connection, 'accepted')}
-            onReject={() => respondToRequest(item.id_connection, 'rejected')}
+            onUpdated={refetchConnections}
           />
         )}
         contentContainerStyle={styles.listContent}
         refreshing={loadingConnections}
-        onRefresh={reloadRequests}
+        onRefresh={refetchConnections}
       />
     );
   };
