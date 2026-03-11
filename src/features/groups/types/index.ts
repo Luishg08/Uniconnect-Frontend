@@ -20,6 +20,11 @@ export interface Group {
     text_content: string;
     send_at: string;
   };
+  user_membership?: {
+    id_membership: number;
+    id_role: number;
+    role: 'admin' | 'member';
+  };
 }
 
 export interface Course {

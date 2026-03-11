@@ -20,6 +20,7 @@ class WebSocketService {
   private currentGroupId: number | null = null;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
+  private pendingAuthData: AuthenticateData | null = null;
 
   /**
    * Conectar al servidor WebSocket
@@ -27,6 +28,11 @@ class WebSocketService {
   connect(serverUrl: string = 'http://localhost:3000') {
     if (this.socket?.connected) {
       console.log('Ya conectado al WebSocket');
+      // Si hay autenticación pendiente, ejecutarla ahora
+      if (this.pendingAuthData) {
+        this.authenticate(this.pendingAuthData);
+        this.pendingAuthData = null;
+      }
       return;
     }
 
@@ -48,11 +54,16 @@ class WebSocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('🟢 Conectado al WebSocket');
+      console.log('Conectado al WebSocket');
       this.reconnectAttempts = 0;
       
-      // Re-autenticar si teníamos una sesión previa
-      if (this.currentUserId && this.currentMembershipId && this.currentGroupId) {
+      // Autenticar con datos pendientes o con sesión previa
+      if (this.pendingAuthData) {
+        console.log('Autenticando con datos pendientes...');
+        this.authenticate(this.pendingAuthData);
+        this.pendingAuthData = null;
+      } else if (this.currentUserId && this.currentMembershipId && this.currentGroupId) {
+        console.log('Re-autenticando sesión previa...');
         this.authenticate({
           id_user: this.currentUserId,
           id_membership: this.currentMembershipId,
@@ -62,22 +73,22 @@ class WebSocketService {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('🔴 Desconectado del WebSocket:', reason);
+      console.log('Desconectado del WebSocket:', reason);
       this.reconnectAttempts++;
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Error de conexión:', error.message);
+      console.error('Error de conexión:', error.message);
       this.reconnectAttempts++;
       
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('❌ Máximo de intentos de reconexión alcanzado');
+        console.error('Máximo de intentos de reconexión alcanzado');
         this.disconnect();
       }
     });
 
     this.socket.on('reconnect', (attemptNumber) => {
-      console.log(`🔄 Reconectado después de ${attemptNumber} intentos`);
+      console.log(`Reconectado después de ${attemptNumber} intentos`);
       this.reconnectAttempts = 0;
     });
   }
@@ -86,16 +97,20 @@ class WebSocketService {
    * Autenticar usuario en el WebSocket
    */
   authenticate(data: AuthenticateData) {
-    if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
-      return;
-    }
-
+    // Guardar los datos para uso futuro
     this.currentUserId = data.id_user;
     this.currentMembershipId = data.id_membership;
     this.currentGroupId = data.id_group;
 
+    if (!this.socket?.connected) {
+      console.log('Socket no conectado aún, guardando datos de autenticación...');
+      this.pendingAuthData = data;
+      return;
+    }
+
+    console.log('Emitiendo autenticación al servidor...');
     this.socket.emit('authenticate', data);
+    this.pendingAuthData = null;
   }
 
   /**
@@ -103,7 +118,7 @@ class WebSocketService {
    */
   sendMessage(data: MessageSendData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -115,7 +130,7 @@ class WebSocketService {
    */
   editMessage(data: MessageEditData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -127,7 +142,7 @@ class WebSocketService {
    */
   deleteMessage(data: MessageDeleteData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -139,7 +154,7 @@ class WebSocketService {
    */
   emitTyping(data: TypingData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -151,7 +166,7 @@ class WebSocketService {
    */
   loadHistory(data: MessagesHistoryData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -163,7 +178,7 @@ class WebSocketService {
    */
   searchMessages(data: SearchMessagesData) {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -175,7 +190,7 @@ class WebSocketService {
    */
   leaveRoom() {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -189,7 +204,7 @@ class WebSocketService {
    */
   getSessionStats() {
     if (!this.socket?.connected) {
-      console.error('❌ Socket no conectado');
+      console.error('Socket no conectado');
       return;
     }
 
@@ -280,7 +295,8 @@ class WebSocketService {
       this.currentUserId = null;
       this.currentMembershipId = null;
       this.currentGroupId = null;
-      console.log('🔴 Desconectado del WebSocket');
+      this.pendingAuthData = null;
+      console.log('Desconectado del WebSocket');
     }
   }
 

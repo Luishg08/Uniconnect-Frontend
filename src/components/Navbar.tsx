@@ -15,7 +15,7 @@ import { useResponsive } from "../hooks/useResponsive";
 import { useConnections } from "../features/connections/hooks/useConnections";
 import { NotificationIcon } from "src/features/notifications/components/NotificationIcon";
 import { useEffect } from "react";
-import { NOTIFICATIONS_ENDPOINTS } from "src/features/notifications/api/endpoints";
+import { notificationsEndpoints } from "src/features/notifications/api/endpoints";
 import { api } from "../constants/api";
 import axios from 'axios';
 
@@ -53,7 +53,7 @@ export const Navbar = () => {
         const token = authStore.accessToken; // obtiene el token del store
         if (!token) return; // si no hay token, salir
 
-        const res = await api.get(NOTIFICATIONS_ENDPOINTS.GET_MY_NOTIFICATIONS, {
+        const res = await api.get(notificationsEndpoints.getUserNotifications(user.id_user), {
           headers: {
             Authorization: `Bearer ${token}`, // enviar token
           },

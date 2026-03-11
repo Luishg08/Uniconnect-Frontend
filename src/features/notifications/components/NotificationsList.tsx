@@ -70,7 +70,7 @@ export function NotificationsList() {
         setMarking(id);
 
         try {
-            await notificationsService.markAsRead(id);
+            await notificationsService.markAsRead(id, authToken!);
 
             setNotifications((prev) =>
                 prev.map((n) =>

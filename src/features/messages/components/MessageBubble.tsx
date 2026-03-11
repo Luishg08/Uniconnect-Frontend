@@ -105,9 +105,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </Text>
         
         <View style={styles.footer}>
-          <Text style={styles.time}>{formatTime(message.send_at)}</Text>
+          <Text style={[styles.time, isOwnMessage && styles.ownTime]}>
+            {formatTime(message.send_at)}
+          </Text>
           {message.is_edited && (
-            <Text style={styles.editedBadge}>editado</Text>
+            <Text style={[styles.editedBadge, isOwnMessage && styles.ownTime]}>
+              editado
+            </Text>
           )}
         </View>
       </View>
@@ -145,7 +149,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#D9B97E',
   },
   bubble: {
     maxWidth: '75%',
@@ -154,21 +158,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   ownBubble: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#D9B97E',
     borderBottomRightRadius: 4,
   },
   otherBubble: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#2a2a2a',
     borderBottomLeftRadius: 4,
   },
   messageText: {
     fontSize: 16,
   },
   ownMessageText: {
-    color: '#FFFFFF',
+    color: '#1a1a1a',
   },
   otherMessageText: {
-    color: '#111827',
+    color: '#FFFFFF',
   },
   footer: {
     flexDirection: 'row',
@@ -179,6 +183,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#9CA3AF',
     marginRight: 4,
+  },
+  ownTime: {
+    color: '#4a4a4a',
   },
   editedBadge: {
     fontSize: 11,

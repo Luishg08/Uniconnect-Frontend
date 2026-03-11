@@ -45,14 +45,14 @@ export default function GroupsScreen() {
     myGroups,
     loading: loadingMyGroups,
     error: errorMyGroups,
-    reload: reloadMyGroups,
+    reloadMyGroups,
   } = useMyGroups(userId, token);
 
   const {
     groups: discoverGroups,
     loading: loadingDiscover,
     error: errorDiscover,
-    reload: reloadDiscover,
+    reloadDiscoverGroups: reloadDiscover,
   } = useDiscoverGroups(userId, token);
 
   const handleGroupPress = (groupId: number) => {
@@ -94,7 +94,7 @@ export default function GroupsScreen() {
   const handleDelete = (group: Group) => {
     Alert.alert(
       "Eliminar grupo",
-      `¿Estás seguro de que deseas eliminar "${group.group_name}"?`,
+      `¿Estás seguro de que deseas eliminar "${group.name}"?`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -113,7 +113,7 @@ export default function GroupsScreen() {
   const handleJoinGroup = (group: Group) => {
     Alert.alert(
       "Unirse al grupo",
-      `Para unirte a "${group.group_name}", debes recibir una invitación del administrador del grupo.`,
+      `Para unirte a "${group.name}", debes recibir una invitación del administrador del grupo.`,
       [{ text: "Entendido" }]
     );
   };
@@ -247,9 +247,9 @@ export default function GroupsScreen() {
                 <Ionicons name="people" size={24} color="#D9B97E" />
               </View>
               <View style={styles.discoverCardInfo}>
-                <Text style={styles.discoverCardTitle}>{item.group_name}</Text>
+                <Text style={styles.discoverCardTitle}>{item.name}</Text>
                 <Text style={styles.discoverCardCourse}>
-                  {item.course?.course_name || "Sin materia"}
+                  {item.course?.name || "Sin materia"}
                 </Text>
               </View>
             </View>

@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   Text,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MessageBubble } from './MessageBubble';
@@ -65,6 +66,22 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       }, 100);
     }
   }, [messages]);
+
+  // Scroll al final cuando aparece el teclado
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -149,7 +166,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={90}
+      keyboardVerticalOffset={0}
     >
       {!isConnected && (
         <View style={styles.connectionBanner}>
@@ -165,6 +182,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         keyExtractor={(item) => item.id_message.toString()}
         contentContainerStyle={styles.messagesList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       />
 
       {renderTypingIndicator()}
@@ -173,7 +192,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Escribe un mensaje..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#6B7280"
           value={inputText}
           onChangeText={handleTextChange}
           multiline
@@ -187,7 +206,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           <Ionicons
             name="send"
             size={24}
-            color={inputText.trim() ? '#3B82F6' : '#9CA3AF'}
+            color={inputText.trim() ? '#D9B97E' : '#6B7280'}
           />
         </TouchableOpacity>
       </View>
@@ -198,24 +217,24 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#363636',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#363636',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6B7280',
+    color: '#9CA3AF',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#363636',
     padding: 20,
   },
   errorText: {
@@ -243,11 +262,11 @@ const styles = StyleSheet.create({
   typingIndicator: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#2a2a2a',
   },
   typingText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     fontStyle: 'italic',
   },
   inputContainer: {
@@ -255,13 +274,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#363636',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: '#4a4a4a',
   },
   input: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#2a2a2a',
+    color: '#fff',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,

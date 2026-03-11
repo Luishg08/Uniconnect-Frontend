@@ -17,6 +17,7 @@ const RootNavigationWrapper = observer(() => {
   const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isRouterReady, setIsRouterReady] = useState(false);
 
   // Subscribe to auth state changes using MobX
   useEffect(() => {
@@ -36,25 +37,37 @@ const RootNavigationWrapper = observer(() => {
 
   useEffect(() => {
     setIsMounted(true);
+    // Dar tiempo adicional para que el router se inicialice
+    const timer = setTimeout(() => {
+      setIsRouterReady(true);
+    }, 200);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || !isRouterReady) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = inAuthGroup && (segments as string[])[1] === 'onboarding';
 
-    setTimeout(() => {
+    try {
+      // Solo navegar si realmente necesitamos cambiar de ruta
       if (!token && !inAuthGroup) {
+        console.log('No authenticated, redirecting to login...');
         router.replace('/(auth)/login');
       } else if (token && needsOnboarding && !inOnboarding) {
+        console.log('Needs onboarding, redirecting...');
         router.replace('/(auth)/onboarding');
       } else if (token && !needsOnboarding && inAuthGroup) {
+        console.log('Authenticated and onboarded, redirecting to tabs...');
         router.replace('/(tabs)');
       }
-    }, 1);
-
-  }, [token, needsOnboarding, segments, isMounted]);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // No hacer nada si hay error, dejar que el router se estabilice
+    }
+  }, [token, needsOnboarding, segments, isMounted, isRouterReady, router]);
 
   useEffect(() => {
     async function getExpoToken() {
