@@ -11,6 +11,7 @@ export { notificationObserver } from './services/notification-observer.service';
 // Hooks
 export { useUserNotifications } from './hooks/useUserNotifications';
 export { useInitNotifications } from './hooks/useInitNotifications';
+export { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
 export { useRegisterPushToken } from './hooks/useNotifications';
 
 // Components

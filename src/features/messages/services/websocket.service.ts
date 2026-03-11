@@ -286,6 +286,13 @@ class WebSocketService {
   }
 
   /**
+   * Escuchar nueva notificación (para badge en tiempo real)
+   */
+  onNotificationReceived(callback: (data: any) => void) {
+    this.socket?.on('notification:new', callback);
+  }
+
+  /**
    * Remover listener de evento específico
    */
   off(event: string, callback?: (...args: any[]) => void) {

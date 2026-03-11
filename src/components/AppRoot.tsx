@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAppInitialization, useTokenRefresh, authStore } from '@/src/features/auth';
 import { useInitNotifications } from '@/src/features/notifications/hooks/useInitNotifications';
+import { useRealtimeNotifications } from '@/src/features/notifications/hooks/useRealtimeNotifications';
 
 interface AppRootProps {
   children: React.ReactNode;
@@ -11,7 +12,8 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
   const { isInitializing, initializationError } = useAppInitialization();
   
   useTokenRefresh();
-  useInitNotifications(authStore.accessToken);
+  useInitNotifications();
+  useRealtimeNotifications(); // Conecta WebSocket para notificaciones en tiempo real
 
   if (isInitializing) {
     return (

@@ -95,22 +95,32 @@ export function useAuth0Login() {
         const missingItems = [];
         if (!code) missingItems.push('code');
         if (!pkce?.codeVerifier) missingItems.push('code_verifier');
-        console.error('Missing required parameters:', missingItems);
+        console.log('Missing required parameters:', missingItems);
         authStore.setError(`Missing required parameters: ${missingItems.join(', ')}`);
-        showToast.error('Error', 'No se recibieron los parámetros necesarios para la autenticación');
+        // No mostrar toast - puede ser resultado de cancelación
       }
     } else if (response?.type === 'error') {
+      const errorCode = response.params?.error;
       const errorMessage = response.params?.error_description || response.params?.error || 'Error en la autenticación';
-      console.error('Auth0 Error:', {
+      
+      console.log('Auth0 Error:', {
         error: response.params?.error,
         error_description: response.params?.error_description,
       });
-      authStore.setError(errorMessage);
-      showToast.error('Error de Auth0', errorMessage);
+      
+      // No mostrar toast si el usuario simplemente no autorizó o canceló
+      if (errorCode === 'access_denied') {
+        console.log('User declined authorization');
+        authStore.setLoading(false);
+      } else {
+        // Solo mostrar errores técnicos reales
+        authStore.setError(errorMessage);
+        showToast.error('Error de Auth0', errorMessage);
+      }
     } else if (response?.type === 'cancel') {
       console.log('User cancelled authentication');
       authStore.setLoading(false);
-      showToast.error('Cancelado', 'Autenticación cancelada por el usuario');
+      // No mostrar toast - es una acción voluntaria del usuario
     }
   }, [response, redirectUri, pkce?.codeVerifier]);
 
