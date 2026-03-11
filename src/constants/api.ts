@@ -8,6 +8,9 @@ if (!envApiUrl) {
   console.warn(`Falta configurar EXPO_PUBLIC_API_URL en .env, usando fallback: ${resolvedBaseUrl}`);
 }
 
+// Exportar la URL base para uso en endpoints
+export const API_BASE_URL = resolvedBaseUrl;
+
 export const api = axios.create({
   baseURL: resolvedBaseUrl,
   headers: {
