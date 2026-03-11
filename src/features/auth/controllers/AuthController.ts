@@ -41,6 +41,14 @@ export class AuthController {
       // Extract data from FEN response
       const { access_token, user, auth0_tokens } = fenResponse.data;
       
+      console.log('Login response data:', {
+        hasAccessToken: !!access_token,
+        hasUser: !!user,
+        hasAuth0Tokens: !!auth0_tokens,
+        hasRefreshToken: !!auth0_tokens?.refresh_token,
+        refreshToken: auth0_tokens?.refresh_token ? auth0_tokens.refresh_token.substring(0, 20) + '...' : 'none',
+      });
+      
       if (!access_token || !user) {
         console.error('Invalid FEN response - missing access_token or user:', {
           hasAccessToken: !!access_token,
@@ -126,7 +134,12 @@ export class AuthController {
 
       // Check if we have a refresh token
       if (!authStore.hasRefreshToken || !authStore.auth0Tokens?.refresh_token || !authStore.user?.id_user) {
-        console.log('No refresh token available or user data missing');
+        console.error('Cannot refresh tokens - missing data:', {
+          hasRefreshToken: authStore.hasRefreshToken,
+          hasAuth0Tokens: !!authStore.auth0Tokens,
+          hasRefreshTokenValue: !!authStore.auth0Tokens?.refresh_token,
+          hasUserId: !!authStore.user?.id_user,
+        });
         return false;
       }
 
@@ -148,6 +161,14 @@ export class AuthController {
 
       // Extract data from FEN response
       const { access_token, user, auth0_tokens } = fenResponse.data;
+      
+      console.log('Refresh response data:', {
+        hasAccessToken: !!access_token,
+        hasUser: !!user,
+        hasAuth0Tokens: !!auth0_tokens,
+        hasRefreshToken: !!auth0_tokens?.refresh_token,
+        newRefreshToken: auth0_tokens?.refresh_token ? auth0_tokens.refresh_token.substring(0, 20) + '...' : 'none',
+      });
       
       if (!access_token || !user) {
         throw new Error('Invalid refresh response format from BFF');

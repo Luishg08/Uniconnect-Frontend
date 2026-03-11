@@ -57,7 +57,19 @@ export class AuthStore {
         expires_at: Date.now() + (validExpiresIn * 1000)
       };
       
-      console.log(`Token expiration set to ${validExpiresIn} seconds from now`);
+      console.log('Auth tokens stored:', {
+        hasAccessToken: !!auth0TokensData.access_token,
+        hasIdToken: !!auth0TokensData.id_token,
+        hasRefreshToken: !!auth0TokensData.refresh_token,
+        expiresIn: validExpiresIn,
+        expiresAt: this.auth0Tokens?.expires_at ? new Date(this.auth0Tokens.expires_at).toISOString() : 'unknown',
+      });
+      
+      if (!auth0TokensData.refresh_token) {
+        console.warn('WARNING: No refresh_token received from backend!');
+      }
+    } else {
+      console.warn('WARNING: No auth0TokensData provided to setAuth!');
     }
 
     // Persist to storage

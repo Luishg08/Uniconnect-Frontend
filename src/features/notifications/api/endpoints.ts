@@ -1,7 +1,23 @@
-export const NOTIFICATIONS_ENDPOINTS = {
-    REGISTER_EXPO_PUSH_TOKEN: '/notifications/expo-push-token',
-    REMOVE_EXPO_PUSH_TOKEN: (token: string) => `/notifications/expo-push-token/${token}`,
-    GET_MY_NOTIFICATIONS: '/notifications',
-    MARK_AS_READ: (id: number) => `/notifications/${id}/read`,
-    MARK_ALL_AS_READ: '/notifications/read-all',
-} as const;
+import { API_BASE_URL } from '@/src/constants/api';
+
+export const notificationsEndpoints = {
+  // Obtener todas las notificaciones del usuario (usa JWT para identificar usuario)
+  getUserNotifications: () => `${API_BASE_URL}/notifications`,
+  
+  // Contar notificaciones no leídas (usa JWT para identificar usuario)
+  getUnreadCount: () => `${API_BASE_URL}/notifications/unread-count`,
+  
+  // Marcar notificación como leída
+  markAsRead: (notificationId: number) =>
+    `${API_BASE_URL}/notifications/${notificationId}/read`,
+  
+  // Marcar todas como leídas (usa JWT para identificar usuario)
+  markAllAsRead: () => `${API_BASE_URL}/notifications/read-all`,
+  
+  // Expo Push Token (mantener compatibilidad)
+  registerExpoPushToken: () =>
+    `${API_BASE_URL}/notifications/expo-push-token`,
+  
+  removeExpoPushToken: (token: string) =>
+    `${API_BASE_URL}/notifications/expo-push-token/${token}`,
+};

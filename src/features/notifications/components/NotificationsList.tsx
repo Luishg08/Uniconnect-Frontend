@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import {
     View,
     Text,
@@ -8,83 +8,38 @@ import {
     ActivityIndicator,
     RefreshControl,
 } from 'react-native';
-import axios from 'axios';
-import { notificationsService } from '../services/notifications.service';
-import { Notification } from '../types';
+import { Ionicons } from '@expo/vector-icons';
+import { NotificationCard } from './NotificationCard';
+import { useUserNotifications } from '../hooks/useUserNotifications';
 import { authStore } from '@/src/features/auth';
 import { useNotificationsStore } from '../store/notifications.store';
 
 export function NotificationsList() {
     const authToken = authStore.accessToken;
-
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [marking, setMarking] = useState<number | null>(null);
-
     const setUnreadCount = useNotificationsStore(state => state.setUnreadCount);
-    const decreaseUnread = useNotificationsStore(state => state.decreaseUnread);
 
-    const loadNotifications = useCallback(async () => {
-        if (!authToken) return;
+    const {
+        notifications,
+        unreadCount,
+        loading,
+        error,
+        markAllAsRead,
+        handleNotificationPress,
+        reloadNotifications,
+    } = useUserNotifications({ 
+        token: authToken || ''
+    });
 
+    // Sincronizar el conteo global con la store
+    React.useEffect(() => {
+        setUnreadCount(unreadCount);
+    }, [unreadCount, setUnreadCount]);
+
+    const handleMarkAllAsRead = async () => {
         try {
-            const data = await notificationsService.getMyNotifications();
-            setNotifications(data);
-
-            // Calcular no leídas y actualizar store global
-            const unread = data.filter(n => !n.is_read).length;
-            setUnreadCount(unread);
-
+            await markAllAsRead();
         } catch (error) {
-            // Backend without notifications endpoint should not break the screen.
-            if (axios.isAxiosError(error) && error.response?.status === 404) {
-                setNotifications([]);
-                setUnreadCount(0);
-                return;
-            }
-
-            console.error('Error cargando notificaciones', error);
-            setNotifications([]);
-            setUnreadCount(0);
-        }
-    }, [authToken, setUnreadCount]);
-
-    useEffect(() => {
-        async function init() {
-            setLoading(true);
-            await loadNotifications();
-            setLoading(false);
-        }
-
-        init();
-    }, [loadNotifications]);
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await loadNotifications();
-        setRefreshing(false);
-    };
-
-    const handleMarkAsRead = async (id: number) => {
-        setMarking(id);
-
-        try {
-            await notificationsService.markAsRead(id);
-
-            setNotifications((prev) =>
-                prev.map((n) =>
-                    n.id_notification === id ? { ...n, is_read: true } : n
-                )
-            );
-
-            // Disminuir contador global
-            decreaseUnread();
-
-        } catch (error) {
-            console.error('Error marcando notificación como leída', error);
-        } finally {
-            setMarking(null);
+            console.error('Error al marcar todas como leídas:', error);
         }
     };
 
@@ -96,95 +51,133 @@ export function NotificationsList() {
         );
     }
 
+    if (error) {
+        return (
+            <View style={styles.center}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity 
+                    style={styles.retryButton} 
+                    onPress={reloadNotifications}
+                >
+                    <Text style={styles.retryButtonText}>Reintentar</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     if (!notifications.length) {
         return (
             <View style={styles.center}>
+                <Ionicons name="notifications-off-outline" size={64} color="#666" />
                 <Text style={styles.emptyText}>
-                    No tienes notificaciones.
+                    No tienes notificaciones
                 </Text>
             </View>
         );
     }
 
+    const hasUnread = notifications.some(n => !n.is_read);
+
     return (
-        <FlatList
-            data={notifications}
-            keyExtractor={(item) => item.id_notification.toString()}
-            contentContainerStyle={{ padding: 16 }}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    tintColor="#D9B97E"
-                />
-            }
-            renderItem={({ item }) => (
-                <TouchableOpacity
-                    style={[
-                        styles.card,
-                        item.is_read && styles.readCard,
-                    ]}
-                    onPress={() => handleMarkAsRead(item.id_notification)}
-                    activeOpacity={0.7}
-                    disabled={item.is_read || marking === item.id_notification}
-                >
-                    <View style={styles.cardHeader}>
-                        <Text style={styles.message}>
-                            {item.message}
+        <View style={styles.container}>
+            {/* Header con botón "Marcar todas como leídas" */}
+            {hasUnread && (
+                <View style={styles.header}>
+                    <TouchableOpacity 
+                        style={styles.markAllButton}
+                        onPress={handleMarkAllAsRead}
+                    >
+                        <Ionicons name="checkmark-done" size={20} color="#D9B97E" />
+                        <Text style={styles.markAllButtonText}>
+                            Marcar todas como leídas
                         </Text>
-
-                        {marking === item.id_notification && (
-                            <ActivityIndicator size="small" color="#D9B97E" />
-                        )}
-                    </View>
-
-                    {item.created_at && (
-                        <Text style={styles.date}>
-                            {new Date(item.created_at).toLocaleString()}
-                        </Text>
-                    )}
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                </View>
             )}
-        />
+
+            <FlatList
+                data={notifications}
+                keyExtractor={(item) => item.id_notification.toString()}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={false}
+                        onRefresh={reloadNotifications}
+                        tintColor="#D9B97E"
+                    />
+                }
+                renderItem={({ item }) => (
+                    <NotificationCard
+                        notification={item}
+                        onPress={() => handleNotificationPress(item)}
+                    />
+                )}
+                ListEmptyComponent={
+                    <View style={styles.center}>
+                        <Text style={styles.emptyText}>
+                            No tienes notificaciones
+                        </Text>
+                    </View>
+                }
+            />
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#363636',
+    },
+    header: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2a2a2a',
+        backgroundColor: '#1a1a1a',
+    },
+    markAllButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#D9B97E',
+    },
+    markAllButtonText: {
+        color: '#D9B97E',
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
     center: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#363636',
+        padding: 20,
     },
     emptyText: {
         fontSize: 16,
         color: '#aaa',
+        marginTop: 16,
+        textAlign: 'center',
     },
-    card: {
-        backgroundColor: 'rgba(26,26,26,0.9)',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(217,185,126,0.3)',
-    },
-    readCard: {
-        backgroundColor: 'rgba(50,50,50,0.8)',
-        opacity: 0.7,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    message: {
+    errorText: {
         fontSize: 16,
-        fontWeight: '500',
-        color: '#fff',
-        flex: 1,
+        color: '#ff6b6b',
+        marginBottom: 16,
+        textAlign: 'center',
     },
-    date: {
-        fontSize: 12,
-        color: '#aaa',
+    retryButton: {
+        backgroundColor: '#D9B97E',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+    },
+    retryButtonText: {
+        color: '#1a1a1a',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

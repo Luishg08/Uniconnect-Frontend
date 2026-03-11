@@ -31,13 +31,40 @@ export const authService = {
   },
 
   refreshTokens: async (refreshToken: string, userId: number) => {
-    const bffUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8007/api';
-    const response = await api.post(`${bffUrl}/auth/refresh`, {
-      refresh_token: refreshToken,
-      user_id: userId,
-    });
-    
-    return response.data;
+    try {
+      const bffUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8007/api';
+      console.log('Calling refresh endpoint:', `${bffUrl}/auth/refresh`);
+      console.log('Refresh token (first 20 chars):', refreshToken.substring(0, 20) + '...');
+      console.log('User ID:', userId);
+      
+      const response = await api.post(`${bffUrl}/auth/refresh`, {
+        refresh_token: refreshToken,
+        user_id: userId,
+      });
+      
+      console.log('Refresh response received:', {
+        success: response.data?.success,
+        statusCode: response.data?.statusCode,
+        hasAccessToken: !!response.data?.data?.access_token,
+        hasRefreshToken: !!response.data?.data?.auth0_tokens?.refresh_token,
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Refresh token service error:', {
+        status: error?.response?.status,
+        message: error?.response?.data?.message || error?.message,
+        data: error?.response?.data,
+      });
+      
+      // Retornar error en formato FEN para mantener consistencia
+      return {
+        success: false,
+        statusCode: error?.response?.status || 500,
+        message: error?.response?.data?.message || error?.message || 'Token refresh failed',
+        data: null,
+      };
+    }
   },
 
   /**
