@@ -1,37 +1,226 @@
-import { api } from '@/src/constants/api';
-import { GROUPS_ENDPOINTS } from '../api/endpoints';
-import { CreateGroupData, UpdateGroupData } from '../types';
-import { authStore } from '../../auth';
+import axios from 'axios';
+import { groupsEndpoints, groupInvitationsEndpoints } from '../api/endpoints';
+import { 
+  Group, 
+  GroupCreateRequest, 
+  GroupInvitation, 
+  GroupInvitationRequest,
+  GroupInvitationResponse 
+} from '../types';
 
-export const groupService = {
-  getAll: async () => {
-    const user = authStore.user;
-    const { data } = await api.get(`${GROUPS_ENDPOINTS.GET_BY_STUDENT}/${user?.id_user}`);
-    return data;
-  },
+class GroupsService {
+  /**
+   * Crear nuevo grupo de estudio
+   */
+  async createGroup(data: GroupCreateRequest, token: string): Promise<Group> {
+    try {
+      const response = await axios.post(groupsEndpoints.createGroup(), data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear grupo:', error);
+      throw error;
+    }
+  }
 
-  create: async (groupData: CreateGroupData) => {
-    const { data } = await api.post(`${GROUPS_ENDPOINTS.CREATE_GROUP}`, groupData);
-    return data;
-  },
+  /**
+   * Obtener grupos creados por el usuario (donde es owner/admin)
+   */
+  async getCreatedGroups(userId: number, token: string): Promise<Group[]> {
+    try {
+      const response = await axios.get(groupsEndpoints.getCreatedGroups(userId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener grupos creados:', error);
+      throw error;
+    }
+  }
 
-  update: async (id: number, groupData: UpdateGroupData) => {
-    const { data } = await api.patch(`${GROUPS_ENDPOINTS.UPDATE_GROUP}/${id}`, {
-      name: groupData.name,
-      description: groupData.description,
-      id_course: groupData.id_course,
-      owner_id: groupData.owner_id,
-    });
-    return data;
-  },
+  /**
+   * Obtener grupos donde el usuario es miembro
+   */
+  async getMemberGroups(userId: number, token: string): Promise<Group[]> {
+    try {
+      const response = await axios.get(groupsEndpoints.getMemberGroups(userId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener grupos como miembro:', error);
+      throw error;
+    }
+  }
 
-  delete: async (id: number) => {
-    const { data } = await api.delete(`${GROUPS_ENDPOINTS.DELETE_GROUP}/${id}`);
-    return data;
-  },
+  /**
+   * Descubrir grupos disponibles según las materias inscritas del usuario
+   */
+  async discoverGroups(userId: number, token: string): Promise<Group[]> {
+    try {
+      const response = await axios.get(groupsEndpoints.discoverGroups(userId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al descubrir grupos:', error);
+      throw error;
+    }
+  }
 
-  getById: async (id: number) => {
-    const { data } = await api.get(`${GROUPS_ENDPOINTS.GET_BY_ID}/${id}`);
-    return data;
-  },
-};
+  /**
+   * Obtener grupos de una materia específica
+   */
+  async getGroupsByCourse(courseId: number, token: string): Promise<Group[]> {
+    try {
+      const response = await axios.get(groupsEndpoints.getGroupsByCourse(courseId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener grupos por materia:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener detalle de un grupo específico
+   */
+  async getGroupDetail(groupId: number, token: string): Promise<Group> {
+    try {
+      const response = await axios.get(groupsEndpoints.getGroupDetail(groupId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener detalle del grupo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Eliminar grupo (solo owner)
+   */
+  async deleteGroup(groupId: number, token: string): Promise<void> {
+    try {
+      await axios.delete(groupsEndpoints.deleteGroup(groupId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error('Error al eliminar grupo:', error);
+      throw error;
+    }
+  }
+
+  // ==================== INVITACIONES ====================
+
+  /**
+   * Enviar invitación a un grupo (solo admin)
+   */
+  async sendInvitation(data: GroupInvitationRequest, token: string): Promise<GroupInvitation> {
+    try {
+      const response = await axios.post(groupInvitationsEndpoints.sendInvitation(), data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al enviar invitación:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener invitaciones pendientes del usuario
+   */
+  async getPendingInvitations(userId: number, token: string): Promise<GroupInvitation[]> {
+    try {
+      const response = await axios.get(groupInvitationsEndpoints.getPendingInvitations(userId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener invitaciones pendientes:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener invitaciones enviadas por el usuario
+   */
+  async getSentInvitations(userId: number, token: string): Promise<GroupInvitation[]> {
+    try {
+      const response = await axios.get(groupInvitationsEndpoints.getSentInvitations(userId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener invitaciones enviadas:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Responder a una invitación (aceptar o rechazar)
+   */
+  async respondToInvitation(
+    invitationId: number, 
+    response: 'accepted' | 'rejected', 
+    token: string
+  ): Promise<GroupInvitationResponse> {
+    try {
+      const res = await axios.patch(
+        groupInvitationsEndpoints.respondToInvitation(invitationId),
+        { response },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.error('Error al responder invitación:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancelar invitación (solo quien la envió)
+   */
+  async cancelInvitation(invitationId: number, token: string): Promise<void> {
+    try {
+      await axios.delete(groupInvitationsEndpoints.cancelInvitation(invitationId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error('Error al cancelar invitación:', error);
+      throw error;
+    }
+  }
+}
+
+export const groupsService = new GroupsService();
+export default GroupsService;
