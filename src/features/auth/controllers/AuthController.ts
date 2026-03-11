@@ -31,10 +31,16 @@ export class AuthController {
 
       // Validate FEN response format
       if (!fenResponse.success || fenResponse.statusCode !== 200) {
-        console.error('BFF returned error:', fenResponse.message);
+        console.log('BFF returned error:', fenResponse.message);
         const errorDetail = fenResponse.message || 'Autenticación fallida';
         authStore.setError(errorDetail);
-        showToast.error('Error de autenticación', errorDetail);
+        
+        // No mostrar toast si es un error de red o servidor (silenciar en login)
+        if (!errorDetail.toLowerCase().includes('network') && 
+            !errorDetail.toLowerCase().includes('econnrefused') &&
+            !errorDetail.toLowerCase().includes('timeout')) {
+          showToast.error('Error de autenticación', errorDetail);
+        }
         return; // No lanzar excepción, solo mostrar el error
       }
 
@@ -74,12 +80,18 @@ export class AuthController {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error en la autenticación';
-      console.error('AuthController: Authentication error', {
+      console.log('AuthController: Authentication error', {
         message: errorMessage,
         error: error instanceof Error ? error.stack : error,
       });
       authStore.setError(errorMessage);
-      showToast.error('Error', errorMessage);
+      
+      // No mostrar toast si es error de red en login
+      if (!errorMessage.toLowerCase().includes('network') && 
+          !errorMessage.toLowerCase().includes('econnrefused') &&
+          !errorMessage.toLowerCase().includes('timeout')) {
+        showToast.error('Error', errorMessage);
+      }
     } finally {
       authStore.setLoading(false);
     }
