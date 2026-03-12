@@ -76,9 +76,6 @@ const normalizeCommunityStudent = (raw: any): Student => {
 
   if (backendCommonCourses.length === 0) {
     const clientCommonCourses = calculateCommonCourses(raw);
-    if (__DEV__) {
-      console.log('[DEBUG] Calculated client-side common_courses:', clientCommonCourses);
-    }
     normalized.common_courses = clientCommonCourses;
   } else {
     normalized.common_courses = backendCommonCourses;
