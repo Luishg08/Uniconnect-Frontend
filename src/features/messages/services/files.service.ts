@@ -109,6 +109,80 @@ class FilesService {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
+
+    /**
+     * Obtener URL prefirmada para descargar un archivo de forma segura desde S3
+     * @param fileId - ID del archivo en la base de datos
+     * @param token - Token JWT del usuario autenticado
+     * @returns URL prefirmada válida por 1 hora
+     */
+    async getPresignedDownloadUrl(fileId: number, token: string): Promise<string> {
+      try {
+        console.log(`[FilesService] Solicitando URL prefirmada para archivo ${fileId}...`);
+
+        const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[FilesService] Error obteniendo URL prefirmada: ${response.status} - ${errorText}`);
+          throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+
+        // Desempaquetar respuesta FEN estándar: response.data.data.url
+        const signedUrl = responseData?.data?.url;
+
+        if (!signedUrl) {
+          throw new Error('URL prefirmada no encontrada en la respuesta');
+        }
+
+        console.log(`[FilesService] URL prefirmada obtenida exitosamente`);
+        return signedUrl;
+      } catch (error: any) {
+        console.error(`[FilesService] Error obteniendo URL prefirmada:`, error.message);
+        throw error;
+      }
+    }
+
+    /**
+     * Descargar y abrir un archivo usando Presigned URL
+     * Orquesta todo el flujo: obtener URL prefirmada -> abrir en navegador
+     * @param file - Objeto completo del archivo con id_file
+     * @param token - Token JWT del usuario autenticado
+     */
+    async downloadAndOpenFile(file: { id_file: number; file_name: string }, token: string): Promise<void> {
+      const { Alert } = await import('react-native');
+      const WebBrowser = await import('expo-web-browser');
+
+      try {
+        console.log(`[FilesService] Iniciando descarga de archivo: ${file.file_name}`);
+
+        // Obtener URL prefirmada del backend
+        const signedUrl = await this.getPresignedDownloadUrl(file.id_file, token);
+
+        console.log(`[FilesService] Abriendo archivo en navegador...`);
+
+        // Abrir el archivo usando Expo WebBrowser
+        await WebBrowser.openBrowserAsync(signedUrl);
+
+        console.log(`[FilesService] Archivo abierto exitosamente`);
+      } catch (error: any) {
+        console.error(`[FilesService] Error descargando archivo:`, error.message);
+
+        Alert.alert(
+          'Error al descargar',
+          `No se pudo abrir el archivo: ${error.message || 'Error desconocido'}`,
+          [{ text: 'OK' }]
+        );
+      }
+    }
 }
 
 export const filesService = new FilesService();

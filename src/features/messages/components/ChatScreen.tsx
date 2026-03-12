@@ -67,6 +67,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     editMessage,
     deleteMessage,
     emitTyping,
+    downloadFile,
   } = useChat({
     groupId,
     userId,
@@ -171,6 +172,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           console.log('Editar mensaje:', item.id_message);
         }}
         onDelete={() => deleteMessage(item.id_message)}
+        onFilePress={downloadFile}
       />
     );
   };

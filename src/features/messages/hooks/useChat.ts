@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { messagesService } from '../services/messages.service';
 import { websocketService } from '../services/websocket.service';
+import { filesService } from '../services/files.service';
 import { Message, MessageSendData, TypingData } from '../types';
 import { getServerUrl } from '../config/websocket.config';
 
@@ -262,6 +263,11 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
     websocketService.searchMessages({ query });
   }, []);
 
+  // Descargar y abrir archivo con Presigned URL
+  const downloadFile = useCallback(async (file: { id_file: number; file_name: string }) => {
+    await filesService.downloadAndOpenFile(file, token);
+  }, [token]);
+
   return {
     messages,
     loading,
@@ -275,5 +281,6 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
     loadMoreMessages,
     searchMessages,
     reloadMessages: loadMessages,
+    downloadFile,
   };
 };

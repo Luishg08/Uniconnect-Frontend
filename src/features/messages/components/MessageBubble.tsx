@@ -7,10 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
 import { Message } from '../types';
 
 interface MessageBubbleProps {
@@ -19,32 +17,18 @@ interface MessageBubbleProps {
   isAdmin: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onFilePress?: (file: { id_file: number; file_name: string }) => void;
 }
 
 // Combo blindado: Linking nativo primero, WebBrowser como plan B
-const handleOpenFile = async (fileUrl: string) => {
-  console.log('[Chat] TOUCH DETECTADO, intentando abrir:', fileUrl);
-  try {
-    const url = fileUrl.trim();
-
-    // Intento 1: Linking nativo
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      console.log('[Chat] Abriendo con Linking Nativo');
-      await Linking.openURL(url);
-      return;
-    }
-
-    // Intento 2: Expo Web Browser
-    console.log('[Chat] Linking fallo, intentando con WebBrowser');
-    await WebBrowser.openBrowserAsync(url);
-  } catch (error) {
-    console.error('[Chat] ERROR CRITICO ABRIENDO ARCHIVO:', error);
-
-    // Intento 3: Fallback kamikaze
-    Linking.openURL(fileUrl).catch(() => {
-      Alert.alert('Error', 'No tienes una aplicacion para abrir este archivo.');
-    });
+const handleOpenFile = async (file: { id_file: number; file_name: string }, onFilePress?: (file: { id_file: number; file_name: string }) => void) => {
+  console.log('[MessageBubble] Archivo presionado:', file.file_name);
+  
+  if (onFilePress) {
+    // Delegar al controlador/servicio (arquitectura MVC Local)
+    onFilePress(file);
+  } else {
+    console.warn('[MessageBubble] No hay handler onFilePress configurado');
   }
 };
 
@@ -54,6 +38,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   isAdmin,
   onEdit,
   onDelete,
+  onFilePress,
 }) => {
   const isMine = isOwnMessage;
 
@@ -125,7 +110,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   <Image source={{ uri: file.url }} style={styles.whatsappImage} resizeMode="cover" />
                   <TouchableOpacity
                     style={styles.whatsappDownloadOverlay}
-                    onPress={() => handleOpenFile(file.url)}
+                    onPress={() => handleOpenFile(file, onFilePress)}
                     activeOpacity={0.6}
                   >
                     <Ionicons name="arrow-down-circle" size={60} color="rgba(255,255,255,0.85)" />
@@ -137,7 +122,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                    ========================================= */
                 <TouchableOpacity
                   style={styles.whatsappDocRow}
-                  onPress={() => handleOpenFile(file.url)}
+                  onPress={() => handleOpenFile(file, onFilePress)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.docIconWrapper}>
