@@ -1,7 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
-import { Message } from '../types';
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  Linking,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import { Message } from '../types';
 
 interface MessageBubbleProps {
   message: Message;
@@ -11,6 +21,33 @@ interface MessageBubbleProps {
   onDelete?: () => void;
 }
 
+// Combo blindado: Linking nativo primero, WebBrowser como plan B
+const handleOpenFile = async (fileUrl: string) => {
+  console.log('[Chat] TOUCH DETECTADO, intentando abrir:', fileUrl);
+  try {
+    const url = fileUrl.trim();
+
+    // Intento 1: Linking nativo
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      console.log('[Chat] Abriendo con Linking Nativo');
+      await Linking.openURL(url);
+      return;
+    }
+
+    // Intento 2: Expo Web Browser
+    console.log('[Chat] Linking fallo, intentando con WebBrowser');
+    await WebBrowser.openBrowserAsync(url);
+  } catch (error) {
+    console.error('[Chat] ERROR CRITICO ABRIENDO ARCHIVO:', error);
+
+    // Intento 3: Fallback kamikaze
+    Linking.openURL(fileUrl).catch(() => {
+      Alert.alert('Error', 'No tienes una aplicacion para abrir este archivo.');
+    });
+  }
+};
+
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isOwnMessage,
@@ -18,25 +55,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const isMine = isOwnMessage;
+
   const showOptions = () => {
     const options = [];
-    
-    // Solo el autor puede editar
+
     if (isOwnMessage && onEdit) {
       options.push({
         text: 'Editar',
         onPress: onEdit,
       });
     }
-    
-    // El autor o admin pueden eliminar
+
     if ((isOwnMessage || isAdmin) && onDelete) {
       options.push({
         text: 'Eliminar',
         onPress: () => {
           Alert.alert(
-            'Confirmar eliminación',
-            '¿Estás seguro de que deseas eliminar este mensaje?',
+            'Confirmar eliminacion',
+            'Estas seguro de que deseas eliminar este mensaje?',
             [
               { text: 'Cancelar', style: 'cancel' as const },
               { text: 'Eliminar', onPress: onDelete, style: 'destructive' as const },
@@ -46,12 +83,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         style: 'destructive' as const,
       });
     }
-    
+
     options.push({
       text: 'Cancelar',
       style: 'cancel' as const,
     });
-    
+
     if (options.length > 1) {
       Alert.alert('Opciones', '', options);
     }
@@ -62,16 +99,77 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // FUNCION RENDERIZADORA A PRUEBA DE FALLOS
+  const renderFiles = () => {
+    if (!message.files || message.files.length === 0) {
+      return null;
+    }
+
+    console.log('[UI Render] Pintando archivos del mensaje:', message.id_message, 'Cantidad:', message.files.length);
+
+    return (
+      <View style={styles.filesGlobalContainer}>
+        {message.files.map((file) => {
+          const mime = file.mime_type || '';
+          const isImage = mime.includes('image');
+
+          console.log(`[UI Render] Archivo: ${file.file_name} | Es imagen: ${isImage}`);
+
+          return (
+            <View key={`file-${file.id_file}`} style={styles.whatsappFileContainer}>
+              {isImage ? (
+                /* =========================================
+                   DISENO DE IMAGEN ESTILO WHATSAPP
+                   ========================================= */
+                <View style={styles.imageWrapper}>
+                  <Image source={{ uri: file.url }} style={styles.whatsappImage} resizeMode="cover" />
+                  <TouchableOpacity
+                    style={styles.whatsappDownloadOverlay}
+                    onPress={() => handleOpenFile(file.url)}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons name="arrow-down-circle" size={60} color="rgba(255,255,255,0.85)" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* =========================================
+                   DISENO DE DOCUMENTO PDF ESTILO WHATSAPP
+                   ========================================= */
+                <TouchableOpacity
+                  style={styles.whatsappDocRow}
+                  onPress={() => handleOpenFile(file.url)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.docIconWrapper}>
+                    <Ionicons name="document-text" size={30} color="#fff" />
+                  </View>
+
+                  <View style={styles.docInfo}>
+                    <Text style={styles.docName} numberOfLines={1}>
+                      {file.file_name || 'Documento adjunto'}
+                    </Text>
+                    <Text style={styles.docSize}>
+                      {file.size ? (file.size / 1024 / 1024).toFixed(2) : '0.00'} MB
+                    </Text>
+                  </View>
+
+                  <View style={styles.downloadIconWrapper}>
+                    <Ionicons name="download-outline" size={28} color="#54656f" />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   return (
-    <TouchableOpacity
-      style={[
-        styles.container,
-        isOwnMessage ? styles.ownMessage : styles.otherMessage,
-      ]}
-      onLongPress={showOptions}
-      activeOpacity={0.7}
-    >
-      {!isOwnMessage && (
+    <View style={[styles.messageWrapper, isMine ? styles.mineWrapper : styles.theirsWrapper]}>
+
+      {/* Header: avatar + nombre (solo mensajes ajenos) */}
+      {!isMine && (
         <View style={styles.header}>
           {message.membership?.user?.picture ? (
             <Image
@@ -88,47 +186,49 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </Text>
         </View>
       )}
-      
-      <View
-        style={[
-          styles.bubble,
-          isOwnMessage ? styles.ownBubble : styles.otherBubble,
-        ]}
-      >
-        <Text
-          style={[
-            styles.messageText,
-            isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
-          ]}
+
+      {/* TEXTO NORMAL */}
+      {message.text_content ? (
+        <Pressable
+          onLongPress={showOptions}
+          style={[styles.bubble, isMine ? styles.mineBubble : styles.theirsBubble]}
         >
-          {message.text_content}
-        </Text>
-        
-        <View style={styles.footer}>
-          <Text style={[styles.time, isOwnMessage && styles.ownTime]}>
-            {formatTime(message.send_at)}
+          <Text style={[styles.messageText, isMine ? styles.mineText : styles.theirsText]}>
+            {message.text_content}
           </Text>
-          {message.is_edited && (
-            <Text style={[styles.editedBadge, isOwnMessage && styles.ownTime]}>
-              editado
-            </Text>
-          )}
-        </View>
+        </Pressable>
+      ) : null}
+
+      {/* ARCHIVOS (LLAMADA DIRECTA A LA FUNCION) */}
+      {renderFiles()}
+
+      {/* Footer: hora + editado */}
+      <View style={styles.footer}>
+        <Text style={[styles.time, isMine && styles.mineTime]}>
+          {formatTime(message.send_at)}
+        </Text>
+        {message.is_edited && (
+          <Text style={[styles.editedBadge, isMine && styles.mineTime]}>
+            editado
+          </Text>
+        )}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  // Contenedor principal del mensaje - SIN overflow hidden, SIN height fijo
+  messageWrapper: {
     marginVertical: 4,
     marginHorizontal: 12,
+    maxWidth: '80%',
   },
-  ownMessage: {
-    alignItems: 'flex-end',
+  mineWrapper: {
+    alignSelf: 'flex-end',
   },
-  otherMessage: {
-    alignItems: 'flex-start',
+  theirsWrapper: {
+    alignSelf: 'flex-start',
   },
   header: {
     flexDirection: 'row',
@@ -152,26 +252,25 @@ const styles = StyleSheet.create({
     color: '#D9B97E',
   },
   bubble: {
-    maxWidth: '75%',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
   },
-  ownBubble: {
+  mineBubble: {
     backgroundColor: '#D9B97E',
     borderBottomRightRadius: 4,
   },
-  otherBubble: {
+  theirsBubble: {
     backgroundColor: '#2a2a2a',
     borderBottomLeftRadius: 4,
   },
   messageText: {
     fontSize: 16,
   },
-  ownMessageText: {
+  mineText: {
     color: '#1a1a1a',
   },
-  otherMessageText: {
+  theirsText: {
     color: '#FFFFFF',
   },
   footer: {
@@ -184,12 +283,84 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginRight: 4,
   },
-  ownTime: {
+  mineTime: {
     color: '#4a4a4a',
   },
   editedBadge: {
     fontSize: 11,
     fontStyle: 'italic',
     color: '#9CA3AF',
+  },
+
+  // ========= ESTILOS DE ARCHIVOS ESTILO WHATSAPP =========
+  filesGlobalContainer: {
+    marginTop: 6,
+    width: '100%',
+  },
+  whatsappFileContainer: {
+    marginBottom: 8,
+  },
+
+  // ESTILOS IMAGEN
+  imageWrapper: {
+    position: 'relative',
+    width: 240,
+    height: 240,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#d9d9d9',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  whatsappImage: {
+    width: '100%',
+    height: '100%',
+  },
+  whatsappDownloadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+
+  // ESTILOS DOCUMENTO
+  whatsappDocRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f2f5',
+    borderRadius: 12,
+    padding: 12,
+    width: 280,
+    borderWidth: 1,
+    borderColor: '#e1e5e8',
+    elevation: 1,
+  },
+  docIconWrapper: {
+    backgroundColor: '#FF5722',
+    padding: 12,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  docInfo: {
+    flex: 1,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+  },
+  docName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#111b21',
+    marginBottom: 3,
+  },
+  docSize: {
+    fontSize: 13,
+    color: '#667781',
+  },
+  downloadIconWrapper: {
+    padding: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

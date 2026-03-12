@@ -12,12 +12,21 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { filesService } from '../services/files.service';
+
+interface SelectedFile {
+  uri: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  isImage: boolean;
+}
 
 interface FilePickerModalProps {
   visible: boolean;
   onClose: () => void;
-  onFilesSelected: (files: File[]) => void;
+  onFilesSelected: (files: SelectedFile[]) => void;
   loading?: boolean;
 }
 
@@ -27,56 +36,80 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
   onFilesSelected,
   loading = false,
 }) => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
 
   const handlePickImages = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (permissionResult.status !== 'granted') {
-        Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para seleccionar fotos.');
+        Alert.alert('Permiso requerido', 'Se necesita acceso a la galeria para seleccionar fotos.');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        base64: false,
-        aspect: [4, 3],
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
         quality: 0.8,
       });
 
       if (!result.canceled) {
-        const files = result.assets.map((asset) => ({
+        const files: SelectedFile[] = result.assets.map((asset) => ({
           uri: asset.uri,
-          name: asset.fileName || `image_${Date.now()}.jpg`,
-          type: asset.type || 'image/jpeg',
+          name: asset.fileName || `imagen_${Date.now()}.jpg`,
+          mimeType: asset.mimeType || 'image/jpeg',
           size: asset.fileSize || 0,
-        } as any)) as File[];
+          isImage: true,
+        }));
 
-        const validation = filesService.validateFiles(files);
+        const allFiles = [...selectedFiles, ...files];
+        const validation = filesService.validateFiles(allFiles);
         if (!validation.valid) {
           Alert.alert('Error', validation.error);
           return;
         }
 
-        setSelectedFiles([...selectedFiles, ...files]);
+        setSelectedFiles(allFiles);
       }
     } catch (error: any) {
-      Alert.alert('Error', 'Error al seleccionar imágenes');
+      Alert.alert('Error', 'Error al seleccionar imagenes');
       console.error(error);
     }
   };
 
   const handlePickDocuments = async () => {
-    Alert.alert(
-      'Próximamente',
-      'La opción de compartir documentos estará disponible pronto. Por ahora solo puedes compartir fotos.'
-    );
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        multiple: true,
+      });
+
+      if (!result.canceled) {
+        const files: SelectedFile[] = result.assets.map((asset) => ({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType || 'application/octet-stream',
+          size: asset.size || 0,
+          isImage: (asset.mimeType || '').startsWith('image/'),
+        }));
+
+        const allFiles = [...selectedFiles, ...files];
+        const validation = filesService.validateFiles(allFiles);
+        if (!validation.valid) {
+          Alert.alert('Error', validation.error);
+          return;
+        }
+
+        setSelectedFiles(allFiles);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', 'Error al seleccionar documentos');
+      console.error(error);
+    }
   };
 
-  const handleRemoveFile = (fileName: string) => {
-    setSelectedFiles(selectedFiles.filter((f) => f.name !== fileName));
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
   const handleSend = () => {
@@ -87,7 +120,6 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
 
     onFilesSelected(selectedFiles);
     setSelectedFiles([]);
-    onClose();
   };
 
   const handleCancel = () => {
@@ -111,11 +143,12 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Botones de selección */}
+        {/* Botones de seleccion */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handlePickImages}
+            disabled={loading}
           >
             <Ionicons name="images-outline" size={24} color="#D9B97E" />
             <Text style={styles.actionButtonText}>Fotos</Text>
@@ -124,6 +157,7 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handlePickDocuments}
+            disabled={loading}
           >
             <Ionicons name="document-outline" size={24} color="#D9B97E" />
             <Text style={styles.actionButtonText}>Documentos</Text>
@@ -134,20 +168,36 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
         <ScrollView style={styles.filesList}>
           {selectedFiles.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="image-outline" size={48} color="#6B7280" />
-              <Text style={styles.emptyText}>No hay fotos seleccionadas</Text>
+              <Ionicons name="cloud-upload-outline" size={48} color="#6B7280" />
+              <Text style={styles.emptyText}>No hay archivos seleccionados</Text>
             </View>
           ) : (
-            <View style={styles.photoGrid}>
+            <View>
               {selectedFiles.map((file, index) => (
-                <View key={index} style={styles.photoContainer}>
-                  <Image
-                    source={{ uri: (file as any).uri }}
-                    style={styles.photoThumbnail}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => handleRemoveFile(file.name)}
-                    style={styles.removePhotoButton}
+                <View key={index} style={styles.fileItem}>
+                  {file.isImage ? (
+                    <Image
+                      source={{ uri: file.uri }}
+                      style={styles.fileThumbnail}
+                    />
+                  ) : (
+                    <View style={styles.fileIconContainer}>
+                      <Ionicons
+                        name={filesService.getFileIcon(file.name) as any}
+                        size={24}
+                        color="#D9B97E"
+                      />
+                    </View>
+                  )}
+                  <View style={styles.fileInfo}>
+                    <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                    <Text style={styles.fileSize}>
+                      {file.size ? filesService.getFileSize(file.size) : 'N/A'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveFile(index)}
+                    style={styles.removeButton}
                   >
                     <Ionicons name="close-circle" size={24} color="#EF4444" />
                   </TouchableOpacity>
@@ -159,7 +209,7 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
 
         {/* Footer con botones */}
         <View style={styles.footer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.cancelButton}
             onPress={handleCancel}
             disabled={loading}
@@ -168,7 +218,7 @@ export const FilePickerModal: React.FC<FilePickerModalProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.sendButton, loading && styles.sendButtonDisabled]}
+            style={[styles.sendButton, (loading || selectedFiles.length === 0) && styles.sendButtonDisabled]}
             onPress={handleSend}
             disabled={selectedFiles.length === 0 || loading}
           >
@@ -244,30 +294,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 12,
   },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    paddingBottom: 12,
-  },
-  photoContainer: {
-    width: '31%',
-    aspectRatio: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#2a2a2a',
-  },
-  photoThumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  removePhotoButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#1a1a1a80',
-    borderRadius: 12,
-  },
   fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -276,6 +302,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 8,
+  },
+  fileThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+  },
+  fileIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    backgroundColor: '#363636',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fileInfo: {
     flex: 1,

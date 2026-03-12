@@ -5,9 +5,7 @@ export const authService = {
   
   exchangeAuthorizationCode: async (code: string, redirectUri: string, codeVerifier: string) => {
     try {
-      // Use the environment-configured API URL for consistency
-      const bffUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8007/api';
-      const response = await api.post(`${bffUrl}/auth/callback`, {
+      const response = await api.post('/auth/callback', {
         code,
         redirect_uri: redirectUri,
         code_verifier: codeVerifier, // PKCE: Send code_verifier for secure exchange
@@ -32,12 +30,9 @@ export const authService = {
 
   refreshTokens: async (refreshToken: string, userId: number) => {
     try {
-      const bffUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8007/api';
-      console.log('Calling refresh endpoint:', `${bffUrl}/auth/refresh`);
-      console.log('Refresh token (first 20 chars):', refreshToken.substring(0, 20) + '...');
-      console.log('User ID:', userId);
-      
-      const response = await api.post(`${bffUrl}/auth/refresh`, {
+      console.log('Calling refresh endpoint');
+
+      const response = await api.post('/auth/refresh', {
         refresh_token: refreshToken,
         user_id: userId,
       });
@@ -72,8 +67,7 @@ export const authService = {
    * Foundation for logout flow
    */
   async logout(accessToken: string) {
-    const bffUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8007/api';
-    const { data } = await api.post(`${bffUrl}/auth/logout`, {
+    const { data } = await api.post('/auth/logout', {
       access_token: accessToken,
     });
     

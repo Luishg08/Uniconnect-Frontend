@@ -1,9 +1,10 @@
-import axios from 'axios';
 import { API_BASE_URL } from '@/src/constants/api';
 
 class FilesService {
   /**
-   * Subir archivos a S3 a través del backend
+   * Subir archivos a S3 a traves del backend.
+   * Usa fetch nativo en lugar de Axios para evitar el bug de Network Error
+   * con FormData en React Native Android.
    */
   async uploadFiles(
     files: any[],
@@ -11,78 +12,72 @@ class FilesService {
     token: string,
     messageId?: number
   ): Promise<any[]> {
+    const formData = new FormData();
+
+    // Campos de texto primero
+    formData.append('id_group', String(groupId));
+    if (messageId) {
+      formData.append('id_message', String(messageId));
+    }
+
+    // Archivos en formato React Native: { uri, type, name }
+    files.forEach((file, index) => {
+      formData.append('files', {
+        uri: file.uri,
+        type: file.mimeType || file.type || 'application/octet-stream',
+        name: file.name || file.fileName || `archivo_${index}`,
+      } as any);
+    });
+
+    console.log(`[FilesService] Subiendo ${files.length} archivo(s) al grupo ${groupId}...`);
+
     try {
-      const formData = new FormData();
-      
-      // Agregar archivos
-      files.forEach((file, index) => {
-        formData.append('files', file);
-      });
-
-      // Agregar parámetros
-      formData.append('id_group', groupId.toString());
-      if (messageId) {
-        formData.append('id_message', messageId.toString());
-      }
-
-      console.log(`[FilesService] Subiendo ${files.length} archivo(s) al grupo ${groupId}...`);
-      
-      const response = await axios.post(`${API_BASE_URL}/files/upload`, formData, {
+      // FETCH NATIVO: evita el bug de Axios con FormData en Android
+      const response = await fetch(`${API_BASE_URL}/files/upload`, {
+        method: 'POST',
+        body: formData,
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+          // NO poner Content-Type: fetch calcula el boundary automaticamente
         },
       });
 
-      console.log(`[FilesService] ✅ Archivos subidos exitosamente:`, response.data);
-      return response.data.data || [];
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[FilesService] Error del servidor: ${response.status} - ${errorText}`);
+        throw new Error(`Error del servidor: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log(`[FilesService] Archivos subidos exitosamente`);
+      return responseData.data || [];
     } catch (error: any) {
-      console.error(`[FilesService] ❌ Error al subir archivos:`, error);
-      console.error(`[FilesService] Status: ${error.response?.status}`);
-      console.error(`[FilesService] Data: ${JSON.stringify(error.response?.data)}`);
+      console.error(`[FilesService] Error subiendo archivos:`, error.message);
       throw error;
     }
   }
 
   /**
-   * Validar que los archivos cumplan con los requisitos
+   * Validar que los archivos cumplan con los requisitos basicos
+   * Solo valida cantidad y tamano, NO tipo MIME (S3 acepta todo)
    */
-  validateFiles(files: File[]): { valid: boolean; error?: string } {
+  validateFiles(files: any[]): { valid: boolean; error?: string } {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     const MAX_FILES = 5;
-    const ALLOWED_TYPES = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    ];
 
     if (files.length === 0) {
       return { valid: false, error: 'Selecciona al menos un archivo' };
     }
 
     if (files.length > MAX_FILES) {
-      return { valid: false, error: `Máximo ${MAX_FILES} archivos permitidos` };
+      return { valid: false, error: `Maximo ${MAX_FILES} archivos permitidos` };
     }
 
     for (const file of files) {
-      // Validar tamaño si está disponible
-      if (file.size && file.size > MAX_FILE_SIZE) {
-        return { valid: false, error: `${file.name} es muy grande (máx 10MB)` };
-      }
-
-      // Validar tipo
-      if (file.type && !ALLOWED_TYPES.includes(file.type)) {
-        console.warn(`Tipo de archivo potencialmente no permitido: ${file.type}`);
-        // No bloqueamos, solo advertimos
+      const size = file.size || file.fileSize;
+      if (size && size > MAX_FILE_SIZE) {
+        return { valid: false, error: `${file.name} es muy grande (max 10MB)` };
       }
     }
 
@@ -94,18 +89,18 @@ class FilesService {
    */
   getFileIcon(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
-    
+
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image-outline';
     if (ext === 'pdf') return 'document-outline';
     if (['doc', 'docx'].includes(ext)) return 'document-text-outline';
     if (['xls', 'xlsx'].includes(ext)) return 'grid-outline';
     if (ext === 'txt') return 'document-outline';
-    
+
     return 'attach-outline';
   }
 
   /**
-   * Obtener tamaño legible del archivo
+   * Obtener tamano legible del archivo
    */
   getFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';

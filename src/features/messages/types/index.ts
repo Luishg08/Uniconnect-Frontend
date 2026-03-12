@@ -1,3 +1,12 @@
+export interface MessageFile {
+  id_file: number;
+  url: string;
+  file_name: string;
+  mime_type: string;
+  size: number;
+  created_at?: string;
+}
+
 export interface Message {
   id_message: number;
   id_membership: number;
@@ -6,6 +15,7 @@ export interface Message {
   attachments: string;
   is_edited: boolean;
   edited_at: string | null;
+  files?: MessageFile[];
   membership?: {
     user: {
       id_user: number;

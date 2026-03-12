@@ -113,7 +113,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     setInputText(inputText + emoji);
   };
 
-  const handleFilesSelected = async (files: File[]) => {
+  const handleFilesSelected = async (files: any[]) => {
     try {
       setUploadingFiles(true);
       console.log(`[ChatScreen] Subiendo ${files.length} archivos...`);
@@ -124,19 +124,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         token
       );
 
-      console.log(`[ChatScreen] ✅ Archivos subidos:`, uploadedFiles);
-
-      // Crear mensaje con los archivos adjuntos
-      if (uploadedFiles.length > 0) {
-        const fileNames = uploadedFiles.map(f => f.file_name).join(', ');
-        const messageText = `📎 Archivos compartidos: ${fileNames}`;
-        sendMessage(messageText);
-      }
+      console.log(`[ChatScreen] Archivos subidos:`, uploadedFiles.length);
+      // El backend crea el mensaje automaticamente y lo emite por WebSocket.
+      // No necesitamos enviar un mensaje de texto adicional.
 
       setShowFilePicker(false);
     } catch (error: any) {
-      console.error(`[ChatScreen] ❌ Error al subir archivos:`, error);
-      Alert.alert('Error', 'Error al subir los archivos. Intenta de nuevo.');
+      console.error(`[ChatScreen] Error al subir archivos:`, error.message);
+      Alert.alert('Error', error.message || 'Error al subir los archivos. Intenta de nuevo.');
     } finally {
       setUploadingFiles(false);
     }
@@ -251,7 +246,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         style={styles.flatList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
+        keyboardDismissMode="on-drag"
       />
 
       {renderTypingIndicator()}

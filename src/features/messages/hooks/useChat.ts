@@ -28,7 +28,17 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       console.log(`[useChat] Cargando mensajes del grupo ${groupId}...`);
       const data = await messagesService.getRecentMessages(groupId, 50, token);
       console.log(`[useChat] ✅ Mensajes cargados: ${data?.length || 0} mensajes`);
-      setMessages(data || []); // Los mensajes ya vienen ordenados correctamente del backend
+      // HOOK TRACKER: Verificar si los mensajes traen files
+      if (data && data.length > 0) {
+        const conArchivos = data.filter((m: any) => m.files && m.files.length > 0);
+        console.log(`[Hook Tracker] Mensajes con files: ${conArchivos.length} de ${data.length}`);
+        if (conArchivos.length > 0) {
+          console.log('[Hook Tracker] Ejemplo de mensaje con files:', JSON.stringify(conArchivos[0], null, 2));
+        } else {
+          console.log('[Hook Tracker] NINGUNO tiene files. Ejemplo primer mensaje:', JSON.stringify(data[0], null, 2));
+        }
+      }
+      setMessages(data || []);
       setError(null);
     } catch (err: any) {
       console.error(`[useChat] ❌ Error al cargar mensajes:`, err);
@@ -66,11 +76,32 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
     };
 
     // Escuchar nuevos mensajes
-    const handleNewMessage = (message: Message) => {
-      
+    const handleNewMessage = (rawMessage: any) => {
+      // WEBSOCKET TRACKER
+      console.log('[WebSocket Tracker] Nuevo mensaje recibido por WS:', JSON.stringify(rawMessage, null, 2));
+      console.log('[WebSocket Tracker] Tiene files?:', !!rawMessage.files, '| Cantidad:', rawMessage.files?.length || 0);
+
+      // Normalizar: el gateway emite { user, group, files } pero la UI espera { membership: { user, group }, files }
+      const message: Message = {
+        id_message: rawMessage.id_message,
+        id_membership: rawMessage.id_membership,
+        text_content: rawMessage.text_content || '',
+        send_at: rawMessage.send_at,
+        attachments: rawMessage.attachments || '',
+        is_edited: rawMessage.is_edited || false,
+        edited_at: rawMessage.edited_at || null,
+        files: rawMessage.files || [],
+        membership: rawMessage.membership || {
+          user: rawMessage.user || { id_user: 0, full_name: 'Usuario', picture: '' },
+          group: rawMessage.group || { id_group: groupId, name: '' },
+        },
+      };
+
+      const textContent = (message.text_content || '').trim();
+
       // Si es un mensaje que ya agregamos optimísticamente, no lo duplicamos
-      if (pendingMessagesRef.current.has(message.text_content.trim())) {
-        pendingMessagesRef.current.delete(message.text_content.trim());
+      if (textContent && pendingMessagesRef.current.has(textContent)) {
+        pendingMessagesRef.current.delete(textContent);
         // Reemplazar el mensaje temporal con el del servidor (tiene id_message real)
         setMessages((prev) => {
           const tempIndex = prev.findIndex(
@@ -78,28 +109,13 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
           );
           if (tempIndex >= 0) {
             const newMessages = [...prev];
-            // Asegurar que el mensaje del servidor tenga la info correcta de membership
-            const confirmedMessage = {
-              ...message,
-              membership: message.membership || {
-                user: {
-                  id_user: userId,
-                  full_name: userFullName,
-                  picture: '',
-                },
-                group: {
-                  id_group: groupId,
-                  name: '',
-                },
-              },
-            };
-            newMessages[tempIndex] = confirmedMessage;
+            newMessages[tempIndex] = message;
             return newMessages;
           }
           return [...prev, message];
         });
       } else {
-        // Mensaje de otro usuario o mensaje que no fue optimista
+        // Mensaje de otro usuario, mensaje de archivos, o mensaje que no fue optimista
         setMessages((prev) => [...prev, message]);
       }
     };

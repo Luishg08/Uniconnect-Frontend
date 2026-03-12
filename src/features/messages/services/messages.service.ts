@@ -16,6 +16,11 @@ class MessagesService {
         },
       });
       console.log(`[MessagesService] ✅ GET ${endpoint} - Status: ${response.status} - ${response.data?.length || 0} mensajes`);
+      // LOG DE AUDITORIA DE DATOS:
+      if (response.data && response.data.length > 0) {
+        console.log('[Data Tracker] Primer mensaje del historial:', JSON.stringify(response.data[0], null, 2));
+        console.log('[Data Tracker] Primer mensaje tiene files?:', !!response.data[0].files, '| Cantidad:', response.data[0].files?.length || 0);
+      }
       return response.data;
     } catch (error: any) {
       const endpoint = messagesEndpoints.getRecentMessages(groupId, limit);

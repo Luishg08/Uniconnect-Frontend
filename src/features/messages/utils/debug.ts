@@ -143,16 +143,13 @@ export async function testMessageSend(
  */
 export function checkEnvironmentVariables(): {
   apiUrl: string | undefined;
-  serverUrl: string | undefined;
   configured: boolean;
 } {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL;
 
   return {
     apiUrl,
-    serverUrl,
-    configured: !!apiUrl || !!serverUrl,
+    configured: !!apiUrl,
   };
 }
 
@@ -174,7 +171,6 @@ export function logConfiguredUrls(): void {
   console.log(`   API Base: ${API_BASE_URL}`);
   console.log(`   WebSocket: ${WEBSOCKET_URL}`);
   console.log(`   Env - EXPO_PUBLIC_API_URL: ${process.env.EXPO_PUBLIC_API_URL || 'no configurada'}`);
-  console.log(`   Env - EXPO_PUBLIC_SERVER_URL: ${process.env.EXPO_PUBLIC_SERVER_URL || 'no configurada'}`);
 }
 
 /**
