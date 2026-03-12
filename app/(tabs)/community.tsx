@@ -1,13 +1,62 @@
 import React, { useState } from 'react';
 import { View, TextInput, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useStudents } from '@/src/features/students/hooks/useStudents';
+import { useCommunityLists } from '@/src/features/students/hooks/useCommunityLists';
 import { StudentCard } from '@/src/features/students/components/StudentCard';
 import { useRouter } from 'expo-router'; 
 
+type CommunityTab = 'friends' | 'general';
+
 export default function CommunityScreen() {
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<CommunityTab>('friends');
   const router = useRouter(); 
-  const { data: students, isLoading } = useStudents(search);
+  const {
+    connectedStudents,
+    notConnectedStudents,
+    connectedQuery,
+    notConnectedQuery,
+  } = useCommunityLists(search);
+
+  const renderListState = () => {
+    const isFriendsTab = activeTab === 'friends';
+    const currentQuery = isFriendsTab ? connectedQuery : notConnectedQuery;
+    const currentData = isFriendsTab ? connectedStudents : notConnectedStudents;
+
+    if (currentQuery.isLoading) {
+      return (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#D9B97E" />
+        </View>
+      );
+    }
+
+    if (currentQuery.isError) {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>No se pudo cargar esta sección.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => currentQuery.refetch()}>
+            <Text style={styles.retryText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <FlatList
+        data={currentData}
+        keyExtractor={(item) => item.id_user.toString()}
+        renderItem={({ item }) => <StudentCard student={item} />}
+        contentContainerStyle={styles.listContent}
+        scrollEventThrottle={16}
+        nestedScrollEnabled={true}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {isFriendsTab ? 'Aún no tienes conexiones.' : 'No hay estudiantes disponibles.'}
+          </Text>
+        }
+      />
+    );
+  };
 
   return (
     <View style={styles.content}>
@@ -28,24 +77,26 @@ export default function CommunityScreen() {
         />
       </View>
 
-      {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      ) : (
-        <FlatList
-          data={students || []}
-          keyExtractor={(item) => item.id_user.toString()}
-          renderItem={({ item }) => <StudentCard student={item} />}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No se encontraron compañeros con esas materias.</Text>
-          }
-        />
-      )}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'friends' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('friends')}
+        >
+          <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>Mis amigos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'general' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('general')}
+        >
+          <Text style={[styles.tabText, activeTab === 'general' && styles.tabTextActive]}>Comunidad general</Text>
+        </TouchableOpacity>
+      </View>
+
+      {renderListState()}
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   content: { flex: 1, backgroundColor: '#363636' },
@@ -75,6 +126,46 @@ const styles = StyleSheet.create({
     borderColor: '#D9B97E',
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingBottom: 20 },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#aaa' }
+  listContent: { paddingBottom: 20, paddingTop: 16 },
+  emptyText: { textAlign: 'center', marginTop: 20, color: '#aaa' },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1a1a1a',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(217, 185, 126, 0.3)',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabButtonActive: {
+    borderBottomColor: '#D9B97E',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+  },
+  tabTextActive: {
+    color: '#D9B97E',
+  },
+  errorText: {
+    color: '#ff4d4d',
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: '#D9B97E',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  retryText: {
+    color: '#1a1a1a',
+    fontWeight: '700',
+  },
 });
