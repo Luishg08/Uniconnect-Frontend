@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: "35%",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#363636",
   },
   bottomBackground: {
     position: "absolute",

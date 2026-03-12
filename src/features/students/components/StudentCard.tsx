@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Student, CommonCourse } from "../types";
@@ -10,16 +10,65 @@ interface StudentCardProps {
 
 export const StudentCard = ({ student }: StudentCardProps) => {
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  const handlePress = () => {
-  router.push(`/(tabs)/student-profile?id=${student.id_user}`);
-};
+  const commonCourses = React.useMemo<CommonCourse[]>(() => {
+    const raw = (student as any).common_courses
+      ?? (student as any).commonCourses
+      ?? (student as any).common_subjects
+      ?? (student as any).commonSubjects
+      ?? (student as any).courses_in_common
+      ?? (student as any).coursesInCommon
+      ?? [];
+
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+
+    const normalized = raw
+      .map((course: any, index: number) => {
+        if (typeof course === 'string') {
+          return {
+            id_course: index + 1,
+            name: course,
+          };
+        }
+
+        if (typeof course !== 'object' || !course) return null;
+
+        const nested = course?.course;
+        const id_course = course?.id_course ?? nested?.id_course ?? index + 1;
+        const name = course?.name ?? nested?.name;
+
+        if (!name) return null;
+
+        return {
+          id_course,
+          name,
+        };
+      })
+      .filter((item): item is CommonCourse => Boolean(item));
+
+    return normalized;
+  }, [student]);
+
+  const handlePress = useCallback(async () => {
+    if (isNavigating) return;
+    
+    setIsNavigating(true);
+    try {
+      router.push(`/(tabs)/student-profile?id=${student.id_user}`);
+    } finally {
+      setIsNavigating(false);
+    }
+  }, [student.id_user, router, isNavigating]);
 
   return (
     <TouchableOpacity
       style={styles.card}
       onPress={handlePress}
       activeOpacity={0.7}
+      disabled={isNavigating}
     >
       <Image
         source={{
@@ -33,23 +82,21 @@ export const StudentCard = ({ student }: StudentCardProps) => {
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{student.full_name}</Text>
 
-        {/* Programa Académico */}
         <Text style={styles.program}>
           {student.program?.name || "Programa no asignado"}
         </Text>
 
-        {/* Materias en común */}
-        <View style={styles.badgeContainer}>
-          {student.common_courses && student.common_courses.length > 0 ? (
-            student.common_courses.map((course: CommonCourse) => (
-              <View key={course.id_course} style={styles.badge}>
+        {commonCourses.length > 0 ? (
+          <View style={styles.badgeContainer}>
+            {commonCourses.map((course) => (
+              <View key={`${course.id_course}-${course.name}`} style={styles.badge}>
                 <Text style={styles.badgeText}>{course.name}</Text>
               </View>
-            ))
-          ) : (
-            <Text style={styles.noCourses}>Sin materias en común</Text>
-          )}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.noCourses}>Sin materias en común</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -63,7 +110,6 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 12,
     marginHorizontal: 15,
-    // Sombra para iOS y Android
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
