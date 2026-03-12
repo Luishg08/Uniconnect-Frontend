@@ -1,15 +1,13 @@
+import { WEBSOCKET_URL } from '@/src/constants/api';
+
 /**
  * Configuración del sistema de WebSocket
  */
 
-// URL del servidor WebSocket
-// Cambiar según el entorno
+// URL del servidor WebSocket - Importada desde constantes centralizadas
 export const WS_CONFIG = {
-  // URL para desarrollo local
-  DEV_SERVER_URL: 'http://localhost:3000',
-  
-  // URL para producción (cambiar según tu deployment)
-  PROD_SERVER_URL: 'https://api-uniconnect.com',
+  // URL dinámica desde constantes (se ajusta según .env)
+  SERVER_URL: WEBSOCKET_URL,
   
   // Configuración de reconexión
   RECONNECTION_DELAY: 1000, // 1 segundo
@@ -24,13 +22,10 @@ export const WS_CONFIG = {
 } as const;
 
 /**
- * Obtener URL del servidor según el entorno
+ * Obtener URL del servidor - Centralizada en constantes de API
  */
 export const getServerUrl = (): string => {
-  // Detectar si estamos en desarrollo o producción
-  const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
-  
-  return isDevelopment ? WS_CONFIG.DEV_SERVER_URL : WS_CONFIG.PROD_SERVER_URL;
+  return WS_CONFIG.SERVER_URL;
 };
 
 /**

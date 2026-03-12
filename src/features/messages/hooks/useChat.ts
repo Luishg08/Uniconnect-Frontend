@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { messagesService } from '../services/messages.service';
 import { websocketService } from '../services/websocket.service';
 import { Message, MessageSendData, TypingData } from '../types';
+import { getServerUrl } from '../config/websocket.config';
 
 interface UseChatOptions {
   groupId: number;
@@ -24,21 +25,32 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
+      console.log(`[useChat] Cargando mensajes del grupo ${groupId}...`);
       const data = await messagesService.getRecentMessages(groupId, 50, token);
-      setMessages(data.reverse()); // Ordenar del más antiguo al más reciente
+      console.log(`[useChat] ✅ Mensajes cargados: ${data?.length || 0} mensajes`);
+      setMessages(data || []); // Los mensajes ya vienen ordenados correctamente del backend
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Error al cargar mensajes');
-      console.error('Error al cargar mensajes:', err);
+      console.error(`[useChat] ❌ Error al cargar mensajes:`, err);
+      const errorMsg = err.message || 'Error al cargar mensajes';
+      console.error(`[useChat] Mensaje de error: ${errorMsg}`);
+      console.error(`[useChat] Status: ${err.response?.status}`);
+      console.error(`[useChat] Data: ${JSON.stringify(err.response?.data)}`);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   }, [groupId, token]);
-
   // Conectar al WebSocket
   useEffect(() => {
+    // Usar serverUrl proporccionado o la configuración centralizada
+    const finalServerUrl = serverUrl || getServerUrl();
+    console.log(`[useChat] ========== INICIANDO HOOK ==========`);
+    console.log(`[useChat] groupId: ${groupId}, userId: ${userId}`);
+    console.log(`[useChat] Conectando a WebSocket en: ${finalServerUrl}`);
+
     if (!websocketService.isConnected()) {
-      websocketService.connect(serverUrl);
+      websocketService.connect(finalServerUrl);
     }
 
     // Autenticar (el backend busca automáticamente el id_membership)

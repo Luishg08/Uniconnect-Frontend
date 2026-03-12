@@ -8,14 +8,20 @@ class MessagesService {
    */
   async getRecentMessages(groupId: number, limit: number = 50, token: string): Promise<Message[]> {
     try {
-      const response = await axios.get(messagesEndpoints.getRecentMessages(groupId, limit), {
+      const endpoint = messagesEndpoints.getRecentMessages(groupId, limit);
+      console.log(`[MessagesService] GET ${endpoint}`);
+      const response = await axios.get(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(`[MessagesService] ✅ GET ${endpoint} - Status: ${response.status} - ${response.data?.length || 0} mensajes`);
       return response.data;
-    } catch (error) {
-      console.error('Error al obtener mensajes recientes:', error);
+    } catch (error: any) {
+      const endpoint = messagesEndpoints.getRecentMessages(groupId, limit);
+      console.error(`[MessagesService] ❌ GET ${endpoint} - Error:`, error.message);
+      console.error(`[MessagesService] Status: ${error.response?.status}`);
+      console.error(`[MessagesService] Data: ${JSON.stringify(error.response?.data)}`);
       throw error;
     }
   }

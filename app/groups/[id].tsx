@@ -14,6 +14,7 @@ import { ChatScreen } from '@/src/features/messages/components/ChatScreen';
 import { authStore } from '@/src/features/auth';
 import { groupsService } from '@/src/features/groups/services/groups.service';
 import { Group } from '@/src/features/groups/types';
+import { WEBSOCKET_URL } from '@/src/constants/api';
 
 export default function GroupChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -101,16 +102,26 @@ export default function GroupChatScreen() {
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#D9B97E" />
         </TouchableOpacity>
+        
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle} numberOfLines={1}>
             {group.name}
           </Text>
           <Text style={styles.headerSubtitle} numberOfLines={1}>
-            {group.course?.name || 'Grupo de estudio'}
+            Grupo de estudio
           </Text>
         </View>
-        <TouchableOpacity style={styles.infoButton}>
-          <Ionicons name="information-circle-outline" size={24} color="#D9B97E" />
+
+        <TouchableOpacity style={styles.headerAction}>
+          <Ionicons name="videocam-outline" size={24} color="#D9B97E" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.headerAction}>
+          <Ionicons name="call-outline" size={24} color="#D9B97E" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.headerAction}>
+          <Ionicons name="ellipsis-vertical" size={24} color="#D9B97E" />
         </TouchableOpacity>
       </View>
 
@@ -120,7 +131,7 @@ export default function GroupChatScreen() {
         token={token}
         isAdmin={isAdmin}
         userFullName={authStore.user?.full_name || 'Usuario'}
-        serverUrl={process.env.EXPO_PUBLIC_API_URL?.replace('/api', '') || 'http://10.0.2.2:8007'}
+        serverUrl={WEBSOCKET_URL}
       />
     </View>
   );
@@ -134,29 +145,32 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
     backgroundColor: '#1a1a1a',
     borderBottomWidth: 1,
     borderBottomColor: '#2a2a2a',
+    gap: 12,
   },
   backButton: {
     padding: 8,
-    marginRight: 8,
+    marginRight: 4,
   },
   headerInfo: {
     flex: 1,
-    marginRight: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#fff',
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#888',
+    color: '#9CA3AF',
+  },
+  headerAction: {
+    padding: 8,
   },
   infoButton: {
     padding: 8,

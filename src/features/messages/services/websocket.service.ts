@@ -12,6 +12,7 @@ import {
   SessionStatsResponse,
   AuthenticateData
 } from '../types';
+import { getServerUrl } from '../config/websocket.config';
 
 class WebSocketService {
   private socket: Socket | null = null;
@@ -25,7 +26,7 @@ class WebSocketService {
   /**
    * Conectar al servidor WebSocket
    */
-  connect(serverUrl: string = 'http://localhost:3000') {
+  connect(serverUrl?: string) {
     if (this.socket?.connected) {
       console.log('Ya conectado al WebSocket');
       // Si hay autenticación pendiente, ejecutarla ahora
@@ -36,7 +37,11 @@ class WebSocketService {
       return;
     }
 
-    this.socket = io(serverUrl, {
+    // Usar serverUrl si se proporciona, sino usar la configuración centralizada
+    const url = serverUrl || getServerUrl();
+    console.log(`[WebSocket] Conectando a: ${url}`);
+
+    this.socket = io(url, {
       transports: ['websocket'],
       autoConnect: true,
       reconnection: true,

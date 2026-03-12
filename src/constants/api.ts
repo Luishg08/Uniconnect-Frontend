@@ -2,14 +2,29 @@ import axios from 'axios';
 import { authStore } from '@/src/features/auth/store/AuthStore';
 
 const envApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-const resolvedBaseUrl = (envApiUrl || 'http://10.0.2.2:8007/api').replace(/\/+$/, '');
+const envServerUrl = process.env.EXPO_PUBLIC_SERVER_URL?.trim();
+
+// Resolver URLs - eliminar /api del final para obtener la raíz del servidor
+const resolvedBaseUrl = (envApiUrl || 'http://10.146.13.164:8007/api').replace(/\/+$/, '');
+const baseServerUrl = (envServerUrl || resolvedBaseUrl.replace('/api', '')).replace(/\/+$/, '');
+
+console.log(`[api.ts] Inicializando URLs...`);
+console.log(`[api.ts] EXPO_PUBLIC_API_URL: ${envApiUrl || 'NO CONFIGURADA'}`);
+console.log(`[api.ts] EXPO_PUBLIC_SERVER_URL: ${envServerUrl || 'NO CONFIGURADA'}`);
+console.log(`[api.ts] API_BASE_URL resuelto: ${resolvedBaseUrl}`);
+console.log(`[api.ts] WEBSOCKET_URL resuelto: ${baseServerUrl}`);
 
 if (!envApiUrl) {
-  console.warn(`Falta configurar EXPO_PUBLIC_API_URL en .env, usando fallback: ${resolvedBaseUrl}`);
+  console.warn(`⚠️ Falta configurar EXPO_PUBLIC_API_URL en .env, usando fallback: ${resolvedBaseUrl}`);
 }
 
-// Exportar la URL base para uso en endpoints
-export const API_BASE_URL = resolvedBaseUrl;
+if (!envServerUrl) {
+  console.warn(`⚠️ Falta configurar EXPO_PUBLIC_SERVER_URL en .env, usando: ${baseServerUrl}`);
+}
+
+// Exportar URLs
+export const API_BASE_URL = resolvedBaseUrl; // Para REST API: http://10.0.2.2:8007/api
+export const WEBSOCKET_URL = baseServerUrl; // Para WebSocket: http://10.0.2.2:8007
 
 export const api = axios.create({
   baseURL: resolvedBaseUrl,

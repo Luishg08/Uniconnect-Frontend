@@ -10,11 +10,16 @@ import {
   ActivityIndicator,
   Text,
   Keyboard,
+  Modal,
+  ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MessageBubble } from './MessageBubble';
+import { FilePickerModal } from './FilePickerModal';
 import { useChat } from '../hooks/useChat';
 import { Message } from '../types';
+import { filesService } from '../services/files.service';
 
 interface ChatScreenProps {
   groupId: number;
@@ -24,6 +29,17 @@ interface ChatScreenProps {
   userFullName: string;
   serverUrl?: string;
 }
+
+// Emojis populares
+const POPULAR_EMOJIS = [
+  '😀', '😂', '😍', '😭', '😱', '😴',
+  '😤', '😡', '💪', '👍', '👏', '🙏',
+  '❤️', '💔', '💖', '💝', '✨', '🔥',
+  '👀', '😎', '🤔', '😏', '😊', '😌',
+  '😸', '😹', '🐶', '🐱', '🐻', '🐼',
+  '🎉', '🎊', '🎈', '🎁', '⭐', '✅',
+  '❌', '⚠️', '📝', '📋', '💯', '🙌',
+];
 
 export const ChatScreen: React.FC<ChatScreenProps> = ({
   groupId,
@@ -35,6 +51,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showFilePicker, setShowFilePicker] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -90,6 +109,39 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     emitTyping(false, userFullName);
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    setInputText(inputText + emoji);
+  };
+
+  const handleFilesSelected = async (files: File[]) => {
+    try {
+      setUploadingFiles(true);
+      console.log(`[ChatScreen] Subiendo ${files.length} archivos...`);
+
+      const uploadedFiles = await filesService.uploadFiles(
+        files,
+        groupId,
+        token
+      );
+
+      console.log(`[ChatScreen] ✅ Archivos subidos:`, uploadedFiles);
+
+      // Crear mensaje con los archivos adjuntos
+      if (uploadedFiles.length > 0) {
+        const fileNames = uploadedFiles.map(f => f.file_name).join(', ');
+        const messageText = `📎 Archivos compartidos: ${fileNames}`;
+        sendMessage(messageText);
+      }
+
+      setShowFilePicker(false);
+    } catch (error: any) {
+      console.error(`[ChatScreen] ❌ Error al subir archivos:`, error);
+      Alert.alert('Error', 'Error al subir los archivos. Intenta de nuevo.');
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
   const handleTextChange = (text: string) => {
     setInputText(text);
 
@@ -142,7 +194,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     );
   };
 
+  // Debug logs
+  useEffect(() => {
+    console.log(`[ChatScreen] Estado actual:`, {
+      loading,
+      error,
+      messagesCount: messages.length,
+      isConnected,
+      typingUsersCount: typingUsers.length,
+    });
+  }, [loading, error, messages.length, isConnected, typingUsers.length]);
+
   if (loading) {
+    console.warn(`[ChatScreen] ⏳ Estado LOADING - Mostrando spinner`);
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3B82F6" />
@@ -152,6 +216,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   }
 
   if (error) {
+    console.error(`[ChatScreen] ❌ Estado ERROR - Error: ${error}`);
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={48} color="#EF4444" />
@@ -160,12 +225,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     );
   }
 
+  console.log(`[ChatScreen] ✅ Renderizando chat con ${messages.length} mensajes`);
+  console.log(`[ChatScreen] Renderizando componentes: FlatList + InputContainer`);
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
-    >
+    <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
       {!isConnected && (
         <View style={styles.connectionBanner}>
           <Ionicons name="cloud-offline" size={16} color="#fff" />
@@ -179,6 +248,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         renderItem={renderMessage}
         keyExtractor={(item) => item.id_message.toString()}
         contentContainerStyle={styles.messagesList}
+        style={styles.flatList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
@@ -187,6 +257,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       {renderTypingIndicator()}
 
       <View style={styles.inputContainer}>
+        
+        <TouchableOpacity 
+          style={styles.emojiButton}
+          onPress={() => setShowEmojiPicker(!showEmojiPicker)}
+        >
+          <Ionicons name="happy-outline" size={24} color="#D9B97E" />
+        </TouchableOpacity>
+
         <TextInput
           style={styles.input}
           placeholder="Escribe un mensaje..."
@@ -196,6 +274,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           multiline
           maxLength={1000}
         />
+
+        <TouchableOpacity 
+          style={styles.attachButton}
+          onPress={() => setShowFilePicker(true)}
+        >
+          <Ionicons name="attach" size={24} color="#D9B97E" />
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
           onPress={handleSend}
@@ -203,12 +289,56 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         >
           <Ionicons
             name="send"
-            size={24}
+            size={20}
             color={inputText.trim() ? '#D9B97E' : '#6B7280'}
           />
         </TouchableOpacity>
       </View>
+
+      {/* Emoji Picker Modal */}
+      <Modal
+        visible={showEmojiPicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEmojiPicker(false)}
+      >
+        <View style={styles.emojiPickerContainer}>
+          <View style={styles.emojiPickerHeader}>
+            <Text style={styles.emojiPickerTitle}>Selecciona un emoji</Text>
+            <TouchableOpacity onPress={() => setShowEmojiPicker(false)}>
+              <Ionicons name="close" size={24} color="#D9B97E" />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            style={styles.emojiPickerContent}
+            contentContainerStyle={styles.emojiGrid}
+          >
+            {POPULAR_EMOJIS.map((emoji, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.emojiButton2}
+                onPress={() => {
+                  handleEmojiSelect(emoji);
+                  setShowEmojiPicker(false);
+                }}
+              >
+                <Text style={styles.emoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* File Picker Modal */}
+      <FilePickerModal
+        visible={showFilePicker}
+        onClose={() => setShowFilePicker(false)}
+        onFilesSelected={handleFilesSelected}
+        loading={uploadingFiles}
+      />
     </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -256,6 +386,11 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  flatList: {
+    flex: 1,
+    backgroundColor: '#363636',
   },
   typingIndicator: {
     paddingHorizontal: 16,
@@ -270,31 +405,86 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
     backgroundColor: '#363636',
     borderTopWidth: 1,
-    borderTopColor: '#4a4a4a',
+    borderTopColor: '#2a2a2a',
+    gap: 8,
+  },
+  emojiButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  attachButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
   },
   input: {
     flex: 1,
     backgroundColor: '#2a2a2a',
     color: '#fff',
-    borderRadius: 20,
+    borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     fontSize: 16,
     maxHeight: 100,
-    marginRight: 8,
   },
   sendButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 22,
+    borderRadius: 20,
   },
   sendButtonDisabled: {
     opacity: 0.5,
+  },
+  emojiPickerContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'flex-end',
+  },
+  emojiPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
+  },
+  emojiPickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  emojiPickerContent: {
+    backgroundColor: '#363636',
+    maxHeight: 400,
+  },
+  emojiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 12,
+    justifyContent: 'space-around',
+  },
+  emojiButton2: {
+    width: '20%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  emoji: {
+    fontSize: 40,
   },
 });
