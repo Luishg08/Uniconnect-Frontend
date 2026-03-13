@@ -185,6 +185,14 @@ export const Navbar = () => {
               <Text style={styles.menuText}>Vínculos</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigateTo("/(tabs)/events")}
+            >
+              <Ionicons name="calendar-outline" size={22} color="#D9B97E" />
+              <Text style={styles.menuText}>Eventos Académicos</Text>
+            </TouchableOpacity>
+
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
