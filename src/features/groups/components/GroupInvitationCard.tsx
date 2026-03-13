@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GroupInvitation } from '../types';
+import { groupsService } from '../services/groups.service';
+import { authStore } from '@/src/features/auth/store/AuthStore';
 
 interface GroupInvitationCardProps {
-  invitation: GroupInvitation;
-  onAccept: () => void;
-  onReject: () => void;
+  invitation: any; // Puede ser GroupInvitation o GroupJoinRequest
+  onAccept?: () => void;
+  onReject?: () => void;
   loading?: boolean;
 }
 
@@ -16,6 +18,9 @@ export const GroupInvitationCard: React.FC<GroupInvitationCardProps> = ({
   onReject,
   loading = false,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const token = authStore.accessToken || '';
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -28,76 +33,134 @@ export const GroupInvitationCard: React.FC<GroupInvitationCardProps> = ({
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} h`;
     if (diffDays < 7) return `Hace ${diffDays} días`;
-    
-    return date.toLocaleDateString('es-ES', { 
+
+    return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'short'
     });
   };
 
+  const handleAccept = async () => {
+    if (!invitation.group?.id_group) return;
+    setIsLoading(true);
+    try {
+      if (invitation.id_invitation) {
+        // Es invitación
+        await groupsService.acceptGroupInvitation(
+          invitation.group.id_group,
+          invitation.id_invitation,
+          token
+        );
+        Alert.alert('¡Listo!', 'Te has unido al grupo.');
+      } else if (invitation.id_request) {
+        // Es solicitud de join
+        await groupsService.acceptJoinRequest(
+          invitation.group.id_group,
+          invitation.id_request,
+          token
+        );
+        Alert.alert('¡Listo!', 'Solicitud aceptada.');
+      }
+      onAccept?.();
+    } catch (error: any) {
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo aceptar.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!invitation.group?.id_group) return;
+    setIsLoading(true);
+    try {
+      if (invitation.id_invitation) {
+        // Es invitación
+        await groupsService.rejectGroupInvitation(
+          invitation.group.id_group,
+          invitation.id_invitation,
+          token
+        );
+        Alert.alert('Invitación rechazada', 'Has rechazado la invitación al grupo.');
+      } else if (invitation.id_request) {
+        // Es solicitud de join
+        await groupsService.rejectJoinRequest(
+          invitation.group.id_group,
+          invitation.id_request,
+          token
+        );
+        Alert.alert('Solicitud rechazada', 'Has rechazado la solicitud.');
+      }
+      onReject?.();
+    } catch (error: any) {
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo rechazar.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.inviterInfo}>
-          {invitation.inviter?.picture ? (
-            <Image
-              source={{ uri: invitation.inviter.picture }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Ionicons name="person" size={20} color="#fff" />
-            </View>
-          )}
-          <View style={styles.headerText}>
-            <Text style={styles.inviterName}>
-              {invitation.inviter?.full_name || 'Usuario'}
-            </Text>
-            <Text style={styles.invitationText}>
-              te invitó a unirte a un grupo
-            </Text>
+      {/* Avatar a la izquierda */}
+      <View style={styles.leftSection}>
+        {invitation.inviter?.picture ? (
+          <Image
+            source={{ uri: invitation.inviter.picture }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Ionicons name="person" size={30} color="#666" />
           </View>
-        </View>
-        <Text style={styles.date}>{formatDate(invitation.created_at)}</Text>
+        )}
       </View>
 
-      <View style={styles.groupInfo}>
-        <View style={styles.groupIcon}>
-          <Ionicons name="people" size={24} color="#3B82F6" />
-        </View>
-        <View style={styles.groupDetails}>
-          <Text style={styles.groupName}>{invitation.group?.name}</Text>
-          {invitation.group?.course && (
-            <Text style={styles.courseName}>
-              {invitation.group.course.name}
-            </Text>
-          )}
-          {invitation.group?.description && (
-            <Text style={styles.groupDescription} numberOfLines={2}>
-              {invitation.group.description}
-            </Text>
-          )}
-        </View>
-      </View>
+      {/* Contenido principal */}
+      <View style={styles.content}>
+        <Text style={styles.name}>
+          {invitation.inviter?.full_name || invitation.requester?.full_name || 'Usuario'}
+        </Text>
+        <Text style={styles.program}>
+          {invitation.group?.course?.name || ''}
+        </Text>
+        <Text style={styles.groupName}>
+          {invitation.group?.name}
+        </Text>
+        {invitation.group?.description ? (
+          <Text style={styles.groupDescription} numberOfLines={2}>
+            {invitation.group.description}
+          </Text>
+        ) : null}
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.button, styles.rejectButton]}
-          onPress={onReject}
-          disabled={loading}
-        >
-          <Ionicons name="close" size={20} color="#EF4444" />
-          <Text style={styles.rejectText}>Rechazar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.acceptButton]}
-          onPress={onAccept}
-          disabled={loading}
-        >
-          <Ionicons name="checkmark" size={20} color="#fff" />
-          <Text style={styles.acceptText}>Aceptar</Text>
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={handleReject}
+            disabled={loading || isLoading}
+          >
+            {isLoading && loading ? (
+              <ActivityIndicator size="small" color="#aaa" />
+            ) : (
+              <>
+                <Ionicons name="close" size={18} color="#666" />
+                <Text style={styles.rejectText}>Rechazar</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.acceptButton]}
+            onPress={handleAccept}
+            disabled={loading || isLoading}
+          >
+            {isLoading && loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={18} color="#fff" />
+                <Text style={styles.acceptText}>Aceptar</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -105,119 +168,96 @@ export const GroupInvitationCard: React.FC<GroupInvitationCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+    borderRadius: 16,
     padding: 16,
-    marginHorizontal: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  inviterInfo: {
-    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 185, 126, 0.2)',
     alignItems: 'center',
-    flex: 1,
+  },
+  leftSection: {
+    marginRight: 12,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#eee',
   },
   avatarPlaceholder: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: '#4a4a4a',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerText: {
+  content: {
     flex: 1,
+    justifyContent: 'center',
   },
-  inviterName: {
+  name: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#fff',
+    marginBottom: 4,
   },
-  invitationText: {
-    fontSize: 14,
-    color: '#6B7280',
+  program: {
+    fontSize: 13,
+    color: '#aaa',
+    marginBottom: 4,
   },
-  date: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  groupInfo: {
-    flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  groupIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#DBEAFE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  groupDetails: {
-    flex: 1,
+  time: {
+    fontSize: 11,
+    color: '#888',
+    marginBottom: 12,
   },
   groupName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    color: '#D9B97E',
+    marginBottom: 2,
   },
   courseName: {
-    fontSize: 14,
-    color: '#3B82F6',
-    marginBottom: 4,
+    fontSize: 13,
+    color: '#aaa',
+    marginBottom: 2,
   },
   groupDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 4,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+    marginTop: 8,
   },
-  button: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 8,
     gap: 6,
   },
-  rejectButton: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  rejectText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
-  },
   acceptButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#D9B97E',
   },
   acceptText: {
-    fontSize: 16,
+    color: '#1a1a1a',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+  },
+  rejectButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  rejectText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
