@@ -15,6 +15,7 @@ import { authStore } from '@/src/features/auth';
 import { groupsService } from '@/src/features/groups/services/groups.service';
 import { Group } from '@/src/features/groups/types';
 import { WEBSOCKET_URL } from '@/src/constants/api';
+import { GroupInfoModal } from '@/src/features/groups/components/GroupInfoModal';
 
 export default function GroupChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function GroupChatScreen() {
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
 
   const userId = authStore.user?.id_user;
   const token = authStore.accessToken || '';
@@ -120,7 +122,10 @@ export default function GroupChatScreen() {
           <Ionicons name="call-outline" size={24} color="#D9B97E" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.headerAction}>
+        <TouchableOpacity 
+          style={styles.headerAction}
+          onPress={() => setShowGroupInfo(true)}
+        >
           <Ionicons name="ellipsis-vertical" size={24} color="#D9B97E" />
         </TouchableOpacity>
       </View>
@@ -132,6 +137,12 @@ export default function GroupChatScreen() {
         isAdmin={isAdmin}
         userFullName={authStore.user?.full_name || 'Usuario'}
         serverUrl={WEBSOCKET_URL}
+      />
+
+      <GroupInfoModal 
+        groupId={group.id_group}
+        visible={showGroupInfo}
+        onClose={() => setShowGroupInfo(false)}
       />
     </View>
   );

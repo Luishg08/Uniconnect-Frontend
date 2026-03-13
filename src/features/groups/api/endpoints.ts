@@ -50,4 +50,43 @@ export const groupInvitationsEndpoints = {
   // Cancelar invitación
   cancelInvitation: (invitationId: number) =>
     `${API_BASE_URL}/group-invitations/${invitationId}`,
+
+  getConnectionsWithCourse: (groupId: number) =>
+    `${API_BASE_URL}/users/connections/with-courses/${groupId}`,
+};
+
+// ==================== JOIN REQUESTS ====================
+
+export const groupJoinRequestsEndpoints = {
+  // Solicitar acceso a un grupo
+  requestJoin: (groupId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/join-request`,
+  
+  // Obtener solicitudes pendientes (para el owner)
+  getPendingRequests: () =>
+    `${API_BASE_URL}/groups/owner/pending-requests`,
+  
+  // Aceptar solicitud
+  acceptRequest: (groupId: number, requestId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/join-requests/${requestId}/accept`,
+  
+  // Rechazar solicitud
+  rejectRequest: (groupId: number, requestId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/join-requests/${requestId}/reject`,
+  
+  // Obtener información del grupo (con permisos y miembros)
+  getGroupInfo: (groupId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/info`,
+  
+  // Sacar miembro del grupo
+  removeMember: (groupId: number, memberId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/members/${memberId}`,
+  
+  // Hacer admin a un miembro
+  makeMemberAdmin: (groupId: number, memberId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/members/${memberId}/make-admin`,
+  
+  // Abandonar grupo
+  leaveGroup: (groupId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/leave`,
 };
