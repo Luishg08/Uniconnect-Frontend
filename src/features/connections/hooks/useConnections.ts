@@ -12,6 +12,14 @@ export const useConnections = () => {
     staleTime: 1000 * 60, // 1 minuto — no refetch automático
   });
 
+  // Obtener conexiones aceptadas (deshabilitado por ahora - endpoint no implementado)
+  const myConnections = [];
+  // const { data: myConnections = [] } = useQuery({
+  //   queryKey: ['my-connections'],
+  //   queryFn: connectionService.getMyConnections,
+  //   staleTime: 1000 * 60, // 1 minuto — no refetch automático
+  // });
+
   // Enviar solicitud de conexión
   const sendRequestMutation = useMutation({
     mutationFn: connectionService.sendConnectionRequest,
@@ -55,6 +63,7 @@ export const useConnections = () => {
 
   return {
     pendingRequests: pendingRequests || [],
+    myConnections,
     isLoading,
     isError,
     refetch,

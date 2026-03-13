@@ -1,11 +1,15 @@
 import axios from 'axios';
-import { groupsEndpoints, groupInvitationsEndpoints } from '../api/endpoints';
+import { groupsEndpoints, groupInvitationsEndpoints, groupJoinRequestsEndpoints } from '../api/endpoints';
 import { 
   Group, 
   GroupCreateRequest, 
   GroupInvitation, 
   GroupInvitationRequest,
-  GroupInvitationResponse 
+  GroupInvitationResponse,
+  GroupJoinRequest,
+  GroupWithJoinRequests,
+  GroupInfo,
+  JoinRequestResponse,
 } from '../types';
 
 class GroupsService {
@@ -219,6 +223,178 @@ class GroupsService {
       console.error('Error al cancelar invitación:', error);
       throw error;
     }
+  }
+
+  // ==================== JOIN REQUESTS ====================
+
+  /**
+   * Solicitar acceso a un grupo
+   */
+  async requestJoinGroup(groupId: number, token: string): Promise<JoinRequestResponse> {
+    try {
+      const response = await axios.post(
+        groupJoinRequestsEndpoints.requestJoin(groupId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al solicitar acceso al grupo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener solicitudes pendientes de acceso a todos los grupos del owner
+   */
+  async getPendingJoinRequests(token: string): Promise<GroupWithJoinRequests[]> {
+    try {
+      const response = await axios.get(
+        groupJoinRequestsEndpoints.getPendingRequests(),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener solicitudes pendientes:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Aceptar solicitud de acceso a un grupo
+   */
+  async acceptJoinRequest(groupId: number, requestId: number, token: string): Promise<GroupJoinRequest> {
+    try {
+      const response = await axios.patch(
+        groupJoinRequestsEndpoints.acceptRequest(groupId, requestId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al aceptar solicitud:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Rechazar solicitud de acceso a un grupo
+   */
+  async rejectJoinRequest(groupId: number, requestId: number, token: string): Promise<void> {
+    try {
+      await axios.patch(
+        groupJoinRequestsEndpoints.rejectRequest(groupId, requestId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error al rechazar solicitud:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener información detallada del grupo (incluyendo miembros y permisos)
+   */
+  async getGroupInfo(groupId: number, token: string): Promise<GroupInfo> {
+    try {
+      const response = await axios.get(
+        groupJoinRequestsEndpoints.getGroupInfo(groupId),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener información del grupo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sacar un miembro del grupo (solo para owner)
+   */
+  async removeMemberFromGroup(groupId: number, memberId: number, token: string): Promise<void> {
+    try {
+      await axios.delete(
+        groupJoinRequestsEndpoints.removeMember(groupId, memberId),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error al sacar miembro del grupo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Promocionar a admin a un miembro del grupo (solo para owner)
+   */
+  async makeMemberAdmin(groupId: number, memberId: number, token: string): Promise<void> {
+    try {
+      await axios.patch(
+        groupJoinRequestsEndpoints.makeMemberAdmin(groupId, memberId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error al promocionar miembro a admin:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Abandonar un grupo (no puede ser owner)
+   */
+  async leaveGroup(groupId: number, token: string): Promise<void> {
+      try {
+        await axios.delete(
+          groupJoinRequestsEndpoints.leaveGroup(groupId),
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (error) {
+        console.error('Error al abandonar grupo:', error);
+        throw error;
+      }
+    }
+
+    async getConnectionsWithCourse(groupId: number, token: string) {
+    const response = await axios.get(
+      groupInvitationsEndpoints.getConnectionsWithCourse(groupId),
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
   }
 }
 

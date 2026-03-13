@@ -121,3 +121,72 @@ export interface GroupInvitationResponse {
   invitation?: GroupInvitation;
   membership?: GroupMembership;
 }
+
+// ==================== JOIN REQUESTS ====================
+
+export interface GroupJoinRequest {
+  id_request: number;
+  id_group: number;
+  id_user: number;
+  status: 'pending' | 'accepted' | 'rejected';
+  requested_at: string;
+  requester: {
+    id_user: number;
+    full_name: string;
+    picture?: string;
+    email: string;
+    program?: {
+      name: string;
+    };
+  };
+}
+
+export interface GroupWithJoinRequests {
+  id_group: number;
+  name: string;
+  description?: string;
+  joinRequests: GroupJoinRequest[];
+}
+
+export interface GroupInfo {
+  id_group: number;
+  name: string;
+  description: string;
+  id_course: number;
+  course: {
+    name: string;
+    code?: string;
+  };
+  owner: {
+    id_user: number;
+    full_name: string;
+    picture?: string;
+  };
+  created_at: string;
+  
+  // Permisos y rol
+  userRole: 'owner' | 'admin' | 'member' | 'none';
+  canManage: boolean;
+  canManageMembers: boolean;
+  isMember: boolean;
+  isOwner: boolean;
+  
+  // Miembros
+  memberships: GroupMembership[];
+}
+
+export interface JoinRequestDto {
+  id_group: number;
+}
+
+export interface JoinRequestResponse {
+  id_request: number;
+  status: 'pending';
+  requested_at: string;
+  requester: {
+    id_user: number;
+    full_name: string;
+    picture?: string;
+    email: string;
+  };
+}
