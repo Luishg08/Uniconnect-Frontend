@@ -53,7 +53,15 @@ export const groupInvitationsEndpoints = {
 
   getConnectionsWithCourse: (groupId: number) =>
     `${API_BASE_URL}/users/connections/with-courses/${groupId}`,
-};
+
+  // Aceptar invitación a grupo
+  acceptGroupInvitation: (groupId: number, invitationId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/invitations/${invitationId}/accept`,
+
+  // Rechazar invitación a grupo
+  rejectGroupInvitation: (groupId: number, invitationId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/invitations/${invitationId}/reject`,
+  };
 
 // ==================== JOIN REQUESTS ====================
 

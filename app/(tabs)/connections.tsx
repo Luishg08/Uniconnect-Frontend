@@ -62,7 +62,7 @@ export default function ConnectionsScreen() {
     try {
       await respondToInvitation(invitationId, 'accepted');
       Alert.alert('¡Éxito!', 'Te has unido al grupo correctamente');
-      reloadInvitations();
+      queryClient.invalidateQueries({ queryKey: ['pending-group-invitations', userId] });
     } catch (error: any) {
       Alert.alert('Error', error.message || 'No se pudo aceptar la invitación');
     }
@@ -81,7 +81,7 @@ export default function ConnectionsScreen() {
             try {
               await respondToInvitation(invitationId, 'rejected');
               Alert.alert('Invitación rechazada');
-              reloadInvitations();
+              queryClient.invalidateQueries({ queryKey: ['pending-group-invitations', userId] });
             } catch (error: any) {
               Alert.alert('Error', error.message || 'No se pudo rechazar la invitación');
             }

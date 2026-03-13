@@ -396,6 +396,24 @@ class GroupsService {
     );
     return response.data;
   }
+
+  async acceptGroupInvitation(groupId: number, invitationId: number, token: string) {
+    const res = await axios.patch(
+      groupInvitationsEndpoints.acceptGroupInvitation(groupId, invitationId),
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data;
+  }
+
+  async rejectGroupInvitation(groupId: number, invitationId: number, token: string) {
+    const res = await axios.patch(
+      groupInvitationsEndpoints.rejectGroupInvitation(groupId, invitationId),
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data;
+  }
 }
 
 export const groupsService = new GroupsService();
