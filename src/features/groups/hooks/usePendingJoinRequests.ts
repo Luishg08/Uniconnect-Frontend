@@ -1,7 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { groupsService } from '../services/groups.service';
 import { authStore } from '@/src/features/auth/store/AuthStore';
-import { GroupWithJoinRequests } from '../types';
+import { GroupJoinRequest, GroupWithJoinRequests } from '../types';
+
+/**
+ * Hook para obtener solicitudes pendientes de un grupo específico (para el owner)
+ */
+export function useGroupJoinRequests(groupId: number) {
+  const token = authStore.accessToken;
+
+  return useQuery({
+    queryKey: ['group-join-requests', groupId],
+    queryFn: async () => {
+      if (!token) throw new Error('No authentication token');
+      return groupsService.getGroupJoinRequests(groupId, token);
+    },
+    enabled: !!token && !!groupId,
+    staleTime: 1 * 60 * 1000, // 1 minuto
+  });
+}
 
 /**
  * Hook para obtener solicitudes pendientes de acceso a grupos del owner

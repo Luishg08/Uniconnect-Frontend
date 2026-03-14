@@ -55,7 +55,7 @@ export const InviteToGroupModal = ({
 
   // Obtener información del grupo para conocer la materia
   const { data: groupInfo, isLoading: groupLoading } = useGroupInfo(groupId);
-  
+
   // Obtener conexiones del usuario
   const { myConnections = [] } = useConnections();
 
@@ -63,22 +63,29 @@ export const InviteToGroupModal = ({
     queryKey: ['connections-with-course', groupId],
     queryFn: () => groupsService.getConnectionsWithCourse(groupId, token),
     enabled: !!groupId && !!token,
-    });
+  });
 
   // Filtrar conexiones que compartan la misma materia del grupo y no sean miembros aún
   const filteredUsers = React.useMemo(() => {
     if (!invitables) return [];
+
+    // Obtener los IDs de los miembros actuales para no listarlos
+    const currentMemberIds = groupInfo?.memberships?.map((m: any) => m.id_user) || [];
+
+    // Filtramos primero a los que no son miembros
+    let filtered = invitables.filter((user: User) => !currentMemberIds.includes(user.id_user));
+
     if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        return invitables.filter(
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
         (user: User) =>
-            user.full_name.toLowerCase().includes(query) ||
-            user.email?.toLowerCase().includes(query) ||
-            user.program?.name.toLowerCase().includes(query)
-        );
+          user.full_name.toLowerCase().includes(query) ||
+          user.email?.toLowerCase().includes(query) ||
+          user.program?.name.toLowerCase().includes(query)
+      );
     }
-    return invitables;
-    }, [invitables, searchQuery]);
+    return filtered;
+  }, [invitables, searchQuery, groupInfo]);
 
   const sendInvitationMutation = useMutation({
     mutationFn: async (inviteeId: number) => {
@@ -132,7 +139,7 @@ export const InviteToGroupModal = ({
 
       setSelectedUsers([]);
       setSearchQuery('');
-      
+
       setTimeout(() => {
         Alert.alert('Éxito', `${successCount} invitación(es) enviada(s) correctamente`);
       }, 300);
@@ -160,8 +167,8 @@ export const InviteToGroupModal = ({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Invitar a Grupo</Text>
-          <TouchableOpacity 
-            onPress={onClose} 
+          <TouchableOpacity
+            onPress={onClose}
             style={styles.closeButton}
             activeOpacity={0.7}
           >

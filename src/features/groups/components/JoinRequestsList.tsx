@@ -11,37 +11,42 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  usePendingJoinRequests,
+  useGroupJoinRequests,
   useAcceptJoinRequest,
   useRejectJoinRequest,
 } from '../hooks/usePendingJoinRequests';
-import { GroupWithJoinRequests } from '../types';
+import { GroupJoinRequest } from '../types';
 
-export const JoinRequestsList = () => {
-  const { data: groupsWithRequests = [], isLoading, error } = usePendingJoinRequests();
+interface JoinRequestsListProps {
+  groupId: number;
+  onEmpty?: (isEmpty: boolean) => void;
+}
+
+export const JoinRequestsList = ({ groupId, onEmpty }: JoinRequestsListProps) => {
+  const { data: requests = [], isLoading, error } = useGroupJoinRequests(groupId);
   const acceptMutation = useAcceptJoinRequest();
   const rejectMutation = useRejectJoinRequest();
 
-  const handleAccept = async (groupId: number, requestId: number) => {
+  const handleAccept = async (requestId: number) => {
     try {
       await acceptMutation.mutateAsync({ groupId, requestId });
-      Alert.alert('Éxito', 'Solicitud aceptada');
+      Alert.alert('Éxito', 'Solicitud aceptada. El usuario se ha unido al grupo.');
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo aceptar la solicitud');
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo aceptar la solicitud');
     }
   };
 
-  const handleReject = async (groupId: number, requestId: number) => {
+  const handleReject = async (requestId: number) => {
     Alert.alert('Rechazar solicitud', '¿Deseas rechazar esta solicitud?', [
-      { text: 'Cancelar', onPress: () => {} },
+      { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Rechazar',
         onPress: async () => {
           try {
             await rejectMutation.mutateAsync({ groupId, requestId });
-            Alert.alert('Éxito', 'Solicitud rechazada');
+            Alert.alert('Solicitud rechazada', 'Se ha notificado al usuario.');
           } catch (error: any) {
-            Alert.alert('Error', 'No se pudo rechazar la solicitud');
+            Alert.alert('Error', error?.response?.data?.message || 'No se pudo rechazar la solicitud');
           }
         },
         style: 'destructive',
@@ -66,124 +71,97 @@ export const JoinRequestsList = () => {
     );
   }
 
-  if (groupsWithRequests.length === 0) {
-    return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="mail-open-outline" size={48} color="#666" />
-        <Text style={styles.emptyText}>No hay solicitudes pendientes</Text>
-      </View>
-    );
+  React.useEffect(() => {
+    if (requests && requests.length === 0 && !isLoading && !error) {
+      onEmpty?.(true);
+    } else {
+      onEmpty?.(false);
+    }
+  }, [requests, isLoading, error, onEmpty]);
+
+  if (requests.length === 0) {
+    return null; // El requerimiento dice que si no hay, la sección entera no debería aparecer.
   }
+
+  const renderRequest = ({ item: request }: { item: GroupJoinRequest }) => (
+    <View style={styles.requestCard}>
+      <View style={styles.requesterInfo}>
+        {request.requester.picture ? (
+          <Image
+            source={{ uri: request.requester.picture }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Ionicons name="person" size={24} color="#D9B97E" />
+          </View>
+        )}
+
+        <View style={styles.infoContainer}>
+          <Text style={styles.requesterName}>
+            {request.requester.full_name}
+          </Text>
+          {request.requester.program && (
+            <Text style={styles.programName}>
+              {request.requester.program.name}
+            </Text>
+          )}
+          <Text style={styles.email}>{request.requester.email}</Text>
+        </View>
+      </View>
+
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.acceptButton]}
+          onPress={() => handleAccept(request.id_request)}
+          disabled={acceptMutation.isPending || rejectMutation.isPending}
+        >
+          {acceptMutation.isPending ? (
+            <ActivityIndicator size="small" color="#22C55E" />
+          ) : (
+            <Ionicons name="checkmark" size={20} color="#22C55E" />
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.rejectButton]}
+          onPress={() => handleReject(request.id_request)}
+          disabled={acceptMutation.isPending || rejectMutation.isPending}
+        >
+          {rejectMutation.isPending ? (
+            <ActivityIndicator size="small" color="#EF4444" />
+          ) : (
+            <Ionicons name="close" size={20} color="#EF4444" />
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <FlatList
-      data={groupsWithRequests}
-      keyExtractor={(item) => item.id_group.toString()}
-      renderItem={({ item: group }) => (
-        <View style={styles.groupContainer}>
-          <Text style={styles.groupName}>{group.name}</Text>
-
-          <FlatList
-            data={group.joinRequests}
-            keyExtractor={(request) => request.id_request.toString()}
-            scrollEnabled={false}
-            renderItem={({ item: request }) => (
-              <View style={styles.requestCard}>
-                <View style={styles.requesterInfo}>
-                  {request.requester.picture ? (
-                    <Image
-                      source={{ uri: request.requester.picture }}
-                      style={styles.avatar}
-                    />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Ionicons name="person" size={24} color="#D9B97E" />
-                    </View>
-                  )}
-
-                  <View style={styles.infoContainer}>
-                    <Text style={styles.requesterName}>
-                      {request.requester.full_name}
-                    </Text>
-                    {request.requester.program && (
-                      <Text style={styles.programName}>
-                        {request.requester.program.name}
-                      </Text>
-                    )}
-                    <Text style={styles.email}>{request.requester.email}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.acceptButton]}
-                    onPress={() =>
-                      handleAccept(group.id_group, request.id_request)
-                    }
-                    disabled={acceptMutation.isPending || rejectMutation.isPending}
-                  >
-                    {acceptMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
-                    onPress={() =>
-                      handleReject(group.id_group, request.id_request)
-                    }
-                    disabled={acceptMutation.isPending || rejectMutation.isPending}
-                  >
-                    {rejectMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Ionicons name="close-circle" size={20} color="#fff" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          />
-        </View>
-      )}
+      data={requests}
+      keyExtractor={(item) => item.id_request.toString()}
+      renderItem={renderRequest}
+      scrollEnabled={false}
       contentContainerStyle={styles.listContent}
-      ListEmptyComponent={
-        <View style={styles.centerContainer}>
-          <Ionicons name="mail-open-outline" size={48} color="#666" />
-          <Text style={styles.emptyText}>No hay solicitudes pendientes</Text>
-        </View>
-      }
     />
   );
 };
 
 const styles = StyleSheet.create({
   centerContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 24,
   },
   listContent: {
-    padding: 12,
-  },
-  groupContainer: {
-    marginBottom: 20,
-  },
-  groupName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#D9B97E',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    gap: 8,
   },
   requestCard: {
     backgroundColor: 'rgba(26, 26, 26, 0.9)',
     borderRadius: 10,
     padding: 12,
-    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(217, 185, 126, 0.2)',
     flexDirection: 'row',
@@ -233,17 +211,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1.5,
   },
   acceptButton: {
-    backgroundColor: 'rgba(52, 168, 83, 0.8)',
+    backgroundColor: 'transparent',
+    borderColor: '#22C55E',
   },
   rejectButton: {
-    backgroundColor: 'rgba(255, 77, 77, 0.8)',
+    backgroundColor: 'transparent',
+    borderColor: '#EF4444',
   },
   errorText: {
     color: '#ff6b6b',

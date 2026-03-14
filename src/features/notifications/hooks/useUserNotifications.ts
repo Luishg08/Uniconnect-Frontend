@@ -95,25 +95,40 @@ export const useUserNotifications = ({ token }: UseUserNotificationsOptions) => 
       case 'connection_request':
         router.push('/(tabs)/connections');
         break;
-      
+
       case 'message':
         router.push('/(tabs)/groups');
         break;
-      
+
       case 'group_invitation':
         router.push('/(tabs)/connections');
         break;
-      
+
       case 'group_invitation_accepted':
         router.push('/(tabs)/groups');
         break;
-      
+
       case 'user_joined_group':
         if (notification.related_entity_id) {
           router.push(`/groups/${notification.related_entity_id}`);
         } else {
           router.push('/(tabs)/groups');
         }
+        break;
+
+      case 'group_join_request':
+        // El owner recibe esto: ir a la pantalla de grupos para gestionar solicitudes
+        router.push('/(tabs)/groups');
+        break;
+
+      case 'group_join_request_accepted':
+        // El solicitante fue aceptado: ir a Mis Grupos
+        router.push('/(tabs)/groups');
+        break;
+
+      case 'group_join_request_rejected':
+        // El solicitante fue rechazado: mostrar mensaje y quedarse en Grupos
+        router.push('/(tabs)/groups');
         break;
     }
   }, [router, markAsRead]);
