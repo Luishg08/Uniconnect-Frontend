@@ -16,8 +16,30 @@ export interface Event {
   time: string;
   location: string;
   type: EventType;
+  created_by: number;
+  id_program?: number | null; // ⭐ NUEVO: ID de la carrera/programa
   createdAt: string;
   updatedAt: string;
+  creator?: {
+    id_user: number;
+    full_name: string;
+    email?: string;
+    picture?: string;
+  };
+  program?: {
+    id_program: number;
+    name: string;
+  };
+}
+
+// ⭐ NUEVO: Payload para crear eventos (sin id_program, se toma del JWT)
+export interface CreateEventPayload {
+  title: string;
+  description: string;
+  date: string; // ISO string (YYYY-MM-DD)
+  time: string; // HH:MM
+  location: string;
+  type: EventType;
 }
 
 export interface EventFilters {

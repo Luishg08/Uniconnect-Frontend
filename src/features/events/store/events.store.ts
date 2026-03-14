@@ -1,9 +1,10 @@
-import { makeObservable, observable, action, runInAction } from 'mobx';
+import { makeObservable, observable, action, runInAction, computed } from 'mobx';
 import { eventsService, EventsService } from '../services/events.service';
 import {
   Event,
   EventFilters,
   Metadata,
+  CreateEventPayload, // ⭐ NUEVO
 } from '../types/event.types';
 
 /**
@@ -23,6 +24,10 @@ export class EventsStore {
     endDate: null,
   };
   @observable metadata: Metadata | null = null;
+  
+  // ⭐ NUEVO: Estado para creación de eventos
+  @observable isCreating: boolean = false;
+  @observable createError: string | null = null;
 
   // Service dependency
   private eventsService: EventsService;
@@ -66,6 +71,62 @@ export class EventsStore {
   }
 
   /**
+   * ⭐ NUEVO: Create a new event
+   * @param payload - Event data (without id_program, extracted from JWT)
+   * @returns Promise<boolean> - true if successful, false otherwise
+   */
+  @action
+  async createEvent(payload: CreateEventPayload): Promise<boolean> {
+    this.setIsCreating(true);
+    this.setCreateError(null);
+
+    // ⭐ DIAGNOSTIC: Log payload before sending
+    console.log('🔍 [EventsStore] Creating event with payload:', payload);
+
+    try {
+      const response = await this.eventsService.createEvent(payload);
+
+      // ⭐ DIAGNOSTIC: Log response
+      console.log('🔍 [EventsStore] Create event response:', {
+        success: response.success,
+        hasData: !!response.data,
+        error: response.error,
+      });
+
+      runInAction(() => {
+        if (response.success && response.data) {
+          // Evento creado exitosamente
+          this.setIsCreating(false);
+          
+          // Re-fetch automático para actualizar la lista
+          this.loadEvents();
+          
+          return true;
+        } else if (response.error) {
+          this.setCreateError(response.error.message);
+          this.setIsCreating(false);
+          return false;
+        }
+      });
+
+      return true;
+    } catch (error: any) {
+      // ⭐ DIAGNOSTIC: Log error details
+      console.error('❌ [EventsStore] Create event error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+
+      runInAction(() => {
+        this.setCreateError(error.message || 'Error al crear el evento');
+        this.setIsCreating(false);
+      });
+      return false;
+    }
+  }
+
+  /**
    * Set a specific filter and reload events
    * @param filterType - Type of filter (date, type, startDate, endDate)
    * @param value - Filter value
@@ -88,6 +149,14 @@ export class EventsStore {
       endDate: null,
     };
     this.loadEvents();
+  }
+
+  /**
+   * ⭐ NUEVO: Clear create error
+   */
+  @action
+  clearCreateError(): void {
+    this.createError = null;
   }
 
   /**
@@ -124,6 +193,33 @@ export class EventsStore {
   @action
   private setMetadata(metadata: Metadata): void {
     this.metadata = metadata;
+  }
+
+  /**
+   * ⭐ NUEVO: Update isCreating state
+   * @private
+   */
+  @action
+  private setIsCreating(isCreating: boolean): void {
+    this.isCreating = isCreating;
+  }
+
+  /**
+   * ⭐ NUEVO: Update createError state
+   * @private
+   */
+  @action
+  private setCreateError(error: string | null): void {
+    this.createError = error;
+  }
+
+  /**
+   * ⭐ NUEVO: Computed - Get upcoming events (future events only)
+   */
+  @computed
+  get upcomingEvents(): Event[] {
+    const now = new Date();
+    return this.events.filter(event => new Date(event.date) >= now);
   }
 }
 

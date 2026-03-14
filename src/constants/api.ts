@@ -26,6 +26,16 @@ api.interceptors.request.use(
   async (config) => {
     const token = authStore.accessToken;
 
+    // ⭐ DIAGNOSTIC: Log token status
+    console.log('🔍 [API Interceptor] Request:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'none',
+      isExpired: authStore.isTokenExpired,
+      hasRefreshToken: authStore.hasRefreshToken,
+    });
+
     if (token) {
       // Check if token is expired and try to refresh
       // But only if we're not already refreshing (prevents circular/infinite refresh attempts)
@@ -39,13 +49,18 @@ api.interceptors.request.use(
         if (refreshSuccess) {
           // Use the new token
           config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+          console.log('✅ [API Interceptor] Token refreshed successfully');
         } else {
           // Refresh failed, request will fail with 401
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('❌ [API Interceptor] Token refresh failed, using old token');
         }
       } else {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ [API Interceptor] Token added to request');
       }
+    } else {
+      console.warn('⚠️ [API Interceptor] No token available for request');
     }
     
     return config;

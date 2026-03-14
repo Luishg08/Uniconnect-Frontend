@@ -1,9 +1,10 @@
 import { makeAutoObservable } from 'mobx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from '../types/user.types';
 
 export class AuthStore {
   accessToken: string | null = null;
-  user: any | null = null; // Will be replaced with UserProfile interface in Phase 4
+  user: User | null = null; // ⭐ FIX: Properly typed User interface
   isLoading: boolean = false;
   error: string | null = null;
   needsOnboarding: boolean = false;
@@ -37,9 +38,17 @@ export class AuthStore {
     return !!this.auth0Tokens?.refresh_token;
   }
 
-  setAuth(token: string, userData: any, auth0TokensData?: any) {
+  setAuth(token: string, userData: User, auth0TokensData?: any) {
     this.accessToken = token;
-    this.user = userData;
+    
+    // ⭐ FIX: Properly extract and store role data
+    // Ensure role object and roleName are preserved
+    this.user = {
+      ...userData,
+      role: userData.role, // Role object from backend response
+      roleName: userData.roleName, // Role name from JWT or backend
+    };
+    
     this.error = null;
     this.needsOnboarding = userData?.needsOnboarding ?? false;
     
@@ -104,8 +113,13 @@ export class AuthStore {
   /**
    * Update user profile data (for profile updates)
    */
-  updateUser(userData: any) {
-    this.user = userData;
+  updateUser(userData: User) {
+    // ⭐ FIX: Preserve role data when updating user
+    this.user = {
+      ...userData,
+      role: userData.role,
+      roleName: userData.roleName,
+    };
     this.persistToStorage();
   }
 
@@ -119,6 +133,14 @@ export class AuthStore {
       const storedAuth = await AsyncStorage.getItem('uniconnect-auth');
       if (storedAuth) {
         const authData = JSON.parse(storedAuth);
+        
+        // ⭐ FIX: Detect and clean legacy cached data without role structure
+        if (authData.user && authData.user.id_role && !authData.user.role && !authData.user.roleName) {
+          console.warn('Legacy cached data detected without role structure - clearing auth');
+          await this.clearFromStorage();
+          this.isInitialized = true;
+          return;
+        }
         
         // Restore auth state
         this.accessToken = authData.accessToken;

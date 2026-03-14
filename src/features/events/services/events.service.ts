@@ -6,6 +6,7 @@ import {
   PaginationParams,
   FENResponse,
   ErrorDetails,
+  CreateEventPayload, // ⭐ NUEVO
 } from '../types/event.types';
 
 /**
@@ -66,6 +67,54 @@ export class EventsService {
       }
 
       throw new Error('Error inesperado al obtener eventos');
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Create a new event
+   * @param payload - Event data (without id_program, extracted from JWT)
+   * @returns Promise with FEN formatted response containing created event
+   */
+  async createEvent(payload: CreateEventPayload): Promise<FENResponse<Event>> {
+    try {
+      // Make HTTP POST request
+      const response = await api.post(EVENTS_ENDPOINTS.CREATE_EVENT, payload);
+
+      // Validate FEN response format
+      const validatedResponse = this.validateFENResponse<Event>(response.data);
+
+      return validatedResponse;
+    } catch (error: any) {
+      // Log error with context
+      this.logError(error, 'createEvent', { payload });
+
+      // Handle network errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        throw new Error('Error de conexión. La solicitud ha excedido el tiempo de espera.');
+      }
+
+      if (!error.response) {
+        throw new Error('Error de conexión. Verifica tu conexión a internet.');
+      }
+
+      // Handle HTTP errors with FEN format
+      if (error.response?.data) {
+        const errorResponse = error.response.data;
+
+        // If backend returns FEN format error, validate and return it
+        if (this.isFENFormat(errorResponse)) {
+          return this.validateFENResponse<Event>(errorResponse);
+        }
+
+        // Otherwise, extract error message
+        throw new Error(
+          errorResponse.message || 
+          errorResponse.error?.message || 
+          'Error al crear el evento'
+        );
+      }
+
+      throw new Error('Error inesperado al crear el evento');
     }
   }
 
@@ -135,21 +184,31 @@ export class EventsService {
 
       // If success is true, validate data
       if (response.success) {
-        if (!Array.isArray(response.data)) {
-          throw new Error('Respuesta del servidor en formato inválido: data debe ser un array');
+        // For array responses
+        if (Array.isArray(response.data)) {
+          // Validate each event has required fields
+          response.data.forEach((event: any, index: number) => {
+            const requiredFields = ['id', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
+            for (const field of requiredFields) {
+              if (!(field in event)) {
+                throw new Error(
+                  `Respuesta del servidor en formato inválido: evento ${index} falta campo ${field}`
+                );
+              }
+            }
+          });
         }
-
-        // Validate each event has required fields
-        response.data.forEach((event: any, index: number) => {
+        // For single object responses (create, update)
+        else if (response.data && typeof response.data === 'object') {
           const requiredFields = ['id', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
           for (const field of requiredFields) {
-            if (!(field in event)) {
+            if (!(field in response.data)) {
               throw new Error(
-                `Respuesta del servidor en formato inválido: evento ${index} falta campo ${field}`
+                `Respuesta del servidor en formato inválido: falta campo ${field}`
               );
             }
           }
-        });
+        }
 
         if (response.error !== null) {
           throw new Error('Respuesta del servidor en formato inválido: error debe ser null cuando success es true');
