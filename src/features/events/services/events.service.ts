@@ -7,6 +7,7 @@ import {
   FENResponse,
   ErrorDetails,
   CreateEventPayload, // ⭐ NUEVO
+  UpdateEventPayload, // ⭐ NUEVO
 } from '../types/event.types';
 
 /**
@@ -32,21 +33,79 @@ export class EventsService {
       // Make HTTP GET request
       const response = await api.get(EVENTS_ENDPOINTS.GET_EVENTS, { params });
 
+      // ⭐ FIX CRÍTICO: Blindaje a prueba de fallos - garantizar array
+      const responseData = response.data;
+      
+      // Si la respuesta no tiene data o es null/undefined, crear estructura FEN con array vacío
+      if (!responseData || !responseData.data) {
+        return {
+          success: true,
+          data: [], // ⭐ GARANTÍA: Siempre array vacío si no hay data
+          error: null,
+          metadata: {
+            total: 0,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
+
+      // Si data no es un array, convertirlo a array vacío
+      if (!Array.isArray(responseData.data)) {
+        responseData.data = [];
+      }
+
       // Validate FEN response format
-      const validatedResponse = this.validateFENResponse<Event[]>(response.data);
+      const validatedResponse = this.validateFENResponse<Event[]>(responseData);
 
       return validatedResponse;
     } catch (error: any) {
       // Log error with context
       this.logError(error, 'getEvents', { filters, pagination });
 
+      // ⭐ FIX CRÍTICO: En caso de error, retornar estructura FEN con array vacío
+      // NUNCA lanzar excepción que cause undefined en el store
+      
       // Handle network errors
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        throw new Error('Error de conexión. La solicitud ha excedido el tiempo de espera.');
+        return {
+          success: false,
+          data: [], // ⭐ GARANTÍA: Array vacío en error
+          error: {
+            code: 'TIMEOUT',
+            message: 'Error de conexión. La solicitud ha excedido el tiempo de espera.',
+          },
+          metadata: {
+            total: 0,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            timestamp: new Date().toISOString(),
+          },
+        };
       }
 
       if (!error.response) {
-        throw new Error('Error de conexión. Verifica tu conexión a internet.');
+        return {
+          success: false,
+          data: [], // ⭐ GARANTÍA: Array vacío en error
+          error: {
+            code: 'NETWORK_ERROR',
+            message: 'Error de conexión. Verifica tu conexión a internet.',
+          },
+          metadata: {
+            total: 0,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            timestamp: new Date().toISOString(),
+          },
+        };
       }
 
       // Handle HTTP errors with FEN format
@@ -55,18 +114,48 @@ export class EventsService {
 
         // If backend returns FEN format error, validate and return it
         if (this.isFENFormat(errorResponse)) {
+          // ⭐ GARANTÍA: Asegurar que data sea array incluso en error
+          if (!Array.isArray(errorResponse.data)) {
+            errorResponse.data = [];
+          }
           return this.validateFENResponse<Event[]>(errorResponse);
         }
 
         // Otherwise, transform to FEN format
-        throw new Error(
-          errorResponse.message || 
-          errorResponse.error?.message || 
-          'Error al obtener eventos'
-        );
+        return {
+          success: false,
+          data: [], // ⭐ GARANTÍA: Array vacío en error
+          error: {
+            code: 'API_ERROR',
+            message: errorResponse.message || errorResponse.error?.message || 'Error al obtener eventos',
+          },
+          metadata: {
+            total: 0,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            timestamp: new Date().toISOString(),
+          },
+        };
       }
 
-      throw new Error('Error inesperado al obtener eventos');
+      return {
+        success: false,
+        data: [], // ⭐ GARANTÍA: Array vacío en error
+        error: {
+          code: 'UNKNOWN_ERROR',
+          message: 'Error inesperado al obtener eventos',
+        },
+        metadata: {
+          total: 0,
+          page: pagination.page,
+          pageSize: pagination.pageSize,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          timestamp: new Date().toISOString(),
+        },
+      };
     }
   }
 
@@ -115,6 +204,55 @@ export class EventsService {
       }
 
       throw new Error('Error inesperado al crear el evento');
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Update an existing event
+   * @param id - Event ID
+   * @param payload - Event data to update
+   * @returns Promise with FEN formatted response containing updated event
+   */
+  async updateEvent(id: string, payload: UpdateEventPayload): Promise<FENResponse<Event>> {
+    try {
+      // Make HTTP PUT request
+      const response = await api.put(EVENTS_ENDPOINTS.UPDATE_EVENT(id), payload);
+
+      // Validate FEN response format
+      const validatedResponse = this.validateFENResponse<Event>(response.data);
+
+      return validatedResponse;
+    } catch (error: any) {
+      // Log error with context
+      this.logError(error, 'updateEvent', { id, payload });
+
+      // Handle network errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        throw new Error('Error de conexión. La solicitud ha excedido el tiempo de espera.');
+      }
+
+      if (!error.response) {
+        throw new Error('Error de conexión. Verifica tu conexión a internet.');
+      }
+
+      // Handle HTTP errors with FEN format
+      if (error.response?.data) {
+        const errorResponse = error.response.data;
+
+        // If backend returns FEN format error, validate and return it
+        if (this.isFENFormat(errorResponse)) {
+          return this.validateFENResponse<Event>(errorResponse);
+        }
+
+        // Otherwise, extract error message
+        throw new Error(
+          errorResponse.message || 
+          errorResponse.error?.message || 
+          'Error al actualizar el evento'
+        );
+      }
+
+      throw new Error('Error inesperado al actualizar el evento');
     }
   }
 
@@ -223,8 +361,10 @@ export class EventsService {
           throw new Error('Respuesta del servidor en formato inválido: error incompleto');
         }
 
-        if (response.data !== null) {
-          throw new Error('Respuesta del servidor en formato inválido: data debe ser null cuando success es false');
+        // ⭐ FIX: Allow empty array [] in addition to null when success is false
+        // This supports defensive programming where backend returns [] instead of null
+        if (response.data !== null && !(Array.isArray(response.data) && response.data.length === 0)) {
+          throw new Error('Respuesta del servidor en formato inválido: data debe ser null o [] cuando success es false');
         }
       }
 

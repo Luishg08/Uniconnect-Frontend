@@ -5,6 +5,7 @@ import {
   EventFilters,
   Metadata,
   CreateEventPayload, // ⭐ NUEVO
+  UpdateEventPayload, // ⭐ NUEVO
 } from '../types/event.types';
 
 /**
@@ -29,6 +30,10 @@ export class EventsStore {
   @observable isCreating: boolean = false;
   @observable createError: string | null = null;
 
+  // ⭐ NUEVO: Estado para actualización de eventos
+  @observable isUpdating: boolean = false;
+  @observable updateError: string | null = null;
+
   // Service dependency
   private eventsService: EventsService;
 
@@ -52,15 +57,25 @@ export class EventsStore {
       const response = await this.eventsService.getEvents(this.filters);
 
       runInAction(() => {
+        // ⭐ FIX CRÍTICO: Blindaje a prueba de fallos - SIEMPRE asignar array
         if (response.success && response.data) {
-          this.setEvents(response.data);
+          // Garantizar que data sea un array
+          const eventsData = Array.isArray(response.data) ? response.data : [];
+          this.setEvents(eventsData);
           this.setMetadata(response.metadata);
         } else if (response.error) {
+          // En caso de error, asignar array vacío para evitar undefined
+          this.setEvents([]); // ⭐ GARANTÍA: Array vacío en error
           this.setError(response.error.message);
+        } else {
+          // Caso inesperado: asignar array vacío
+          this.setEvents([]); // ⭐ GARANTÍA: Array vacío por defecto
         }
       });
     } catch (error: any) {
       runInAction(() => {
+        // ⭐ FIX CRÍTICO: En catch, SIEMPRE asignar array vacío
+        this.setEvents([]); // ⭐ GARANTÍA: Array vacío en excepción
         this.setError(error.message || 'Error al cargar eventos');
       });
     } finally {
@@ -127,6 +142,63 @@ export class EventsStore {
   }
 
   /**
+   * ⭐ NUEVO: Update an existing event
+   * @param id - Event ID
+   * @param payload - Event data to update
+   * @returns Promise<boolean> - true if successful, false otherwise
+   */
+  @action
+  async updateEvent(id: string, payload: UpdateEventPayload): Promise<boolean> {
+    this.setIsUpdating(true);
+    this.setUpdateError(null);
+
+    // ⭐ DIAGNOSTIC: Log payload before sending
+    console.log('🔍 [EventsStore] Updating event with payload:', { id, payload });
+
+    try {
+      const response = await this.eventsService.updateEvent(id, payload);
+
+      // ⭐ DIAGNOSTIC: Log response
+      console.log('🔍 [EventsStore] Update event response:', {
+        success: response.success,
+        hasData: !!response.data,
+        error: response.error,
+      });
+
+      runInAction(() => {
+        if (response.success && response.data) {
+          // Evento actualizado exitosamente
+          this.setIsUpdating(false);
+          
+          // Re-fetch automático para actualizar la lista
+          this.loadEvents();
+          
+          return true;
+        } else if (response.error) {
+          this.setUpdateError(response.error.message);
+          this.setIsUpdating(false);
+          return false;
+        }
+      });
+
+      return true;
+    } catch (error: any) {
+      // ⭐ DIAGNOSTIC: Log error details
+      console.error('❌ [EventsStore] Update event error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+
+      runInAction(() => {
+        this.setUpdateError(error.message || 'Error al actualizar el evento');
+        this.setIsUpdating(false);
+      });
+      return false;
+    }
+  }
+
+  /**
    * Set a specific filter and reload events
    * @param filterType - Type of filter (date, type, startDate, endDate)
    * @param value - Filter value
@@ -157,6 +229,14 @@ export class EventsStore {
   @action
   clearCreateError(): void {
     this.createError = null;
+  }
+
+  /**
+   * ⭐ NUEVO: Clear update error
+   */
+  @action
+  clearUpdateError(): void {
+    this.updateError = null;
   }
 
   /**
@@ -211,6 +291,24 @@ export class EventsStore {
   @action
   private setCreateError(error: string | null): void {
     this.createError = error;
+  }
+
+  /**
+   * ⭐ NUEVO: Update isUpdating state
+   * @private
+   */
+  @action
+  private setIsUpdating(isUpdating: boolean): void {
+    this.isUpdating = isUpdating;
+  }
+
+  /**
+   * ⭐ NUEVO: Update updateError state
+   * @private
+   */
+  @action
+  private setUpdateError(error: string | null): void {
+    this.updateError = error;
   }
 
   /**

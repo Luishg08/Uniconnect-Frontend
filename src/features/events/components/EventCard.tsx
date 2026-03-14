@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event, EventType } from '../types/event.types';
 
 export interface EventCardProps {
   event: Event;
+  currentUser?: { id_user: number; role: string };
+  onEdit?: (event: Event) => void;
 }
 
 /**
@@ -12,7 +14,12 @@ export interface EventCardProps {
  * Receives event object as prop
  * No business logic or network calls
  */
-export const EventCard: React.FC<EventCardProps> = ({ event }) => {
+export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit }) => {
+  // Calculate if edit button should be visible
+  const shouldShowEditButton = currentUser && onEdit && (
+    currentUser.role === 'superadmin' || 
+    (currentUser.role === 'admin' && event.created_by === currentUser.id_user)
+  );
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -53,6 +60,19 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
       <View style={[styles.typeBadge, { backgroundColor: getEventTypeColor(event.type) }]}>
         <Text style={styles.typeText}>{getEventTypeLabel(event.type)}</Text>
       </View>
+
+      {/* Edit Button */}
+      {shouldShowEditButton && (
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={() => onEdit(event)}
+          accessibilityLabel="Editar evento"
+          accessibilityRole="button"
+          testID="edit-button"
+        >
+          <Ionicons name="pencil-outline" size={20} color="#0056b3" />
+        </TouchableOpacity>
+      )}
 
       {/* Event Title */}
       <Text style={styles.title}>{event.title}</Text>
@@ -97,6 +117,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: 'relative',
+  },
+  editButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 8,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 20,
+    zIndex: 1,
   },
   typeBadge: {
     alignSelf: 'flex-start',

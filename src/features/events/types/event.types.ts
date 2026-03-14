@@ -42,6 +42,16 @@ export interface CreateEventPayload {
   type: EventType;
 }
 
+// ⭐ NUEVO: Payload para actualizar eventos
+export interface UpdateEventPayload {
+  title?: string;
+  description?: string;
+  date?: string; // ISO string (YYYY-MM-DD)
+  time?: string; // HH:MM
+  location?: string;
+  type?: EventType;
+}
+
 export interface EventFilters {
   date?: string | null;
   type?: EventType | null;

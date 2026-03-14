@@ -11,8 +11,9 @@ import {
   ErrorMessage,
   EmptyState,
   CreateEventModal,
+  EditEventModal,
 } from '@/src/features/events/components';
-import { CreateEventPayload } from '@/src/features/events/types/event.types';
+import { CreateEventPayload, Event, UpdateEventPayload } from '@/src/features/events/types/event.types';
 
 /**
  * EventsScreen - Main screen for academic events query
@@ -30,6 +31,10 @@ import { CreateEventPayload } from '@/src/features/events/types/event.types';
 const EventsScreen: React.FC = observer(() => {
   // ⭐ NUEVO: Modal state
   const [modalVisible, setModalVisible] = useState(false);
+  
+  // ⭐ NUEVO: Edit modal state
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   // Load events on component mount
   useEffect(() => {
@@ -78,6 +83,51 @@ const EventsScreen: React.FC = observer(() => {
     }
   };
 
+  /**
+   * ⭐ NUEVO: Handle edit button press
+   * Opens edit modal with selected event
+   */
+  const handleEdit = (event: Event) => {
+    console.log('🔍 [EditEvent] Opening edit modal for event:', event.id);
+    setSelectedEvent(event);
+    setEditModalVisible(true);
+  };
+
+  /**
+   * ⭐ NUEVO: Handle event update
+   * Calls store action and handles success/error
+   */
+  const handleSave = async (id: string, payload: UpdateEventPayload) => {
+    console.log('🔍 [UpdateEvent] Updating event:', id, payload);
+    
+    const success = await eventsStore.updateEvent(id, payload);
+
+    if (success) {
+      // Success - close modal and show success message
+      setEditModalVisible(false);
+      setSelectedEvent(null);
+      Alert.alert('Éxito', 'Evento actualizado correctamente');
+    } else {
+      // Error - show error message (modal stays open)
+      Alert.alert(
+        'Error',
+        eventsStore.updateError || 'No se pudo actualizar el evento. Intenta nuevamente.'
+      );
+    }
+  };
+
+  /**
+   * ⭐ NUEVO: Get current user info for EventCard
+   */
+  const currentUser = React.useMemo(() => {
+    if (!authStore.user) return undefined;
+    
+    return {
+      id_user: authStore.user.id_user,
+      role: authStore.user.role?.name || authStore.user.roleName || 'student',
+    };
+  }, [authStore.user]);
+
   // Rendering logic based on store state
   return (
     <SafeAreaView style={styles.container}>
@@ -114,12 +164,18 @@ const EventsScreen: React.FC = observer(() => {
           />
         )}
         
-        {!eventsStore.loading && !eventsStore.error && eventsStore.events.length === 0 && (
+        {/* ⭐ FIX CRÍTICO: Validación defensiva con Array.isArray */}
+        {!eventsStore.loading && !eventsStore.error && Array.isArray(eventsStore.events) && eventsStore.events.length === 0 && (
           <EmptyState />
         )}
         
-        {!eventsStore.loading && !eventsStore.error && eventsStore.events.length > 0 && (
-          <EventList events={eventsStore.events} />
+        {/* ⭐ FIX CRÍTICO: Validación defensiva con Array.isArray */}
+        {!eventsStore.loading && !eventsStore.error && Array.isArray(eventsStore.events) && eventsStore.events.length > 0 && (
+          <EventList 
+            events={eventsStore.events} 
+            currentUser={currentUser}
+            onEdit={handleEdit}
+          />
         )}
       </View>
 
@@ -132,6 +188,19 @@ const EventsScreen: React.FC = observer(() => {
         }}
         onSubmit={handleCreateEvent}
         isSubmitting={eventsStore.isCreating}
+      />
+
+      {/* ⭐ NUEVO: Edit Event Modal */}
+      <EditEventModal
+        visible={editModalVisible}
+        event={selectedEvent}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedEvent(null);
+          eventsStore.clearUpdateError();
+        }}
+        onSave={handleSave}
+        isSubmitting={eventsStore.isUpdating}
       />
     </SafeAreaView>
   );
