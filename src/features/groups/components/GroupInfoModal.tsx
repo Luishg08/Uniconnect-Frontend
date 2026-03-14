@@ -15,6 +15,7 @@ import { useGroupInfo } from '../hooks/useGroupInfo';
 import { GroupInfoHeader } from './GroupInfoHeader';
 import { GroupMembersTab } from './GroupMembersTab';
 import { InviteToGroupModal } from './InviteToGroupModal';
+import { JoinRequestsList } from './JoinRequestsList';
 
 interface GroupInfoModalProps {
   groupId: number;
@@ -42,7 +43,7 @@ export const GroupInfoModal = ({ groupId, visible, onClose }: GroupInfoModalProp
           <Text style={styles.headerTitle}>Información del Grupo</Text>
           <View style={styles.headerActions}>
             {groupInfo?.canManage && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowInviteModal(true)}
                 style={styles.inviteButton}
                 activeOpacity={0.7}
@@ -50,8 +51,8 @@ export const GroupInfoModal = ({ groupId, visible, onClose }: GroupInfoModalProp
                 <Ionicons name="person-add" size={24} color="#D9B97E" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity 
-              onPress={onClose} 
+            <TouchableOpacity
+              onPress={onClose}
               style={styles.closeButton}
               activeOpacity={0.7}
             >
@@ -74,7 +75,25 @@ export const GroupInfoModal = ({ groupId, visible, onClose }: GroupInfoModalProp
         ) : groupInfo ? (
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             <GroupInfoHeader groupInfo={groupInfo} onJoinSuccess={onClose} />
-            
+
+            {/* Solicitudes de unión – solo visible para el owner */}
+            {groupInfo.isOwner && (
+              <View style={styles.requestsSection}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="people-circle-outline" size={20} color="#F97316" />
+                  <Text style={[styles.sectionTitle, { color: '#F97316' }]}>Solicitudes de unión</Text>
+                </View>
+                <JoinRequestsList
+                  groupId={groupId}
+                  onEmpty={(isEmpty) => {
+                    // Si queremos ocultarlo dinámicamente, podríamos usar un estado aquí.
+                    // Pero para hacerlo simple, delegamos al JoinRequestsList que retorne null si está vacío,
+                    // y el encabezado lo ocultamos si no hay data.
+                  }}
+                />
+              </View>
+            )}
+
             <View style={styles.membersSection}>
               <Text style={styles.sectionTitle}>Miembros del Grupo</Text>
               <GroupMembersTab groupInfo={groupInfo} />
@@ -146,6 +165,20 @@ const styles = StyleSheet.create({
   membersSection: {
     marginTop: 12,
     marginBottom: 20,
+  },
+  requestsSection: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(249, 115, 22, 0.15)',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 16,

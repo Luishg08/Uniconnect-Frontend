@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { groupsEndpoints, groupInvitationsEndpoints, groupJoinRequestsEndpoints } from '../api/endpoints';
-import { 
-  Group, 
-  GroupCreateRequest, 
-  GroupInvitation, 
+import {
+  Group,
+  GroupCreateRequest,
+  GroupInvitation,
   GroupInvitationRequest,
   GroupInvitationResponse,
   GroupJoinRequest,
@@ -188,8 +188,8 @@ class GroupsService {
    * Responder a una invitación (aceptar o rechazar)
    */
   async respondToInvitation(
-    invitationId: number, 
-    response: 'accepted' | 'rejected', 
+    invitationId: number,
+    response: 'accepted' | 'rejected',
     token: string
   ): Promise<GroupInvitationResponse> {
     try {
@@ -244,6 +244,26 @@ class GroupsService {
       return response.data;
     } catch (error) {
       console.error('Error al solicitar acceso al grupo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener solicitudes pendientes de acceso a un grupo específico (para el owner)
+   */
+  async getGroupJoinRequests(groupId: number, token: string): Promise<GroupJoinRequest[]> {
+    try {
+      const response = await axios.get(
+        groupJoinRequestsEndpoints.getGroupPendingRequests(groupId),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener solicitudes del grupo:', error);
       throw error;
     }
   }
@@ -372,22 +392,22 @@ class GroupsService {
    * Abandonar un grupo (no puede ser owner)
    */
   async leaveGroup(groupId: number, token: string): Promise<void> {
-      try {
-        await axios.delete(
-          groupJoinRequestsEndpoints.leaveGroup(groupId),
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } catch (error) {
-        console.error('Error al abandonar grupo:', error);
-        throw error;
-      }
+    try {
+      await axios.delete(
+        groupJoinRequestsEndpoints.leaveGroup(groupId),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error al abandonar grupo:', error);
+      throw error;
     }
+  }
 
-    async getConnectionsWithCourse(groupId: number, token: string) {
+  async getConnectionsWithCourse(groupId: number, token: string) {
     const response = await axios.get(
       groupInvitationsEndpoints.getConnectionsWithCourse(groupId),
       {

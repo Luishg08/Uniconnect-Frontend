@@ -18,6 +18,7 @@ import { CreateGroupModal } from "@/src/features/groups/components/CreateGroup";
 import { EditGroupModal } from "@/src/features/groups/components/EditGroup";
 import { Group } from "@/src/features/groups/types";
 import { authStore } from "@/src/features/auth";
+import { useJoinRequest } from "@/src/features/groups/hooks/useJoinRequest";
 
 type TabType = "misGrupos" | "descubrir";
 
@@ -27,6 +28,7 @@ export default function GroupsScreen() {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [pendingRequests, setPendingRequests] = useState<Set<number>>(new Set());
 
   // Obtener datos del usuario autenticado
   const userId = authStore.user?.id_user;
@@ -54,6 +56,8 @@ export default function GroupsScreen() {
     error: errorDiscover,
     reloadDiscoverGroups: reloadDiscover,
   } = useDiscoverGroups(userId, token);
+
+  const joinMutation = useJoinRequest();
 
   const handleGroupPress = (groupId: number) => {
     router.push(`/groups/${groupId}` as any);
@@ -116,6 +120,23 @@ export default function GroupsScreen() {
       `Para unirte a "${group.name}", debes recibir una invitación del administrador del grupo.`,
       [{ text: "Entendido" }]
     );
+  };
+
+  const handleRequestJoin = async (groupId: number) => {
+    try {
+      await joinMutation.mutateAsync(groupId);
+      setPendingRequests(prev => new Set(prev).add(groupId));
+      Alert.alert("Solicitud enviada", "Tu solicitud de unión fue enviada al administrador del grupo.");
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "No se pudo enviar la solicitud";
+
+      // Si el backend dice que ya hay solicitud pendiente, actualizamos el estado local de todos modos
+      if (errorMessage.toLowerCase().includes('solicitud pendiente')) {
+        setPendingRequests(prev => new Set(prev).add(groupId));
+      }
+
+      Alert.alert("Error", errorMessage);
+    }
   };
 
   // Calcular cuántos grupos tiene por materia (para mostrar el límite)
@@ -265,7 +286,29 @@ export default function GroupsScreen() {
                   {item.owner?.full_name || "Propietario"}
                 </Text>
               </View>
-              <Text style={styles.discoverCardAction}>Solicitar invitación →</Text>
+              <TouchableOpacity
+                onPress={() => handleRequestJoin(item.id_group)}
+                disabled={joinMutation.isPending && joinMutation.variables === item.id_group || pendingRequests.has(item.id_group)}
+                style={[
+                  styles.joinButton,
+                  pendingRequests.has(item.id_group) && styles.joinButtonSent
+                ]}
+                accessibilityLabel="Solicitar unirse al grupo"
+              >
+                {joinMutation.isPending && joinMutation.variables === item.id_group ? (
+                  <ActivityIndicator size={16} color="#D9B97E" />
+                ) : pendingRequests.has(item.id_group) ? (
+                  <>
+                    <Ionicons name="checkmark-outline" size={16} color="#aaa" />
+                    <Text style={styles.joinButtonTextSent}>Enviada</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="add-outline" size={16} color="#1a1a1a" />
+                    <Text style={styles.joinButtonText}>Solicitar</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         )}
@@ -605,5 +648,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#D9B97E",
     fontWeight: "600",
+  },
+  joinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D9B97E',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
+  },
+  joinButtonSent: {
+    backgroundColor: 'rgba(217, 185, 126, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 185, 126, 0.3)',
+  },
+  joinButtonText: {
+    color: '#1a1a1a',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  joinButtonTextSent: {
+    color: '#aaa',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });

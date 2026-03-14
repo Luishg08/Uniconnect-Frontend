@@ -9,7 +9,10 @@ export type NotificationType =
   | 'message'
   | 'group_invitation'
   | 'group_invitation_accepted'
-  | 'user_joined_group';
+  | 'user_joined_group'
+  | 'group_join_request'
+  | 'group_join_request_accepted'
+  | 'group_join_request_rejected';
 
 export type Notification = {
   id_notification: number;
