@@ -208,6 +208,63 @@ export class EventsService {
   }
 
   /**
+   * ⭐ NUEVO: Delete an event (only owner or superadmin)
+   * @param id_event - Event ID
+   * @returns Promise<boolean> - true if deleted successfully
+   */
+  async deleteEvent(id_event: number): Promise<boolean> {
+    try {
+      // Make HTTP DELETE request
+      const response = await api.delete<FENResponse<{ deleted: boolean }>>(
+        EVENTS_ENDPOINTS.DELETE_EVENT(id_event.toString())
+      );
+
+      // Validate FEN response format
+      const validatedResponse = this.validateFENResponse<{ deleted: boolean }>(response.data);
+
+      // Check if deletion was successful
+      if (!validatedResponse.success || !validatedResponse.data?.deleted) {
+        throw new Error(
+          validatedResponse.error?.message || 'Error al eliminar evento'
+        );
+      }
+
+      return true;
+    } catch (error: unknown) {
+      // Log error with context
+      this.logError(error, 'deleteEvent', { id_event });
+
+      // Handle network errors
+      if (error && typeof error === 'object' && 'code' in error) {
+        const axiosError = error as { code?: string; message?: string };
+        if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
+          throw new Error('Error de conexión. La solicitud ha excedido el tiempo de espera.');
+        }
+      }
+
+      // Handle HTTP errors with FEN format
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: any } };
+        if (axiosError.response?.data) {
+          const errorResponse = axiosError.response.data;
+          if (this.isFENFormat(errorResponse)) {
+            throw new Error(
+              errorResponse.error?.message || 'Error al eliminar evento'
+            );
+          }
+        }
+      }
+
+      // Re-throw if already an Error instance
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error('No se pudo eliminar el evento');
+    }
+  }
+
+  /**
    * ⭐ NUEVO: Update an existing event
    * @param id - Event ID
    * @param payload - Event data to update

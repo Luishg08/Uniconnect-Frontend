@@ -2,11 +2,13 @@ import React from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { Event } from '../types/event.types';
 import { EventCard } from './EventCard';
+import { User } from '@/src/features/auth/types/user.types';
 
 export interface EventListProps {
-  events: Event[] | undefined | null; // ⭐ FIX: Permitir undefined/null para manejar casos edge
-  currentUser?: { id_user: number; role: string };
+  events: Event[] | undefined | null;
+  currentUser?: User;
   onEdit?: (event: Event) => void;
+  onDelete?: (id: string) => void;
 }
 
 /**
@@ -16,7 +18,7 @@ export interface EventListProps {
  * 
  * ⭐ FIX CRÍTICO: Programación defensiva con Early Return
  */
-export const EventList: React.FC<EventListProps> = ({ events, currentUser, onEdit }) => {
+export const EventList: React.FC<EventListProps> = ({ events, currentUser, onEdit, onDelete }) => {
   // ⭐ FIX CRÍTICO: Early Return - Validación temprana para evitar crash
   // Si events es undefined, null, o no es un array, usar array vacío
   const safeEvents = Array.isArray(events) ? events : [];
@@ -30,6 +32,7 @@ export const EventList: React.FC<EventListProps> = ({ events, currentUser, onEdi
           event={item} 
           currentUser={currentUser}
           onEdit={onEdit}
+          onDelete={onDelete}
         />
       )}
       contentContainerStyle={styles.listContainer}

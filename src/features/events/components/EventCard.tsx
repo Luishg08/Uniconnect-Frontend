@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event, EventType } from '../types/event.types';
+import { User } from '@/src/features/auth/types/user.types';
 
 export interface EventCardProps {
   event: Event;
-  currentUser?: { id_user: number; role: string };
+  currentUser?: User;
   onEdit?: (event: Event) => void;
+  onDelete?: (id: string) => void;
 }
 
 /**
@@ -14,12 +16,36 @@ export interface EventCardProps {
  * Receives event object as prop
  * No business logic or network calls
  */
-export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit }) => {
+export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit, onDelete }) => {
   // Calculate if edit button should be visible
   const shouldShowEditButton = currentUser && onEdit && (
-    currentUser.role === 'superadmin' || 
-    (currentUser.role === 'admin' && event.created_by === currentUser.id_user)
+    currentUser.role?.name === 'superadmin' || 
+    (currentUser.role?.name === 'admin' && event.created_by === currentUser.id_user)
   );
+
+  // Calculate if delete button should be visible
+  const shouldShowDeleteButton = currentUser && onDelete && (
+    currentUser.role?.name === 'superadmin' || 
+    event.created_by === currentUser.id_user
+  );
+
+  const handleDelete = (): void => {
+    Alert.alert(
+      '¿Estás seguro?',
+      'Esta acción no se puede deshacer',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sí, eliminar',
+          style: 'destructive',
+          onPress: () => onDelete?.(event.id),
+        },
+      ]
+    );
+  };
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -65,12 +91,25 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
       {shouldShowEditButton && (
         <TouchableOpacity 
           style={styles.editButton} 
-          onPress={() => onEdit(event)}
+          onPress={() => onEdit?.(event)}
           accessibilityLabel="Editar evento"
           accessibilityRole="button"
           testID="edit-button"
         >
           <Ionicons name="pencil-outline" size={20} color="#0056b3" />
+        </TouchableOpacity>
+      )}
+
+      {/* Delete Button */}
+      {shouldShowDeleteButton && (
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={handleDelete}
+          accessibilityLabel="Eliminar evento"
+          accessibilityRole="button"
+          testID="delete-button"
+        >
+          <Ionicons name="trash-outline" size={20} color="#dc3545" />
         </TouchableOpacity>
       )}
 
@@ -125,6 +164,15 @@ const styles = StyleSheet.create({
     right: 12,
     padding: 8,
     backgroundColor: '#f0f8ff',
+    borderRadius: 20,
+    zIndex: 1,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 56,
+    padding: 8,
+    backgroundColor: '#fff5f5',
     borderRadius: 20,
     zIndex: 1,
   },

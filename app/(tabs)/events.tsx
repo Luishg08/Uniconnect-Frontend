@@ -117,15 +117,28 @@ const EventsScreen: React.FC = observer(() => {
   };
 
   /**
+   * ⭐ NUEVO: Handle event deletion
+   * Calls store action and handles success/error
+   */
+  const handleDelete = async (id: string) => {
+    try {
+      await eventsStore.deleteEvent(id);
+      Alert.alert('Éxito', 'Evento eliminado correctamente');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'No se pudo eliminar el evento. Intenta nuevamente.';
+      Alert.alert('Error', errorMessage);
+    }
+  };
+
+  /**
    * ⭐ NUEVO: Get current user info for EventCard
    */
   const currentUser = React.useMemo(() => {
     if (!authStore.user) return undefined;
     
-    return {
-      id_user: authStore.user.id_user,
-      role: authStore.user.role?.name || authStore.user.roleName || 'student',
-    };
+    return authStore.user;
   }, [authStore.user]);
 
   // Rendering logic based on store state
@@ -175,6 +188,7 @@ const EventsScreen: React.FC = observer(() => {
             events={eventsStore.events} 
             currentUser={currentUser}
             onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         )}
       </View>

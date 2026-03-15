@@ -199,6 +199,34 @@ export class EventsStore {
   }
 
   /**
+   * ⭐ NUEVO: Delete an event (only owner or superadmin)
+   * @param id_event - Event ID
+   * @returns Promise<void>
+   */
+  @action
+  async deleteEvent(id_event: string): Promise<void> {
+    try {
+      const deleted = await this.eventsService.deleteEvent(parseInt(id_event, 10));
+
+      if (deleted) {
+        runInAction(() => {
+          // Filtrar el evento eliminado del estado local
+          this.events = this.events.filter(
+            (e: Event) => e.id !== id_event
+          );
+        });
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Error desconocido al eliminar evento';
+
+      console.error('[EventsStore] Error deleting event:', errorMessage);
+      throw error; // Re-throw para que UI pueda manejarlo
+    }
+  }
+
+  /**
    * Set a specific filter and reload events
    * @param filterType - Type of filter (date, type, startDate, endDate)
    * @param value - Filter value
