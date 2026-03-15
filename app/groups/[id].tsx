@@ -34,8 +34,9 @@ export default function GroupChatScreen() {
       try {
         setLoading(true);
         const groupId = parseInt(id as string);
-        const groupData = await groupsService.getGroupDetail(groupId, token);
-        setGroup(groupData);
+        // Usar getGroupInfo que incluye toda la información necesaria
+        const groupData = await groupsService.getGroupInfo(groupId, token);
+        setGroup(groupData as any);
         setError(null);
       } catch (err: any) {
         console.error('Error loading group:', err);
@@ -97,6 +98,26 @@ export default function GroupChatScreen() {
   const userMembership = group.user_membership;
   const isAdmin = userMembership?.id_role === 1 || userMembership?.role === 'admin' || false;
 
+  // Determinar si es un chat privado
+  const isDirectMessage = group.is_direct_message ?? false;
+
+  // Obtener el nombre del otro usuario en chats privados
+  const getOtherUserName = (): string => {
+    if (!isDirectMessage || !group.memberships) {
+      return group.name;
+    }
+
+    const otherMember = group.memberships.find(
+      (m) => m.id_user !== userId
+    );
+
+    return otherMember?.user?.full_name ?? 'Usuario';
+  };
+
+  const displayName = isDirectMessage ? getOtherUserName() : group.name;
+  const displaySubtitle = isDirectMessage ? 'Chat privado' : 'Grupo de estudio';
+  const showAdminButtons = !isDirectMessage && isAdmin;
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="#363636" />
@@ -107,10 +128,10 @@ export default function GroupChatScreen() {
         
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {group.name}
+            {displayName}
           </Text>
           <Text style={styles.headerSubtitle} numberOfLines={1}>
-            Grupo de estudio
+            {displaySubtitle}
           </Text>
         </View>
 
@@ -122,12 +143,14 @@ export default function GroupChatScreen() {
           <Ionicons name="call-outline" size={24} color="#D9B97E" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.headerAction}
-          onPress={() => setShowGroupInfo(true)}
-        >
-          <Ionicons name="ellipsis-vertical" size={24} color="#D9B97E" />
-        </TouchableOpacity>
+        {showAdminButtons && (
+          <TouchableOpacity 
+            style={styles.headerAction}
+            onPress={() => setShowGroupInfo(true)}
+          >
+            <Ionicons name="ellipsis-vertical" size={24} color="#D9B97E" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ChatScreen
@@ -137,13 +160,16 @@ export default function GroupChatScreen() {
         isAdmin={isAdmin}
         userFullName={authStore.user?.full_name || 'Usuario'}
         serverUrl={WEBSOCKET_URL}
+        group={group}
       />
 
-      <GroupInfoModal 
-        groupId={group.id_group}
-        visible={showGroupInfo}
-        onClose={() => setShowGroupInfo(false)}
-      />
+      {showAdminButtons && (
+        <GroupInfoModal 
+          groupId={group.id_group}
+          visible={showGroupInfo}
+          onClose={() => setShowGroupInfo(false)}
+        />
+      )}
     </View>
   );
 }

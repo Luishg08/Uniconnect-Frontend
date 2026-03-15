@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { connectionService } from '../services/connections.service';
 import { showToast } from '@/src/lib/toast';
+import { groupsService } from '@/src/features/groups/services/groups.service';
+import { authStore } from '@/src/features/auth';
+import { useRouter } from 'expo-router';
 
 export const useConnections = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Obtener solicitudes pendientes — sin polling, se refresca tras cada acción
   const { data: pendingRequests, isLoading, isError, refetch } = useQuery({
@@ -19,6 +23,33 @@ export const useConnections = () => {
   //   queryFn: connectionService.getMyConnections,
   //   staleTime: 1000 * 60, // 1 minuto — no refetch automático
   // });
+
+  // Abrir chat privado con un usuario
+  const openDirectMessage = async (targetUserId: number): Promise<void> => {
+    try {
+      const token = authStore.accessToken || '';
+      if (!token) {
+        showToast.error('Error', 'No estás autenticado');
+        return;
+      }
+
+      const response = await groupsService.findOrCreateDirectMessage(targetUserId, token);
+      
+      // Navegar al chat con el grupo retornado
+      router.push(`/groups/${response.group.id_group}`);
+    } catch (error) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Error al abrir chat';
+      
+      if (axiosError.response?.status === 403) {
+        showToast.error('Error', 'No tienes una conexión aceptada con este usuario');
+      } else if (axiosError.response?.status === 404) {
+        showToast.error('Error', 'Usuario no encontrado');
+      } else {
+        showToast.error('Error', errorMessage);
+      }
+    }
+  };
 
   // Enviar solicitud de conexión
   const sendRequestMutation = useMutation({
@@ -73,6 +104,7 @@ export const useConnections = () => {
     isSendingRequest: sendRequestMutation.isPending,
     isAccepting: acceptRequestMutation.isPending,
     isRejecting: rejectRequestMutation.isPending,
+    openDirectMessage,
   };
 };
 

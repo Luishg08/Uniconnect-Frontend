@@ -10,6 +10,7 @@ import {
   GroupWithJoinRequests,
   GroupInfo,
   JoinRequestResponse,
+  DirectMessageResponse,
 } from '../types';
 
 class GroupsService {
@@ -433,6 +434,46 @@ class GroupsService {
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return res.data;
+  }
+
+  // ==================== DIRECT MESSAGES ====================
+
+  /**
+   * Obtener todos los chats privados del usuario autenticado
+   */
+  async getDirectMessages(token: string): Promise<Group[]> {
+    try {
+      const response = await axios.get(groupsEndpoints.getDirectMessages(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener chats privados:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crear o encontrar un chat privado con otro usuario
+   */
+  async findOrCreateDirectMessage(targetUserId: number, token: string): Promise<DirectMessageResponse> {
+    try {
+      const response = await axios.post(
+        groupsEndpoints.findOrCreateDirectMessage(targetUserId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear/encontrar chat privado:', error);
+      throw error;
+    }
   }
 }
 

@@ -28,6 +28,16 @@ export const groupsEndpoints = {
   // Eliminar grupo
   deleteGroup: (groupId: number) =>
     `${API_BASE_URL}/groups/${groupId}`,
+
+  // ==================== DIRECT MESSAGES ====================
+  
+  // Obtener todos los chats privados del usuario
+  getDirectMessages: () =>
+    `${API_BASE_URL}/groups/direct-messages`,
+
+  // Crear o encontrar chat privado con otro usuario
+  findOrCreateDirectMessage: (targetUserId: number) =>
+    `${API_BASE_URL}/groups/direct-message/${targetUserId}`,
 };
 
 export const groupInvitationsEndpoints = {

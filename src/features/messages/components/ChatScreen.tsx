@@ -28,6 +28,21 @@ interface ChatScreenProps {
   isAdmin: boolean;
   userFullName: string;
   serverUrl?: string;
+  group?: {
+    id_group: number;
+    name: string;
+    is_direct_message?: boolean;
+    memberships?: Array<{
+      id_membership: number;
+      id_user: number;
+      user: {
+        id_user: number;
+        full_name: string;
+        picture?: string;
+        email: string;
+      };
+    }>;
+  };
 }
 
 // Emojis populares
@@ -48,6 +63,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   isAdmin,
   userFullName,
   serverUrl,
+  group,
 }) => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -56,6 +72,28 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Determinar si es un chat privado
+  const isDirectMessage = group?.is_direct_message ?? false;
+
+  // Obtener el nombre del otro usuario en chats privados
+  const getOtherUserName = (): string => {
+    if (!isDirectMessage || !group?.memberships) {
+      return group?.name ?? 'Chat';
+    }
+
+    const otherMember = group.memberships.find(
+      (m) => m.id_user !== userId
+    );
+
+    return otherMember?.user?.full_name ?? 'Usuario';
+  };
+
+  // Nombre a mostrar en el header (se usará desde el componente padre)
+  const displayName = isDirectMessage ? getOtherUserName() : group?.name ?? 'Chat';
+
+  // Ocultar botones de administración si es chat privado
+  const showAdminButtons = !isDirectMessage && isAdmin;
 
   const {
     messages,

@@ -5,6 +5,7 @@ export interface Group {
   id_course: number;
   owner_id: number;
   created_at: string;
+  is_direct_message?: boolean;
   course: Course;
   owner?: {
     id_user: number;
@@ -25,6 +26,16 @@ export interface Group {
     id_role: number;
     role: 'admin' | 'member';
   };
+  memberships?: Array<{
+    id_membership: number;
+    id_user: number;
+    user: {
+      id_user: number;
+      full_name: string;
+      picture?: string;
+      email: string;
+    };
+  }>;
 }
 
 export interface Course {
@@ -189,4 +200,12 @@ export interface JoinRequestResponse {
     picture?: string;
     email: string;
   };
+}
+
+// ==================== DIRECT MESSAGES ====================
+
+export interface DirectMessageResponse {
+  success: boolean;
+  isNew: boolean;
+  group: Group;
 }

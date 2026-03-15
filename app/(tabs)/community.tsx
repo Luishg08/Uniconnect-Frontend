@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { View, TextInput, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useCommunityLists } from '@/src/features/students/hooks/useCommunityLists';
 import { StudentCard } from '@/src/features/students/components/StudentCard';
-import { useRouter } from 'expo-router'; 
+import { useRouter } from 'expo-router';
+import { useConnections } from '@/src/features/connections/hooks/useConnections'; 
 
 type CommunityTab = 'friends' | 'general';
 
 export default function CommunityScreen() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<CommunityTab>('friends');
-  const router = useRouter(); 
+  const router = useRouter();
+  const { openDirectMessage } = useConnections();
   const {
     connectedStudents,
     notConnectedStudents,
@@ -45,7 +47,13 @@ export default function CommunityScreen() {
       <FlatList
         data={currentData}
         keyExtractor={(item) => item.id_user.toString()}
-        renderItem={({ item }) => <StudentCard student={item} />}
+        renderItem={({ item }) => (
+          <StudentCard 
+            student={item} 
+            isFriend={isFriendsTab}
+            onOpenDirectMessage={isFriendsTab ? openDirectMessage : undefined}
+          />
+        )}
         contentContainerStyle={styles.listContent}
         scrollEventThrottle={16}
         nestedScrollEnabled={true}

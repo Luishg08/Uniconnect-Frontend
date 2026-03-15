@@ -1,16 +1,20 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from '@expo/vector-icons';
 import { Student, CommonCourse } from "../types";
 import { authService } from "../../auth/services/auth.service";
 
 interface StudentCardProps {
   student: Student;
+  isFriend?: boolean;
+  onOpenDirectMessage?: (userId: number) => Promise<void>;
 }
 
-export const StudentCard = ({ student }: StudentCardProps) => {
+export const StudentCard = ({ student, isFriend = false, onOpenDirectMessage }: StudentCardProps) => {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isOpeningChat, setIsOpeningChat] = useState(false);
 
   const commonCourses = React.useMemo<CommonCourse[]>(() => {
     const raw = (student as any).common_courses
@@ -63,6 +67,18 @@ export const StudentCard = ({ student }: StudentCardProps) => {
     }
   }, [student.id_user, router, isNavigating]);
 
+  const handleOpenChat = useCallback(async (e: React.BaseSyntheticEvent) => {
+    e.stopPropagation();
+    if (isOpeningChat || !onOpenDirectMessage) return;
+    
+    setIsOpeningChat(true);
+    try {
+      await onOpenDirectMessage(student.id_user);
+    } finally {
+      setIsOpeningChat(false);
+    }
+  }, [student.id_user, onOpenDirectMessage, isOpeningChat]);
+
   return (
     <TouchableOpacity
       style={styles.card}
@@ -98,6 +114,21 @@ export const StudentCard = ({ student }: StudentCardProps) => {
           <Text style={styles.noCourses}>Sin materias en común</Text>
         )}
       </View>
+
+      {isFriend && onOpenDirectMessage && (
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={handleOpenChat}
+          disabled={isOpeningChat}
+          activeOpacity={0.7}
+        >
+          {isOpeningChat ? (
+            <ActivityIndicator size="small" color="#D9B97E" />
+          ) : (
+            <Ionicons name="chatbubble-outline" size={24} color="#D9B97E" />
+          )}
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 };
@@ -163,5 +194,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#888",
     fontStyle: "italic",
+  },
+  messageButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(217, 185, 126, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 185, 126, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });
