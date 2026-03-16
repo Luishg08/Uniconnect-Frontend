@@ -24,12 +24,12 @@ interface GroupInfoModalProps {
 }
 
 export const GroupInfoModal = ({ groupId, visible, onClose }: GroupInfoModalProps) => {
+  // ✅ TODOS los hooks al inicio del componente (sin early return antes)
   const { data: groupInfo, isLoading, error } = useGroupInfo(groupId);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const insets = useSafeAreaInsets();
 
-  if (!visible) return null;
-
+  // ✅ Modal maneja visible internamente, no necesitamos early return
   return (
     <Modal
       visible={visible}
@@ -85,7 +85,7 @@ export const GroupInfoModal = ({ groupId, visible, onClose }: GroupInfoModalProp
                 </View>
                 <JoinRequestsList
                   groupId={groupId}
-                  onEmpty={(isEmpty) => {
+                  onEmpty={(isEmpty: boolean) => {
                     // Si queremos ocultarlo dinámicamente, podríamos usar un estado aquí.
                     // Pero para hacerlo simple, delegamos al JoinRequestsList que retorne null si está vacío,
                     // y el encabezado lo ocultamos si no hay data.

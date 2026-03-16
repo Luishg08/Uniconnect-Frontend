@@ -154,8 +154,7 @@ export const InviteToGroupModal = ({
     }
   };
 
-  if (!visible) return null;
-
+  // ✅ Modal maneja visible internamente, no necesitamos early return
   return (
     <Modal
       visible={visible}

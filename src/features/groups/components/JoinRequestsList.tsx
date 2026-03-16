@@ -23,16 +23,30 @@ interface JoinRequestsListProps {
 }
 
 export const JoinRequestsList = ({ groupId, onEmpty }: JoinRequestsListProps) => {
+  // ✅ TODOS los hooks al inicio del componente
   const { data: requests = [], isLoading, error } = useGroupJoinRequests(groupId);
   const acceptMutation = useAcceptJoinRequest();
   const rejectMutation = useRejectJoinRequest();
 
+  // ✅ useEffect movido al inicio, después de otros hooks
+  React.useEffect(() => {
+    if (requests && requests.length === 0 && !isLoading && !error) {
+      onEmpty?.(true);
+    } else {
+      onEmpty?.(false);
+    }
+  }, [requests, isLoading, error, onEmpty]);
+
+  // ✅ Funciones de handlers (no son hooks)
   const handleAccept = async (requestId: number) => {
     try {
       await acceptMutation.mutateAsync({ groupId, requestId });
       Alert.alert('Éxito', 'Solicitud aceptada. El usuario se ha unido al grupo.');
-    } catch (error: any) {
-      Alert.alert('Error', error?.response?.data?.message || 'No se pudo aceptar la solicitud');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error.response as { data?: { message?: string } })?.data?.message 
+        : 'No se pudo aceptar la solicitud';
+      Alert.alert('Error', errorMessage || 'No se pudo aceptar la solicitud');
     }
   };
 
@@ -45,43 +59,17 @@ export const JoinRequestsList = ({ groupId, onEmpty }: JoinRequestsListProps) =>
           try {
             await rejectMutation.mutateAsync({ groupId, requestId });
             Alert.alert('Solicitud rechazada', 'Se ha notificado al usuario.');
-          } catch (error: any) {
-            Alert.alert('Error', error?.response?.data?.message || 'No se pudo rechazar la solicitud');
+          } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'response' in error 
+              ? (error.response as { data?: { message?: string } })?.data?.message 
+              : 'No se pudo rechazar la solicitud';
+            Alert.alert('Error', errorMessage || 'No se pudo rechazar la solicitud');
           }
         },
         style: 'destructive',
       },
     ]);
   };
-
-  if (isLoading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#D9B97E" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
-        <Text style={styles.errorText}>Error al cargar solicitudes</Text>
-      </View>
-    );
-  }
-
-  React.useEffect(() => {
-    if (requests && requests.length === 0 && !isLoading && !error) {
-      onEmpty?.(true);
-    } else {
-      onEmpty?.(false);
-    }
-  }, [requests, isLoading, error, onEmpty]);
-
-  if (requests.length === 0) {
-    return null; // El requerimiento dice que si no hay, la sección entera no debería aparecer.
-  }
 
   const renderRequest = ({ item: request }: { item: GroupJoinRequest }) => (
     <View style={styles.requestCard}>
@@ -138,14 +126,34 @@ export const JoinRequestsList = ({ groupId, onEmpty }: JoinRequestsListProps) =>
     </View>
   );
 
+  // ✅ Conditional rendering en JSX - DESPUÉS de todos los hooks
   return (
-    <FlatList
-      data={requests}
-      keyExtractor={(item) => item.id_request.toString()}
-      renderItem={renderRequest}
-      scrollEnabled={false}
-      contentContainerStyle={styles.listContent}
-    />
+    <>
+      {isLoading && (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#D9B97E" />
+        </View>
+      )}
+      
+      {error && (
+        <View style={styles.centerContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
+          <Text style={styles.errorText}>Error al cargar solicitudes</Text>
+        </View>
+      )}
+      
+      {!isLoading && !error && requests.length === 0 && null}
+      
+      {!isLoading && !error && requests.length > 0 && (
+        <FlatList
+          data={requests}
+          keyExtractor={(item) => item.id_request.toString()}
+          renderItem={renderRequest}
+          scrollEnabled={false}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
+    </>
   );
 };
 
