@@ -199,11 +199,17 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const renderMessage = ({ item }: { item: Message }) => {
     const isOwnMessage = item.membership?.user?.id_user === userId;
     
+    // NUEVO: Estilo corporativo (Slack/Discord)
+    // En chats grupales, TODOS los mensajes muestran remitente (incluso los propios)
+    // En chats privados, NINGÚN mensaje muestra remitente
+    const showSenderInfo = !isDirectMessage;
+    
     return (
       <MessageBubble
         message={item}
         isOwnMessage={isOwnMessage}
         isAdmin={isAdmin}
+        showSenderInfo={showSenderInfo}
         onEdit={() => {
           // Implementar lógica de edición (abrir modal con input)
           // Por ahora solo lo dejamos preparado

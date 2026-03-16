@@ -116,7 +116,9 @@ export default function GroupChatScreen() {
 
   const displayName = isDirectMessage ? getOtherUserName() : group.name;
   const displaySubtitle = isDirectMessage ? 'Chat privado' : 'Grupo de estudio';
-  const showAdminButtons = !isDirectMessage && isAdmin;
+  // HOTFIX: El botón de opciones debe aparecer en TODOS los grupos (no solo para admins)
+  // La restricción de admin se aplica DENTRO del modal, no en la visibilidad del botón
+  const showGroupOptionsButton = !isDirectMessage;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -143,7 +145,7 @@ export default function GroupChatScreen() {
           <Ionicons name="call-outline" size={24} color="#D9B97E" />
         </TouchableOpacity>
 
-        {showAdminButtons && (
+        {showGroupOptionsButton && (
           <TouchableOpacity 
             style={styles.headerAction}
             onPress={() => setShowGroupInfo(true)}
@@ -163,7 +165,7 @@ export default function GroupChatScreen() {
         group={group}
       />
 
-      {showAdminButtons && (
+      {showGroupOptionsButton && (
         <GroupInfoModal 
           groupId={group.id_group}
           visible={showGroupInfo}

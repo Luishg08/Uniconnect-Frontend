@@ -15,6 +15,7 @@ interface MessageBubbleProps {
   message: Message;
   isOwnMessage: boolean;
   isAdmin: boolean;
+  showSenderInfo?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   onFilePress?: (file: { id_file: number; file_name: string }) => void;
@@ -36,6 +37,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isOwnMessage,
   isAdmin,
+  showSenderInfo = false,
   onEdit,
   onDelete,
   onFilePress,
@@ -153,21 +155,28 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <View style={[styles.messageWrapper, isMine ? styles.mineWrapper : styles.theirsWrapper]}>
 
-      {/* Header: avatar + nombre (solo mensajes ajenos) */}
-      {!isMine && (
-        <View style={styles.header}>
-          {message.membership?.user?.picture ? (
+      {/* Información del remitente (solo si showSenderInfo es true) */}
+      {showSenderInfo && (
+        <View style={[
+          styles.senderInfo,
+          isMine && styles.senderInfoMine
+        ]}>
+          {message.sender_picture ? (
             <Image
-              source={{ uri: message.membership.user.picture }}
-              style={styles.avatar}
+              source={{ uri: message.sender_picture }}
+              style={[styles.senderAvatar, isMine && styles.senderAvatarMine]}
             />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Ionicons name="person" size={20} color="#fff" />
+            <View style={[
+              styles.senderAvatar,
+              styles.avatarPlaceholder,
+              isMine && styles.senderAvatarMine
+            ]}>
+              <Ionicons name="person" size={16} color="#fff" />
             </View>
           )}
-          <Text style={styles.userName}>
-            {message.membership?.user?.full_name || 'Usuario'}
+          <Text style={styles.senderName}>
+            {message.sender_name || message.membership?.user?.full_name || 'Usuario'}
           </Text>
         </View>
       )}
@@ -214,6 +223,32 @@ const styles = StyleSheet.create({
   },
   theirsWrapper: {
     alignSelf: 'flex-start',
+  },
+  senderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingLeft: 4,
+  },
+  senderInfoMine: {
+    flexDirection: 'row-reverse',
+    paddingLeft: 0,
+    paddingRight: 4,
+  },
+  senderAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 6,
+  },
+  senderAvatarMine: {
+    marginRight: 0,
+    marginLeft: 6,
+  },
+  senderName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#D9B97E',
   },
   header: {
     flexDirection: 'row',

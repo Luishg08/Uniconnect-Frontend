@@ -16,6 +16,8 @@ export interface Message {
   is_edited: boolean;
   edited_at: string | null;
   files?: MessageFile[];
+  sender_name?: string;
+  sender_picture?: string | null;
   membership?: {
     user: {
       id_user: number;

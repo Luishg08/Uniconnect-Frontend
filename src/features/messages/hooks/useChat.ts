@@ -92,6 +92,8 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
         is_edited: rawMessage.is_edited || false,
         edited_at: rawMessage.edited_at || null,
         files: rawMessage.files || [],
+        sender_name: rawMessage.sender_name,
+        sender_picture: rawMessage.sender_picture,
         membership: rawMessage.membership || {
           user: rawMessage.user || { id_user: 0, full_name: 'Usuario', picture: '' },
           group: rawMessage.group || { id_group: groupId, name: '' },
@@ -188,6 +190,8 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       send_at: new Date().toISOString(),
       is_edited: false,
       edited_at: null,
+      sender_name: userFullName,
+      sender_picture: null, // No tenemos la foto en el hook, pero el fallback funcionará
       membership: {
         user: {
           id_user: userId,
