@@ -17,13 +17,16 @@ export const useGroups = () => {
       queryClient.invalidateQueries({ queryKey: ['discoverGroups'] });
       showToast.success('Éxito', 'Grupo creado correctamente');
     },
-    onError: (error: any) => {
-      showToast.error('Error', error.response?.data?.message || 'No se pudo crear el grupo');
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'No se pudo crear el grupo'
+        : 'No se pudo crear el grupo';
+      showToast.error('Error', errorMessage);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => {
+    mutationFn: ({ id, data }: { id: number; data: GroupCreateRequest }) => {
       const token = authStore.accessToken || '';
       return groupsService.createGroup(data, token); // TODO: Implementar updateGroup en el servicio
     },
@@ -32,8 +35,11 @@ export const useGroups = () => {
       queryClient.invalidateQueries({ queryKey: ['discoverGroups'] });
       showToast.success('Éxito', 'Grupo actualizado correctamente');
     },
-    onError: (error: any) => {
-      showToast.error('Error', error.response?.data?.message || 'No se pudo actualizar el grupo');
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'No se pudo actualizar el grupo'
+        : 'No se pudo actualizar el grupo';
+      showToast.error('Error', errorMessage);
     },
   });
 
@@ -47,8 +53,11 @@ export const useGroups = () => {
       queryClient.invalidateQueries({ queryKey: ['discoverGroups'] });
       showToast.success('Éxito', 'Grupo eliminado correctamente');
     },
-    onError: (error: any) => {
-      showToast.error('Error', error.response?.data?.message || 'No se pudo eliminar el grupo');
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'No se pudo eliminar el grupo'
+        : 'No se pudo eliminar el grupo';
+      showToast.error('Error', errorMessage);
     },
   });
 

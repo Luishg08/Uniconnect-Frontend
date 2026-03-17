@@ -15,8 +15,9 @@ export const useGroupInvitations = (userId: number, token: string) => {
       const data = await groupsService.getPendingInvitations(userId, token);
       setPendingInvitations(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar invitaciones pendientes');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar invitaciones pendientes';
+      setError(errorMessage);
       console.error('Error al cargar invitaciones pendientes:', err);
     } finally {
       setLoading(false);
@@ -28,7 +29,7 @@ export const useGroupInvitations = (userId: number, token: string) => {
     try {
       const data = await groupsService.getSentInvitations(userId, token);
       setSentInvitations(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al cargar invitaciones enviadas:', err);
     }
   }, [userId, token]);
@@ -39,7 +40,7 @@ export const useGroupInvitations = (userId: number, token: string) => {
       const newInvitation = await groupsService.sendInvitation(invitationData, token);
       setSentInvitations((prev) => [...prev, newInvitation]);
       return newInvitation;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al enviar invitación:', err);
       throw err;
     }
@@ -57,7 +58,7 @@ export const useGroupInvitations = (userId: number, token: string) => {
       setPendingInvitations((prev) => prev.filter((inv) => inv.id_invitation !== invitationId));
       
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al responder invitación:', err);
       throw err;
     }
@@ -70,7 +71,7 @@ export const useGroupInvitations = (userId: number, token: string) => {
       
       // Remover de enviadas
       setSentInvitations((prev) => prev.filter((inv) => inv.id_invitation !== invitationId));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al cancelar invitación:', err);
       throw err;
     }

@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { GroupMembership } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { groupsService } from '../services/groups.service';
@@ -70,7 +71,7 @@ export const InviteToGroupModal = ({
     if (!invitables) return [];
 
     // Obtener los IDs de los miembros actuales para no listarlos
-    const currentMemberIds = groupInfo?.memberships?.map((m: any) => m.id_user) || [];
+    const currentMemberIds = groupInfo?.memberships?.map((m: GroupMembership) => m.id_user) || [];
 
     // Filtramos primero a los que no son miembros
     let filtered = invitables.filter((user: User) => !currentMemberIds.includes(user.id_user));
@@ -101,9 +102,11 @@ export const InviteToGroupModal = ({
     onSuccess: () => {
       Alert.alert('Éxito', 'Invitación enviada correctamente');
     },
-    onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Error al enviar invitación';
-      Alert.alert('Error', message);
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al enviar invitación'
+        : 'Error al enviar invitación';
+      Alert.alert('Error', errorMessage);
     },
   });
 

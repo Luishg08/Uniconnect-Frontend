@@ -50,9 +50,11 @@ export const GroupJoinButton = ({
       await joinMutation.mutateAsync(groupId);
       Alert.alert('Éxito', 'Solicitud de acceso enviada al grupo.');
       onSuccess?.();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Error al solicitar acceso';
-      Alert.alert('Error', message);
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al solicitar acceso'
+        : 'Error al solicitar acceso';
+      Alert.alert('Error', errorMessage);
     }
   };
 

@@ -41,7 +41,7 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
                 memberId,
               });
               Alert.alert('Éxito', 'Miembro sacado del grupo');
-            } catch (error: any) {
+            } catch (error: unknown) {
               Alert.alert('Error', 'No se pudo sacar el miembro');
             }
           },
@@ -66,7 +66,7 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
                 memberId,
               });
               Alert.alert('Éxito', 'Miembro promovido a administrador');
-            } catch (error: any) {
+            } catch (error: unknown) {
               Alert.alert('Error', 'No se pudo promocionar al miembro');
             }
           },
@@ -95,7 +95,7 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
             try {
               await leaveGroupMutation.mutateAsync(groupInfo.id_group);
               Alert.alert('Éxito', 'Has abandonado el grupo');
-            } catch (error: any) {
+            } catch (error: unknown) {
               Alert.alert('Error', 'No se pudo abandonar el grupo');
             }
           },

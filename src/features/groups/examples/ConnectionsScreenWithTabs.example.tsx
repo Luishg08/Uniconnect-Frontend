@@ -56,8 +56,9 @@ export default function ConnectionsScreenWithTabs() {
       await respondToInvitation(invitationId, 'accepted');
       Alert.alert('¡Éxito!', 'Te has unido al grupo correctamente');
       reloadInvitations();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'No se pudo aceptar la invitación');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'No se pudo aceptar la invitación';
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -75,8 +76,9 @@ export default function ConnectionsScreenWithTabs() {
               await respondToInvitation(invitationId, 'rejected');
               Alert.alert('Invitación rechazada');
               reloadInvitations();
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'No se pudo rechazar la invitación');
+            } catch (error: unknown) {
+              const errorMessage = error instanceof Error ? error.message : 'No se pudo rechazar la invitación';
+              Alert.alert('Error', errorMessage);
             }
           },
         },

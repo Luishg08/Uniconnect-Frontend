@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GroupInvitation } from '../types';
+import { GroupInvitation, GroupJoinRequest } from '../types';
 import { groupsService } from '../services/groups.service';
 import { authStore } from '@/src/features/auth/store/AuthStore';
 
 interface GroupInvitationCardProps {
-  invitation: any; // Puede ser GroupInvitation o GroupJoinRequest
+  invitation: GroupInvitation | GroupJoinRequest;
   onAccept?: () => void;
   onReject?: () => void;
   loading?: boolean;
@@ -62,8 +62,11 @@ export const GroupInvitationCard: React.FC<GroupInvitationCardProps> = ({
         Alert.alert('¡Listo!', 'Solicitud aceptada.');
       }
       onAccept?.();
-    } catch (error: any) {
-      Alert.alert('Error', error?.response?.data?.message || 'No se pudo aceptar.');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'No se pudo aceptar.'
+        : 'No se pudo aceptar.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +94,11 @@ export const GroupInvitationCard: React.FC<GroupInvitationCardProps> = ({
         Alert.alert('Solicitud rechazada', 'Has rechazado la solicitud.');
       }
       onReject?.();
-    } catch (error: any) {
-      Alert.alert('Error', error?.response?.data?.message || 'No se pudo rechazar.');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'No se pudo rechazar.'
+        : 'No se pudo rechazar.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }

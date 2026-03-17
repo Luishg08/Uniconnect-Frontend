@@ -64,8 +64,9 @@ export default function GroupsScreenWithTabs() {
       Alert.alert('Éxito', '¡Te has unido al grupo!');
       reloadMyGroups();
       reloadDiscoverGroups();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'No se pudo unir al grupo');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'No se pudo unir al grupo';
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -83,8 +84,9 @@ export default function GroupsScreenWithTabs() {
               await groupsService.deleteGroup(groupId, token);
               Alert.alert('Éxito', 'Grupo eliminado correctamente');
               reloadMyGroups();
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar el grupo');
+            } catch (error: unknown) {
+              const errorMessage = error instanceof Error ? error.message : 'No se pudo eliminar el grupo';
+              Alert.alert('Error', errorMessage);
             }
           },
         },
