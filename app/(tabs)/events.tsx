@@ -62,6 +62,7 @@ const EventsScreen: React.FC = observer(() => {
     console.log('🔍 [CreateEvent] Auth state:', {
       isAuthenticated: authStore.isAuthenticated,
       hasToken: !!authStore.accessToken,
+      token: authStore.accessToken,
       tokenPreview: authStore.accessToken ? authStore.accessToken.substring(0, 20) + '...' : 'none',
       userId: authStore.user?.id_user,
       userRole: authStore.user?.role?.name || authStore.user?.roleName,
