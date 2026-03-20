@@ -131,6 +131,24 @@ class GroupsService {
       throw error;
     }
   }
+  async updateGroup(groupId: number, data: GroupCreateRequest, token: string): Promise<Group> {
+    try {
+      const response = await axios.patch(
+        groupsEndpoints.updateGroup(groupId),
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating group:', error);
+      throw new Error(error.response?.data?.message || 'Error al actualizar el grupo');
+    }
+  }
+
 
   // ==================== INVITACIONES ====================
 
@@ -196,7 +214,7 @@ class GroupsService {
     try {
       const res = await axios.patch(
         groupInvitationsEndpoints.respondToInvitation(invitationId),
-        { response },
+        { status: response }, // Corregido: backend espera 'status', no 'response'
         {
           headers: {
             Authorization: `Bearer ${token}`,

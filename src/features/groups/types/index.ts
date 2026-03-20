@@ -29,6 +29,7 @@ export interface Group {
   memberships?: Array<{
     id_membership: number;
     id_user: number;
+    is_admin?: boolean;
     user: {
       id_user: number;
       full_name: string;

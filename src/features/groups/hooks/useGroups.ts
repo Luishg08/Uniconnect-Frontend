@@ -28,7 +28,7 @@ export const useGroups = () => {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: GroupCreateRequest }) => {
       const token = authStore.accessToken || '';
-      return groupsService.createGroup(data, token); // TODO: Implementar updateGroup en el servicio
+      return groupsService.updateGroup(id, data, token);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myGroups'] });

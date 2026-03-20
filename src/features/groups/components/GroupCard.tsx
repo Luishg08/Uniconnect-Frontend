@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Group } from "../types";
+import { authStore } from "@/src/features/auth/store/AuthStore";
 
 interface GroupCardProps {
   group: Group;
@@ -13,6 +14,13 @@ interface GroupCardProps {
 
 export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false }: GroupCardProps) => {
   const membersCount = group._count?.memberships || 0;
+  const currentUserId = authStore.user?.id_user;
+
+  // Calcular permisos del usuario actual
+  const isOwner = group.owner_id === currentUserId;
+  const userMembership = group.memberships?.find(m => m.id_user === currentUserId);
+  const isAdmin = userMembership?.is_admin || false;
+  const canManage = isOwner || isAdmin;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -26,32 +34,35 @@ export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false
           </View>
         </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            style={styles.actionButton}
-            disabled={isDeleting}
-          >
-            <Ionicons name="create-outline" size={22} color="#D9B97E" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            style={styles.actionButton}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color="#ff4d4d" />
-            ) : (
-              <Ionicons name="trash-outline" size={22} color="#ff4d4d" />
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Solo mostrar acciones si el usuario puede gestionar el grupo */}
+        {canManage && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              style={styles.actionButton}
+              disabled={isDeleting}
+            >
+              <Ionicons name="create-outline" size={22} color="#D9B97E" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              style={styles.actionButton}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#ff4d4d" />
+              ) : (
+                <Ionicons name="trash-outline" size={22} color="#ff4d4d" />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {group.description && (
@@ -67,6 +78,19 @@ export const GroupCard = ({ group, onPress, onEdit, onDelete, isDeleting = false
             {membersCount} {membersCount === 1 ? "miembro" : "miembros"}
           </Text>
         </View>
+        {/* Mostrar indicador de rol si es owner o admin */}
+        {isOwner && (
+          <View style={styles.roleIndicator}>
+            <Ionicons name="star" size={14} color="#D9B97E" />
+            <Text style={styles.roleText}>Propietario</Text>
+          </View>
+        )}
+        {isAdmin && !isOwner && (
+          <View style={styles.roleIndicator}>
+            <Ionicons name="shield-checkmark" size={14} color="#4CAF50" />
+            <Text style={styles.roleText}>Admin</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -134,6 +158,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(217, 185, 126, 0.2)",
     paddingTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   membersInfo: {
     flexDirection: "row",
@@ -144,5 +171,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#aaa",
     fontWeight: "500",
+  },
+  roleIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(217, 185, 126, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  roleText: {
+    fontSize: 11,
+    color: "#D9B97E",
+    fontWeight: "600",
   },
 });

@@ -25,6 +25,10 @@ export const groupsEndpoints = {
   getGroupDetail: (groupId: number) =>
     `${API_BASE_URL}/groups/${groupId}`,
 
+  // Actualizar grupo
+  updateGroup: (groupId: number) =>
+    `${API_BASE_URL}/groups/${groupId}`,
+
   // Eliminar grupo
   deleteGroup: (groupId: number) =>
     `${API_BASE_URL}/groups/${groupId}`,
