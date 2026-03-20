@@ -35,7 +35,7 @@ describe('Bug Condition Exploration - EventsService updateEvent', () => {
   /**
    * Property 2: Fault Condition - updateEvent Method Signature
    * 
-   * The updateEvent method SHALL accept (id: string, payload: UpdateEventPayload)
+   * The updateEvent method SHALL accept (id: number, payload: UpdateEventPayload)
    * and return Promise<FENResponse<Event>>
    */
   it('should have correct updateEvent method signature', () => {
@@ -73,7 +73,7 @@ describe('Bug Condition Exploration - EventsService updateEvent', () => {
     };
 
     // This will fail because updateEvent doesn't exist
-    const result = service.updateEvent('event-123', mockPayload);
+    const result = service.updateEvent(123, mockPayload);
     expect(result).toBeInstanceOf(Promise);
   });
 
@@ -117,7 +117,7 @@ describe('Bug Condition Exploration - EventsService updateEvent', () => {
 
     // This will fail because updateEvent doesn't exist
     expect(async () => {
-      await service.updateEvent('event-123', mockPayload);
+      await service.updateEvent(123, mockPayload);
     }).not.toThrow();
   });
 });

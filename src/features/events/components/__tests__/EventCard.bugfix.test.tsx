@@ -30,7 +30,7 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
       // Admin with id_user=5 viewing event with created_by=5
       
       const mockEvent: Event = {
-        id: 'event-123',
+        id_event: 123,
         title: 'Test Event',
         description: 'Test Description',
         date: '2024-12-31',
@@ -44,7 +44,10 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
 
       const mockCurrentUser = {
         id_user: 5, // Current user is user 5
-        role: 'admin',
+        email: 'admin@test.com',
+        full_name: 'Admin User',
+        id_role: 2,
+        role: { name: 'admin' },
       };
 
       // This test WILL FAIL because EventCard doesn't accept currentUser prop
@@ -69,7 +72,7 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
           fc.integer({ min: 1, max: 1000 }),
           // Generate random event data
           fc.record({
-            id: fc.uuid(),
+            id_event: fc.integer({ min: 1, max: 10000 }),
             title: fc.string({ minLength: 1, maxLength: 100 }),
             description: fc.string({ minLength: 1, maxLength: 500 }),
             date: fc.date().map(d => d.toISOString().split('T')[0]),
@@ -87,7 +90,10 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
 
             const currentUser = {
               id_user: userId, // Same user viewing
-              role: 'admin',
+              email: 'admin@test.com',
+              full_name: 'Admin User',
+              id_role: 2,
+              role: { name: 'admin' },
             };
 
             // This WILL FAIL because EventCard doesn't support these props
@@ -118,7 +124,7 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
   describe('Property 2: Edit button visible for superadmin viewing any event', () => {
     it('should show edit button when superadmin views any event', () => {
       const mockEvent: Event = {
-        id: 'event-456',
+        id_event: 456,
         title: 'Another Event',
         description: 'Another Description',
         date: '2024-12-31',
@@ -132,7 +138,10 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
 
       const mockCurrentUser = {
         id_user: 99, // Different user (superadmin)
-        role: 'superadmin',
+        email: 'superadmin@test.com',
+        full_name: 'Super Admin',
+        id_role: 1,
+        role: { name: 'superadmin' },
       };
 
       // This test WILL FAIL because EventCard doesn't accept currentUser prop
@@ -157,7 +166,7 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
           fc.integer({ min: 1001, max: 2000 }),
           // Generate random event data
           fc.record({
-            id: fc.uuid(),
+            id_event: fc.integer({ min: 1, max: 10000 }),
             title: fc.string({ minLength: 1, maxLength: 100 }),
             description: fc.string({ minLength: 1, maxLength: 500 }),
             date: fc.date().map(d => d.toISOString().split('T')[0]),
@@ -175,7 +184,10 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
 
             const currentUser = {
               id_user: superadminId, // Superadmin viewing
-              role: 'superadmin',
+              email: 'superadmin@test.com',
+              full_name: 'Super Admin',
+              id_role: 1,
+              role: { name: 'superadmin' },
             };
 
             const { queryByTestId } = render(
@@ -205,7 +217,7 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
   describe('Property 3: No edit button for students (preservation)', () => {
     it('should not show edit button when student views event', () => {
       const mockEvent: Event = {
-        id: 'event-789',
+        id_event: 789,
         title: 'Student Event',
         description: 'Student Description',
         date: '2024-12-31',
@@ -219,7 +231,10 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
 
       const mockCurrentUser = {
         id_user: 20,
-        role: 'student',
+        email: 'student@test.com',
+        full_name: 'Student User',
+        id_role: 3,
+        role: { name: 'student' },
       };
 
       const { queryByTestId } = render(

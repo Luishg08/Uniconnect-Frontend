@@ -8,7 +8,7 @@ export interface EventCardProps {
   event: Event;
   currentUser?: User;
   onEdit?: (event: Event) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (id: number) => void;
 }
 
 /**
@@ -41,7 +41,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
         {
           text: 'Sí, eliminar',
           style: 'destructive',
-          onPress: () => onDelete?.(event.id),
+          onPress: () => onDelete?.(event.id_event),
         },
       ]
     );

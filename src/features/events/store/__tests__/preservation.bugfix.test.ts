@@ -35,7 +35,7 @@ describe('Preservation Tests - EventsStore Existing Behaviors', () => {
       // Mock service
       const mockEvents: Event[] = [
         {
-          id: 'event-1',
+          id_event: 1,
           title: 'Event 1',
           description: 'Description 1',
           date: '2024-12-31',
@@ -126,7 +126,7 @@ describe('Preservation Tests - EventsStore Existing Behaviors', () => {
   describe('Property 2: Creating event refreshes list automatically', () => {
     it('should call loadEvents() after successful event creation', async () => {
       const mockCreatedEvent: Event = {
-        id: 'new-event',
+        id_event: 999,
         title: 'New Event',
         description: 'New Description',
         date: '2024-12-31',
@@ -186,7 +186,7 @@ describe('Preservation Tests - EventsStore Existing Behaviors', () => {
             const payload: CreateEventPayload = payloadData;
 
             const mockCreatedEvent: Event = {
-              id: 'generated-id',
+              id_event: 1000,
               ...payload,
               created_by: 1,
               createdAt: new Date().toISOString(),

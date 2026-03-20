@@ -216,7 +216,7 @@ export class EventsService {
     try {
       // Make HTTP DELETE request
       const response = await api.delete<FENResponse<{ deleted: boolean }>>(
-        EVENTS_ENDPOINTS.DELETE_EVENT(id_event.toString())
+        EVENTS_ENDPOINTS.DELETE_EVENT(id_event)
       );
 
       // Validate FEN response format
@@ -266,11 +266,11 @@ export class EventsService {
 
   /**
    * ⭐ NUEVO: Update an existing event
-   * @param id - Event ID
+   * @param id - Event ID (number)
    * @param payload - Event data to update
    * @returns Promise with FEN formatted response containing updated event
    */
-  async updateEvent(id: string, payload: UpdateEventPayload): Promise<FENResponse<Event>> {
+  async updateEvent(id: number, payload: UpdateEventPayload): Promise<FENResponse<Event>> {
     try {
       // Make HTTP PUT request
       const response = await api.put(EVENTS_ENDPOINTS.UPDATE_EVENT(id), payload);
@@ -383,7 +383,7 @@ export class EventsService {
         if (Array.isArray(response.data)) {
           // Validate each event has required fields
           response.data.forEach((event: any, index: number) => {
-            const requiredFields = ['id', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
+            const requiredFields = ['id_event', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
             for (const field of requiredFields) {
               if (!(field in event)) {
                 throw new Error(
@@ -395,7 +395,7 @@ export class EventsService {
         }
         // For single object responses (create, update)
         else if (response.data && typeof response.data === 'object') {
-          const requiredFields = ['id', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
+          const requiredFields = ['id_event', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
           for (const field of requiredFields) {
             if (!(field in response.data)) {
               throw new Error(

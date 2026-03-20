@@ -8,7 +8,7 @@ export interface EventListProps {
   events: Event[] | undefined | null;
   currentUser?: User;
   onEdit?: (event: Event) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (id: number) => void;
 }
 
 /**
@@ -26,7 +26,7 @@ export const EventList: React.FC<EventListProps> = ({ events, currentUser, onEdi
   return (
     <FlatList
       data={safeEvents} // ⭐ GARANTÍA: Siempre pasar array válido
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.id_event.toString()}
       renderItem={({ item }) => (
         <EventCard 
           event={item} 

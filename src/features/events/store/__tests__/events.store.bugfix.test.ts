@@ -43,7 +43,7 @@ describe('Bug Condition Exploration - EventsStore updateEvent', () => {
   /**
    * Property 2: Fault Condition - updateEvent Action Signature
    * 
-   * The updateEvent action SHALL accept (id: string, payload: UpdateEventPayload)
+   * The updateEvent action SHALL accept (id: number, payload: UpdateEventPayload)
    * and return Promise<boolean>
    */
   it('should have correct updateEvent action signature', () => {
@@ -60,7 +60,7 @@ describe('Bug Condition Exploration - EventsStore updateEvent', () => {
     // Check that action exists and returns a Promise
     expect(store.updateEvent).toBeDefined();
     
-    const result = store.updateEvent('event-123', mockPayload);
+    const result = store.updateEvent(123, mockPayload);
     expect(result).toBeInstanceOf(Promise);
   });
 
@@ -84,7 +84,7 @@ describe('Bug Condition Exploration - EventsStore updateEvent', () => {
     mockService.updateEvent.mockResolvedValue({
       success: true,
       data: {
-        id: 'event-123',
+        id_event: 123,
         ...mockPayload,
         created_by: 5,
         createdAt: '2024-01-01T00:00:00Z',
@@ -115,7 +115,7 @@ describe('Bug Condition Exploration - EventsStore updateEvent', () => {
 
     // This will fail because updateEvent doesn't exist
     expect(async () => {
-      await store.updateEvent('event-123', mockPayload);
+      await store.updateEvent(123, mockPayload);
       
       // Should have called loadEvents to refresh the list
       expect(mockService.getEvents).toHaveBeenCalled();

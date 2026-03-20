@@ -143,12 +143,12 @@ export class EventsStore {
 
   /**
    * ⭐ NUEVO: Update an existing event
-   * @param id - Event ID
+   * @param id - Event ID (number)
    * @param payload - Event data to update
    * @returns Promise<boolean> - true if successful, false otherwise
    */
   @action
-  async updateEvent(id: string, payload: UpdateEventPayload): Promise<boolean> {
+  async updateEvent(id: number, payload: UpdateEventPayload): Promise<boolean> {
     this.setIsUpdating(true);
     this.setUpdateError(null);
 
@@ -200,19 +200,19 @@ export class EventsStore {
 
   /**
    * ⭐ NUEVO: Delete an event (only owner or superadmin)
-   * @param id_event - Event ID
+   * @param id_event - Event ID (number)
    * @returns Promise<void>
    */
   @action
-  async deleteEvent(id_event: string): Promise<void> {
+  async deleteEvent(id_event: number): Promise<void> {
     try {
-      const deleted = await this.eventsService.deleteEvent(parseInt(id_event, 10));
+      const deleted = await this.eventsService.deleteEvent(id_event);
 
       if (deleted) {
         runInAction(() => {
           // Filtrar el evento eliminado del estado local
           this.events = this.events.filter(
-            (e: Event) => e.id !== id_event
+            (e: Event) => e.id_event !== id_event
           );
         });
       }

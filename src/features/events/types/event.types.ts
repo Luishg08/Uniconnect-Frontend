@@ -9,7 +9,7 @@ export enum EventType {
 }
 
 export interface Event {
-  id: string;
+  id_event: number;
   title: string;
   description: string;
   date: string; // ISO string from backend

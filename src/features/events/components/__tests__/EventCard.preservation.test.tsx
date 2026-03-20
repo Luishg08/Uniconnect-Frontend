@@ -36,7 +36,7 @@ describe('Preservation Tests - EventCard Existing Behaviors', () => {
       // No currentUser prop, no onEdit prop, no edit button rendered
       
       const mockEvent: Event = {
-        id: 'event-123',
+        id_event: 123,
         title: 'Test Event',
         description: 'Test Description',
         date: '2024-12-31',
@@ -67,7 +67,7 @@ describe('Preservation Tests - EventCard Existing Behaviors', () => {
         fc.asyncProperty(
           // Generate random event data
           fc.record({
-            id: fc.uuid(),
+            id_event: fc.integer({ min: 1, max: 10000 }),
             title: fc.string({ minLength: 1, maxLength: 100 }),
             description: fc.string({ minLength: 1, maxLength: 500 }),
             date: fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString().split('T')[0]),
@@ -108,7 +108,7 @@ describe('Preservation Tests - EventCard Existing Behaviors', () => {
   describe('Property 2: EventCard renders event data correctly', () => {
     it('should display event information', () => {
       const mockEvent: Event = {
-        id: 'event-456',
+        id_event: 456,
         title: 'Conference Event',
         description: 'Important conference',
         date: '2024-12-31',
@@ -135,7 +135,7 @@ describe('Preservation Tests - EventCard Existing Behaviors', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.record({
-            id: fc.uuid(),
+            id_event: fc.integer({ min: 1, max: 10000 }),
             title: fc.string({ minLength: 1, maxLength: 100 }),
             description: fc.string({ minLength: 1, maxLength: 500 }),
             date: fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString().split('T')[0]),

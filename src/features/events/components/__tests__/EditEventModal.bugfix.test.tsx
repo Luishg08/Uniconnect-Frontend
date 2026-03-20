@@ -40,7 +40,7 @@ describe('Bug Condition Exploration - EditEventModal Component', () => {
   it('should render EditEventModal with required props', () => {
     // This WILL FAIL because EditEventModal doesn't exist
     const mockEvent: Event = {
-      id: 'event-123',
+      id_event: 123,
       title: 'Test Event',
       description: 'Test Description',
       date: '2024-12-31',
@@ -80,7 +80,7 @@ describe('Bug Condition Exploration - EditEventModal Component', () => {
    */
   it('should preload form fields with event data', () => {
     const mockEvent: Event = {
-      id: 'event-456',
+      id_event: 456,
       title: 'Preload Test Event',
       description: 'Preload Description',
       date: '2024-12-31',

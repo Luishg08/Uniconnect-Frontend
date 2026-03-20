@@ -16,7 +16,7 @@ interface EditEventModalProps {
   visible: boolean;
   event: Event | null;
   onClose: () => void;
-  onSave: (id: string, payload: UpdateEventPayload) => Promise<void>;
+  onSave: (id: number, payload: UpdateEventPayload) => Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -141,10 +141,10 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
    * Handle form submission
    */
   const handleSave = async () => {
-    if (!validateForm() || !event || !event.id) {
+    if (!validateForm() || !event || !event.id_event) {
       console.error('❌ [EditEventModal] Invalid form or missing event ID:', { 
         hasEvent: !!event, 
-        eventId: event?.id,
+        eventId: event?.id_event,
         formValid: validateForm() 
       });
       return;
@@ -152,9 +152,8 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
 
     // ⭐ DIAGNOSTIC: Log event ID before sending
     console.log('🔍 [EditEventModal] Submitting update for event:', {
-      eventId: event.id,
-      idType: typeof event.id,
-      idLength: event.id?.length,
+      eventId: event.id_event,
+      idType: typeof event.id_event,
     });
 
     // Emit data to parent via onSave prop
@@ -167,7 +166,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       type,
     };
 
-    await onSave(event.id, payload);
+    await onSave(event.id_event, payload);
   };
 
   /**

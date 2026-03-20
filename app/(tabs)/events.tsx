@@ -88,7 +88,7 @@ const EventsScreen: React.FC = observer(() => {
    * Opens edit modal with selected event
    */
   const handleEdit = (event: Event) => {
-    console.log('🔍 [EditEvent] Opening edit modal for event:', event.id);
+    console.log('🔍 [EditEvent] Opening edit modal for event:', event.id_event);
     setSelectedEvent(event);
     setEditModalVisible(true);
   };
@@ -97,7 +97,7 @@ const EventsScreen: React.FC = observer(() => {
    * ⭐ NUEVO: Handle event update
    * Calls store action and handles success/error
    */
-  const handleSave = async (id: string, payload: UpdateEventPayload) => {
+  const handleSave = async (id: number, payload: UpdateEventPayload) => {
     console.log('🔍 [UpdateEvent] Updating event:', id, payload);
     
     const success = await eventsStore.updateEvent(id, payload);
@@ -120,7 +120,7 @@ const EventsScreen: React.FC = observer(() => {
    * ⭐ NUEVO: Handle event deletion
    * Calls store action and handles success/error
    */
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await eventsStore.deleteEvent(id);
       Alert.alert('Éxito', 'Evento eliminado correctamente');
