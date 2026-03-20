@@ -141,9 +141,21 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
    * Handle form submission
    */
   const handleSave = async () => {
-    if (!validateForm() || !event) {
+    if (!validateForm() || !event || !event.id) {
+      console.error('❌ [EditEventModal] Invalid form or missing event ID:', { 
+        hasEvent: !!event, 
+        eventId: event?.id,
+        formValid: validateForm() 
+      });
       return;
     }
+
+    // ⭐ DIAGNOSTIC: Log event ID before sending
+    console.log('🔍 [EditEventModal] Submitting update for event:', {
+      eventId: event.id,
+      idType: typeof event.id,
+      idLength: event.id?.length,
+    });
 
     // Emit data to parent via onSave prop
     const payload: UpdateEventPayload = {

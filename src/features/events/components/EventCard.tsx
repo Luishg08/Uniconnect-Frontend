@@ -20,7 +20,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
   // Calculate if edit button should be visible
   const shouldShowEditButton = currentUser && onEdit && (
     currentUser.role?.name === 'superadmin' || 
-    (currentUser.role?.name === 'admin' && event.created_by === currentUser.id_user)
+    event.created_by === currentUser.id_user
   );
 
   // Calculate if delete button should be visible
