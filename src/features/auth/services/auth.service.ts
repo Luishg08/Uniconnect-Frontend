@@ -30,14 +30,14 @@ export const authService = {
 
   refreshTokens: async (refreshToken: string, userId: number) => {
     try {
-      console.log('Calling refresh endpoint');
+      console.log('[AuthService] Calling /auth/refresh endpoint');
 
       const response = await api.post('/auth/refresh', {
         refresh_token: refreshToken,
         user_id: userId,
       });
       
-      console.log('Refresh response received:', {
+      console.log('[AuthService] Refresh response received:', {
         success: response.data?.success,
         statusCode: response.data?.statusCode,
         hasAccessToken: !!response.data?.data?.access_token,
@@ -45,18 +45,35 @@ export const authService = {
       });
       
       return response.data;
-    } catch (error: any) {
-      console.error('Refresh token service error:', {
-        status: error?.response?.status,
-        message: error?.response?.data?.message || error?.message,
-        data: error?.response?.data,
-      });
       
-      // Retornar error en formato FEN para mantener consistencia
+    } catch (error: unknown) {
+      // FIX-10 REQ-2: Handle errors gracefully without throwing
+      // The error response will be wrapped in FEN format for consistency
+      
+      let statusCode = 500;
+      let errorMessage = 'Token refresh failed';
+
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as Record<string, any>;
+        statusCode = axiosError.response?.status || 500;
+        errorMessage = axiosError.response?.data?.message || axiosError.message || 'Token refresh failed';
+        
+        console.error('[AuthService] Refresh token service error:', {
+          status: statusCode,
+          message: errorMessage,
+          data: axiosError.response?.data,
+        });
+      } else {
+        console.error('[AuthService] Unexpected error during refresh:', error);
+        errorMessage = error instanceof Error ? error.message : 'Unexpected error during refresh';
+      }
+      
+      // FIX-10: Return error in FEN format for consistency
+      // Never throw - let the caller decide what to do with the error
       return {
         success: false,
-        statusCode: error?.response?.status || 500,
-        message: error?.response?.data?.message || error?.message || 'Token refresh failed',
+        statusCode,
+        message: errorMessage,
         data: null,
       };
     }

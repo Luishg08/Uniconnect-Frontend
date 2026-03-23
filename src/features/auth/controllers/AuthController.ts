@@ -6,6 +6,25 @@ import * as WebBrowser from 'expo-web-browser';
 import { AUTH0_CONFIG } from '../constants/auth0';
 import { makeRedirectUri } from 'expo-auth-session';
 
+// ============================================================================
+// FIX-10: Type Definitions for Token Refresh Result
+// ============================================================================
+
+/**
+ * Result of token refresh operation
+ * Allows interceptor to handle success/failure gracefully without try/catch
+ */
+export interface TokenRefreshResult {
+  success: boolean;
+  tokens?: {
+    accessToken: string;
+    refreshToken?: string;
+  };
+  errorCode?: 'INVALID_CREDENTIALS' | 'TOKEN_EXPIRED' | 'SERVER_ERROR' | 'TIMEOUT' | 'NETWORK_ERROR' | 'UNKNOWN';
+  message?: string;
+  statusCode?: number;
+}
+
 export class AuthController {
   
   async handleAuthorizationCode(authorizationCode: string, redirectUri: string, codeVerifier: string): Promise<void> {
@@ -136,12 +155,27 @@ export class AuthController {
     }
   }
 
-  async refreshTokens(): Promise<boolean> {
+  /**
+   * FIX-10: Refresh tokens with robust error handling
+   * 
+   * Returns a typed result object instead of throwing exceptions.
+   * This allows the interceptor to handle failures gracefully without try/catch.
+   * 
+   * Behavior:
+   * - If successful: Returns { success: true, tokens: {...} }
+   * - If failed: Returns { success: false, errorCode: '...', message: '...' }
+   * - Never throws exceptions during refresh failure
+   */
+  async refreshTokens(): Promise<TokenRefreshResult> {
     try {
       // Check if already refreshing to prevent simultaneous refresh attempts
       if (authStore.isRefreshing) {
         console.log('Already refreshing tokens, skipping duplicate refresh attempt');
-        return false;
+        return {
+          success: false,
+          errorCode: 'UNKNOWN',
+          message: 'Already refreshing tokens',
+        };
       }
 
       // Check if we have a refresh token
@@ -152,7 +186,11 @@ export class AuthController {
           hasRefreshTokenValue: !!authStore.auth0Tokens?.refresh_token,
           hasUserId: !!authStore.user?.id_user,
         });
-        return false;
+        return {
+          success: false,
+          errorCode: 'INVALID_CREDENTIALS',
+          message: 'Missing refresh token or user ID',
+        };
       }
 
       console.log('Attempting to refresh tokens...');
@@ -168,7 +206,25 @@ export class AuthController {
 
       // Validate FEN response format
       if (!fenResponse.success || fenResponse.statusCode !== 200) {
-        throw new Error(fenResponse.message || 'Token refresh failed');
+        const message = fenResponse.message || 'Token refresh failed';
+        console.error('Refresh failed with response error:', {
+          success: fenResponse.success,
+          statusCode: fenResponse.statusCode,
+          message,
+        });
+
+        // FIX-10 REQ-2c: Don't show toast during interceptor-driven refresh
+        // The interceptor will handle user notification
+        
+        // Clear auth state on refresh failure (graceful degradation)
+        authStore.clearAuth();
+        
+        return {
+          success: false,
+          errorCode: this.getErrorCodeFromStatus(fenResponse.statusCode),
+          message,
+          statusCode: fenResponse.statusCode,
+        };
       }
 
       // Extract data from FEN response
@@ -183,30 +239,76 @@ export class AuthController {
       });
       
       if (!access_token || !user) {
-        throw new Error('Invalid refresh response format from BFF');
+        console.error('Invalid refresh response format from BFF');
+        
+        // Clear auth state on invalid response
+        authStore.clearAuth();
+        
+        return {
+          success: false,
+          errorCode: 'UNKNOWN',
+          message: 'Invalid refresh response format',
+        };
       }
 
       // Update AuthStore with new tokens
       authStore.setAuth(access_token, user, auth0_tokens);
       
-      console.log('Tokens refreshed successfully');
-      showToast.success('Sesión renovada', 'Tu sesión ha sido renovada automáticamente');
+      console.log('✅ Tokens refreshed successfully');
       
-      return true;
+      return {
+        success: true,
+        tokens: {
+          accessToken: access_token,
+          refreshToken: auth0_tokens?.refresh_token,
+        },
+      };
       
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al renovar la sesión';
-      console.error('Token refresh failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during token refresh';
+      console.error('Unexpected error during token refresh:', error);
       
-      // If refresh fails, clear auth state (user needs to login again)
+      // FIX-10 REQ-2: Graceful degradation - don't throw, just return error result
       authStore.clearAuth();
-      showToast.error('Sesión expirada', 'Por favor, inicia sesión nuevamente');
       
-      return false;
+      return {
+        success: false,
+        errorCode: this.getErrorCodeFromException(error),
+        message: errorMessage,
+      };
     } finally {
       authStore.isRefreshing = false;
       authStore.setLoading(false);
     }
+  }
+
+  /**
+   * Map HTTP status codes to error codes
+   * @private
+   */
+  private getErrorCodeFromStatus(status?: number): TokenRefreshResult['errorCode'] {
+    if (!status) return 'UNKNOWN';
+    
+    if (status === 400) return 'INVALID_CREDENTIALS';
+    if (status === 401) return 'TOKEN_EXPIRED';
+    if (status === 408) return 'TIMEOUT';
+    if (status === 429) return 'UNKNOWN'; // Will be handled as rate limit
+    if (status >= 500) return 'SERVER_ERROR';
+    
+    return 'UNKNOWN';
+  }
+
+  /**
+   * Map exceptions to error codes
+   * @private
+   */
+  private getErrorCodeFromException(error: unknown): TokenRefreshResult['errorCode'] {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      if (message.includes('timeout')) return 'TIMEOUT';
+      if (message.includes('network')) return 'NETWORK_ERROR';
+    }
+    return 'UNKNOWN';
   }
 
   async ensureValidTokens(): Promise<boolean> {
