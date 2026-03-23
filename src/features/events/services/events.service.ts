@@ -215,12 +215,12 @@ export class EventsService {
   async deleteEvent(id_event: number): Promise<boolean> {
     try {
       // Make HTTP DELETE request
-      const response = await api.delete<FENResponse<{ deleted: boolean }>>(
-        EVENTS_ENDPOINTS.DELETE_EVENT(id_event)
+      const response = await api.delete<FENResponse<{ deleted: boolean }>>(       EVENTS_ENDPOINTS.DELETE_EVENT(id_event)
       );
 
-      // Validate FEN response format
-      const validatedResponse = this.validateFENResponse<{ deleted: boolean }>(response.data);
+      // ⭐ FIX-11: Validate FEN response with relaxed validation
+      // DELETE operations don't return full event data, only confirmation
+      const validatedResponse = this.validateFENResponse<{ deleted: boolean }>(response.data, true);
 
       // Check if deletion was successful
       if (!validatedResponse.success || !validatedResponse.data?.deleted) {
@@ -349,7 +349,12 @@ export class EventsService {
    * Validate that response follows FEN format
    * @private
    */
-  private validateFENResponse<T>(response: any): FENResponse<T> {
+  /**
+   * ⭐ FIX-11: Validate FEN response with configurable strictness
+   * @param response - The response to validate
+   * @param skipStrictValidation - If true, skip strict field validation (for DELETE operations)
+   */
+  private validateFENResponse<T>(response: any, skipStrictValidation: boolean = false): FENResponse<T> {
     try {
       // Check if response has FEN structure
       if (!this.isFENFormat(response)) {
@@ -377,30 +382,33 @@ export class EventsService {
         throw new Error('Respuesta del servidor en formato inválido: metadata incompleta');
       }
 
-      // If success is true, validate data
+      // If success is true, validate data (with configurable strictness)
       if (response.success) {
-        // For array responses
-        if (Array.isArray(response.data)) {
-          // Validate each event has required fields
-          response.data.forEach((event: any, index: number) => {
+        // Skip field validation for operations like DELETE that don't return full entity data
+        if (!skipStrictValidation) {
+          // For array responses
+          if (Array.isArray(response.data)) {
+            // Validate each event has required fields
+            response.data.forEach((event: any, index: number) => {
+              const requiredFields = ['id_event', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
+              for (const field of requiredFields) {
+                if (!(field in event)) {
+                  throw new Error(
+                    `Respuesta del servidor en formato inválido: evento ${index} falta campo ${field}`
+                  );
+                }
+              }
+            });
+          }
+          // For single object responses (create, update)
+          else if (response.data && typeof response.data === 'object') {
             const requiredFields = ['id_event', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
             for (const field of requiredFields) {
-              if (!(field in event)) {
+              if (!(field in response.data)) {
                 throw new Error(
-                  `Respuesta del servidor en formato inválido: evento ${index} falta campo ${field}`
+                  `Respuesta del servidor en formato inválido: falta campo ${field}`
                 );
               }
-            }
-          });
-        }
-        // For single object responses (create, update)
-        else if (response.data && typeof response.data === 'object') {
-          const requiredFields = ['id_event', 'title', 'description', 'date', 'time', 'location', 'type', 'createdAt', 'updatedAt'];
-          for (const field of requiredFields) {
-            if (!(field in response.data)) {
-              throw new Error(
-                `Respuesta del servidor en formato inválido: falta campo ${field}`
-              );
             }
           }
         }
