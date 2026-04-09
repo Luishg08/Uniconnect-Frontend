@@ -67,25 +67,33 @@ function processQueue(error: RefreshError | null, token: string | null = null): 
   failedQueue = [];
 }
 
-// Única fuente de verdad: EXPO_PUBLIC_API_URL
+// ⭐ FIX: Support both .env (development) and app.json extra (production builds)
+import Constants from 'expo-constants';
+
+// Try to get API URL from multiple sources (production build priority)
 const envApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+const appJsonApiUrl = Constants.expoConfig?.extra?.apiUrl;
 
-const resolvedBaseUrl = (envApiUrl || 'http://10.146.13.164:8007/api').replace(/\/+$/, '');
+// Use app.json value if available (production builds), otherwise use .env (development)
+const resolvedBaseUrl = (appJsonApiUrl || envApiUrl || 'http://10.146.13.164:8007/api').replace(/\/+$/, '');
 
-if (!envApiUrl) {
-  console.warn('[api.ts] Falta EXPO_PUBLIC_API_URL en .env, usando fallback:', resolvedBaseUrl);
-}
+console.log('[api.ts] API Configuration:', {
+  envApiUrl,
+  appJsonApiUrl,
+  resolvedBaseUrl,
+  source: appJsonApiUrl ? 'app.json (production)' : envApiUrl ? '.env (development)' : 'fallback',
+});
 
 // Exportar URLs
-export const API_BASE_URL = resolvedBaseUrl; // Ej: http://10.146.13.164:8007/api
-export const WEBSOCKET_URL = resolvedBaseUrl.replace('/api', ''); // Ej: http://10.146.13.164:8007
+export const API_BASE_URL = resolvedBaseUrl; // Ej: https://uniconnect-backend-core.onrender.com/api
+export const WEBSOCKET_URL = resolvedBaseUrl.replace('/api', ''); // Ej: https://uniconnect-backend-core.onrender.com
 
 export const api = axios.create({
   baseURL: resolvedBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 segundos timeout
+  timeout: 60000, // ⭐ FIX: 60 segundos timeout (Render puede tardar en despertar del sleep mode)
 });
 
 api.interceptors.request.use(
@@ -97,6 +105,7 @@ api.interceptors.request.use(
       url: config.url,
       method: config.method,
       hasToken: !!token,
+      token:token,
       tokenPreview: token ? token.substring(0, 20) + '...' : 'none',
       isExpired: authStore.isTokenExpired,
       hasRefreshToken: authStore.hasRefreshToken,
