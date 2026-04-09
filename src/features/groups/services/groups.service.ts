@@ -212,9 +212,19 @@ class GroupsService {
     token: string
   ): Promise<GroupInvitationResponse> {
     try {
+      const endpoint = groupInvitationsEndpoints.respondToInvitation(invitationId);
+      const payload = { status: response };
+      
+      console.log('[GroupsService] Responding to invitation', { 
+        invitationId, 
+        response, 
+        endpoint, 
+        payload 
+      });
+      
       const res = await axios.patch(
-        groupInvitationsEndpoints.respondToInvitation(invitationId),
-        { status: response }, // Corregido: backend espera 'status', no 'response'
+        endpoint,
+        payload, // Corregido: backend espera 'status', no 'response'
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -222,8 +232,13 @@ class GroupsService {
         }
       );
       return res.data;
-    } catch (error) {
-      console.error('Error al responder invitación:', error);
+    } catch (error: any) {
+      console.error('[GroupsService] Error responding to invitation', { 
+        invitationId, 
+        response, 
+        error: error.response?.data || error.message, 
+        status: error.response?.status 
+      });
       throw error;
     }
   }
