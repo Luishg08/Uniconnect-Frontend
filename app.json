@@ -2,6 +2,7 @@
   "expo": {
     "name": "uniconnect_g",
     "slug": "uniconnect_g",
+    "owner": "jaimecardona",
     "scheme": "uniconnect",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -42,15 +43,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7541a88e-f9c1-4ab7-85f3-c010177e2b26"
-      },
-      "apiUrl": "https://uniconnect-backend-core.onrender.com/api",
-      "googleWebClientId": "121639712366-pfrjd8tif8f6no4htd5lskm6osfkf0jn.apps.googleusercontent.com",
-      "googleIosClientId": "121639712366-i35usri5h6ok8d3oo8d91s4r5ndc7qrm.apps.googleusercontent.com",
-      "googleAndroidClientId": "860680710099-g5i5nunmdg3kgsf5bv0knug2cavg9oar.apps.googleusercontent.com",
-      "auth0Domain": "dev-tuflbr5cbjtkf3zm.us.auth0.com",
-      "auth0ClientId": "fP8oFibh9VcVPS7Ly9HHb2vQBdFHDNO2",
-      "auth0Audience": "https://dev-tuflbr5cbjtkf3zm.us.auth0.com/api/v2/"
+        "projectId": "5cee6f28-4377-444c-ba29-decac103cf30"
+      }
     }
   }
 }
