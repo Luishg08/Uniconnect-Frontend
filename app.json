@@ -2,7 +2,6 @@
   "expo": {
     "name": "uniconnect_g",
     "slug": "uniconnect_g",
-    "owner": "jaimecardona",
     "scheme": "uniconnect",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,7 +42,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5cee6f28-4377-444c-ba29-decac103cf30"
+        "projectId": "7541a88e-f9c1-4ab7-85f3-c010177e2b26"
       }
     }
   }
