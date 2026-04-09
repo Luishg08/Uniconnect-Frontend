@@ -98,9 +98,14 @@ export const StudentCard = ({ student, isFriend = false, onOpenDirectMessage }: 
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{student.full_name}</Text>
 
-        <Text style={styles.program}>
-          {student.program?.name || "Programa no asignado"}
-        </Text>
+        <View style={styles.programRow}>
+          <Text style={styles.program}>
+            {student.program?.name || "Programa no asignado"}
+          </Text>
+          {student.current_semester && (
+            <Text style={styles.semester}>• Semestre {student.current_semester}</Text>
+          )}
+        </View>
 
         {commonCourses.length > 0 ? (
           <View style={styles.badgeContainer}>
@@ -167,10 +172,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
+  programRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    flexWrap: "wrap",
+  },
   program: {
     fontSize: 13,
     color: "#aaa",
-    marginBottom: 8,
+  },
+  semester: {
+    fontSize: 13,
+    color: "#D9B97E",
+    marginLeft: 6,
+    fontWeight: "600",
   },
   badgeContainer: {
     flexDirection: "row",

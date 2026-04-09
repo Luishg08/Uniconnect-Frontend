@@ -156,6 +156,15 @@ export default function StudentProfileScreen() {
               {profile.program || "Sin programa asignado"}
             </Text>
           </View>
+
+          {profile.current_semester && (
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={20} color="#D9B97E" />
+              <Text style={[styles.infoText, styles.semesterText]}>
+                Semestre {profile.current_semester}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Materias en Común */}
@@ -343,6 +352,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     marginLeft: 12,
+  },
+  semesterText: {
+    color: "#D9B97E",
+    fontWeight: "600",
   },
   courseItem: {
     flexDirection: "row",

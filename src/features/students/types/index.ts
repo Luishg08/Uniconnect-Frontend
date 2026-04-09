@@ -20,6 +20,7 @@ export interface Student {
   email: string;
   picture?: string;
   id_program?: number;
+  current_semester?: number;
   program?: { name: string };
   enrollments: Enrollment[];
   common_courses?: CommonCourse[];
