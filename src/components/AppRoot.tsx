@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAppInitialization, useTokenRefresh, authStore } from '@/src/features/auth';
 import { useInitNotifications } from '@/src/features/notifications/hooks/useInitNotifications';
 import { useRealtimeNotifications } from '@/src/features/notifications/hooks/useRealtimeNotifications';
+import { useRouter } from 'expo-router';
 
 interface AppRootProps {
   children: React.ReactNode;
@@ -10,15 +11,24 @@ interface AppRootProps {
 
 export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
   const { isInitializing, initializationError } = useAppInitialization();
+  const router = useRouter();
   
   useTokenRefresh();
-  useInitNotifications();
+  useInitNotifications(authStore.accessToken);
   useRealtimeNotifications(); // Conecta WebSocket para notificaciones en tiempo real
+
+  const handleForceReset = () => {
+    console.log('🔄 Force reset triggered by user');
+    authStore.clearAuth();
+    setTimeout(() => {
+      router.replace('/(auth)/login');
+    }, 100);
+  };
 
   if (isInitializing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0056b3" />
+        <ActivityIndicator size="large" color="#D9B97E" />
         <Text style={styles.loadingText}>Inicializando aplicación...</Text>
       </View>
     );
@@ -32,6 +42,12 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
         <Text style={styles.errorHint}>
           Por favor, reinicia la aplicación o contacta soporte técnico.
         </Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={handleForceReset}
+        >
+          <Text style={styles.retryButtonText}>Reiniciar Sesión</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -44,37 +60,49 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#363636',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: '#aaa',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#363636',
     padding: 20,
   },
   errorTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#d32f2f',
+    color: '#ff4d4d',
     marginBottom: 16,
     textAlign: 'center',
   },
   errorMessage: {
     fontSize: 16,
-    color: '#666',
+    color: '#aaa',
     marginBottom: 16,
     textAlign: 'center',
   },
   errorHint: {
     fontSize: 14,
-    color: '#999',
+    color: '#888',
     textAlign: 'center',
     fontStyle: 'italic',
+    marginBottom: 24,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#D9B97E',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

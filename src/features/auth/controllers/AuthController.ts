@@ -120,10 +120,22 @@ export class AuthController {
     try {
       authStore.setLoading(true);
       
-      // Clear local authentication state first
+      // 1. Call backend to invalidate tokens (if we have an access token)
+      if (authStore.accessToken) {
+        try {
+          console.log('Calling backend logout endpoint...');
+          await authService.logout(authStore.accessToken);
+          console.log('Backend logout successful');
+        } catch (backendError) {
+          // Log but don't fail - continue with local cleanup
+          console.error('Backend logout failed, continuing with local cleanup:', backendError);
+        }
+      }
+
+      // 2. Clear local authentication state
       authStore.clearAuth();
 
-      // Close Auth0 session on their servers to allow account switching
+      // 3. Close Auth0 session on their servers to allow account switching
       try {
         const redirectUri = makeRedirectUri({
           scheme: 'uniconnect',
@@ -141,15 +153,26 @@ export class AuthController {
         console.log('Note: Auth0 logout URL could not be opened, but local session cleared');
       }
 
-      showToast.success('Sesión cerrada', 'Has cerrado sesión correctamente. Ya puedes cambiar de cuenta.');
+      // 4. Show success message
+      showToast.success('Sesión cerrada', 'Has cerrado sesión correctamente');
       
-      // Navigate to login screen
+      // 5. Wait a moment to ensure state is cleared before navigation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // 6. Navigate to login screen
       router.replace('/(auth)/login');
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al cerrar sesión';
       authStore.setError(errorMessage);
       showToast.error('Error', errorMessage);
+      
+      // Even on error, try to navigate to login
+      try {
+        router.replace('/(auth)/login');
+      } catch (navError) {
+        console.error('Navigation error during logout:', navError);
+      }
     } finally {
       authStore.setLoading(false);
     }
@@ -324,40 +347,71 @@ export class AuthController {
 
     // Token is expired, try to refresh
     console.log('Token expired, attempting refresh...');
-    return await this.refreshTokens();
+    const result = await this.refreshTokens();
+    return result.success;
   }
 
   async initializeAuth(): Promise<void> {
-    // Wait for AuthStore to initialize from storage
+    console.log('🔄 [initializeAuth] Starting initialization...');
+    
+    // Wait for AuthStore to initialize from storage with timeout
+    const maxWaitTime = 5000; // 5 seconds timeout
+    const startTime = Date.now();
+    
     while (!authStore.isInitialized) {
+      if (Date.now() - startTime > maxWaitTime) {
+        console.error('❌ [initializeAuth] Timeout waiting for AuthStore initialization');
+        // Force initialization to prevent infinite loop
+        authStore.isInitialized = true;
+        authStore.clearAuth();
+        return;
+      }
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
+    console.log('✅ [initializeAuth] AuthStore initialized');
+
     // If we have a stored session, validate it
     if (authStore.isAuthenticated) {
-      console.log('Found stored session, validating...');
+      console.log('🔍 [initializeAuth] Found stored session, validating...');
       
       // Check if we need to refresh tokens
       if (authStore.isTokenExpired && authStore.hasRefreshToken) {
-        console.log('Stored session expired, attempting refresh...');
-        await this.refreshTokens();
+        console.log('🔄 [initializeAuth] Stored session expired, attempting refresh...');
+        const result = await this.refreshTokens();
+        
+        if (!result.success) {
+          console.log('❌ [initializeAuth] Refresh failed, clearing auth');
+          authStore.clearAuth();
+          return;
+        }
+        
+        console.log('✅ [initializeAuth] Token refreshed successfully');
       } else if (authStore.isTokenExpired && !authStore.hasRefreshToken) {
-        console.log('Stored session expired and no refresh token, clearing auth...');
+        console.log('⚠️ [initializeAuth] Stored session expired and no refresh token, clearing auth...');
         authStore.clearAuth();
+        return;
       } else {
-        console.log('Stored session is valid');
+        console.log('✅ [initializeAuth] Stored session is valid');
       }
 
       // Fetch fresh profile to get up-to-date needsOnboarding status
       if (authStore.isAuthenticated) {
         try {
+          console.log('🔄 [initializeAuth] Fetching fresh profile...');
           const profile = await authService.getUserProfile();
           authStore.setNeedsOnboarding(profile.needsOnboarding ?? false);
-        } catch {
+          console.log('✅ [initializeAuth] Profile fetched, needsOnboarding:', profile.needsOnboarding);
+        } catch (error) {
+          console.warn('⚠️ [initializeAuth] Failed to fetch profile, using cached needsOnboarding');
           // Use persisted needsOnboarding — don't fail initialization
         }
       }
+    } else {
+      console.log('ℹ️ [initializeAuth] No stored session found');
     }
+    
+    console.log('✅ [initializeAuth] Initialization complete');
   }
 
   async completeOnboarding(id_program: number, current_semester: number): Promise<void> {

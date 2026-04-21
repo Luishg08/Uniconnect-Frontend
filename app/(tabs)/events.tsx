@@ -224,7 +224,7 @@ const EventsScreen: React.FC = observer(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#363636',
   },
   content: {
     flex: 1,
@@ -236,14 +236,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    paddingHorizontal: 4,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
   },
   createButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#D9B97E',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   createButtonText: {
-    color: '#fff',
+    color: '#1a1a1a',
     fontSize: 14,
     fontWeight: '600',
   },

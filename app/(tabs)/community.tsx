@@ -23,6 +23,7 @@ export default function CommunityScreen() {
     const isFriendsTab = activeTab === 'friends';
     const currentQuery = isFriendsTab ? connectedQuery : notConnectedQuery;
     const currentData = isFriendsTab ? connectedStudents : notConnectedStudents;
+    const hasSearchTerm = search.trim().length > 0;
 
     if (currentQuery.isLoading) {
       return (
@@ -43,6 +44,13 @@ export default function CommunityScreen() {
       );
     }
 
+    const getEmptyMessage = () => {
+      if (hasSearchTerm) {
+        return `No se encontraron resultados para "${search}"`;
+      }
+      return isFriendsTab ? 'Aún no tienes conexiones.' : 'No hay estudiantes disponibles.';
+    };
+
     return (
       <FlatList
         data={currentData}
@@ -58,9 +66,14 @@ export default function CommunityScreen() {
         scrollEventThrottle={16}
         nestedScrollEnabled={true}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {isFriendsTab ? 'Aún no tienes conexiones.' : 'No hay estudiantes disponibles.'}
-          </Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>{getEmptyMessage()}</Text>
+            {hasSearchTerm && (
+              <Text style={styles.emptySubtext}>
+                Intenta con otro término de búsqueda
+              </Text>
+            )}
+          </View>
         }
       />
     );
@@ -135,7 +148,24 @@ const styles = StyleSheet.create({
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingBottom: 20, paddingTop: 16 },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#aaa' },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#aaa',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#888',
+    fontStyle: 'italic',
+  },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: '#1a1a1a',

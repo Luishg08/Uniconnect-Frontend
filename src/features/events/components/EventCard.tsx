@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Event, EventType } from '../types/event.types';
 import { User } from '@/src/features/auth/types/user.types';
 
@@ -17,6 +18,8 @@ export interface EventCardProps {
  * No business logic or network calls
  */
 export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit, onDelete }) => {
+  const router = useRouter();
+
   // Calculate if edit button should be visible
   const shouldShowEditButton = currentUser && onEdit && (
     currentUser.role?.name === 'superadmin' || 
@@ -28,6 +31,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
     currentUser.role?.name === 'superadmin' || 
     event.created_by === currentUser.id_user
   );
+
+  const handleCardPress = () => {
+    router.push(`/events/${event.id_event}`);
+  };
 
   const handleDelete = (): void => {
     Alert.alert(
@@ -81,7 +88,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
   };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={handleCardPress}
+      activeOpacity={0.7}
+    >
       {/* Event Type Badge */}
       <View style={[styles.typeBadge, { backgroundColor: getEventTypeColor(event.type) }]}>
         <Text style={styles.typeText}>{getEventTypeLabel(event.type)}</Text>
@@ -91,12 +102,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
       {shouldShowEditButton && (
         <TouchableOpacity 
           style={styles.editButton} 
-          onPress={() => onEdit?.(event)}
+          onPress={(e) => {
+            e.stopPropagation();
+            onEdit?.(event);
+          }}
           accessibilityLabel="Editar evento"
           accessibilityRole="button"
           testID="edit-button"
         >
-          <Ionicons name="pencil-outline" size={20} color="#0056b3" />
+          <Ionicons name="pencil-outline" size={20} color="#D9B97E" />
         </TouchableOpacity>
       )}
 
@@ -104,12 +118,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
       {shouldShowDeleteButton && (
         <TouchableOpacity 
           style={styles.deleteButton} 
-          onPress={handleDelete}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }}
           accessibilityLabel="Eliminar evento"
           accessibilityRole="button"
           testID="delete-button"
         >
-          <Ionicons name="trash-outline" size={20} color="#dc3545" />
+          <Ionicons name="trash-outline" size={20} color="#ff4d4d" />
         </TouchableOpacity>
       )}
 
@@ -125,29 +142,29 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
       <View style={styles.detailsContainer}>
         {/* Date */}
         <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color="#666" />
+          <Ionicons name="calendar-outline" size={16} color="#D9B97E" />
           <Text style={styles.detailText}>{formatDate(event.date)}</Text>
         </View>
 
         {/* Time */}
         <View style={styles.detailRow}>
-          <Ionicons name="time-outline" size={16} color="#666" />
+          <Ionicons name="time-outline" size={16} color="#D9B97E" />
           <Text style={styles.detailText}>{event.time}</Text>
         </View>
 
         {/* Location */}
         <View style={styles.detailRow}>
-          <Ionicons name="location-outline" size={16} color="#666" />
+          <Ionicons name="location-outline" size={16} color="#D9B97E" />
           <Text style={styles.detailText}>{event.location}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -157,13 +174,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 185, 126, 0.2)',
   },
   editButton: {
     position: 'absolute',
     top: 12,
     right: 12,
     padding: 8,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: 'rgba(217, 185, 126, 0.15)',
     borderRadius: 20,
     zIndex: 1,
   },
@@ -172,7 +191,7 @@ const styles = StyleSheet.create({
     top: 12,
     right: 56,
     padding: 8,
-    backgroundColor: '#fff5f5',
+    backgroundColor: 'rgba(255, 77, 77, 0.15)',
     borderRadius: 20,
     zIndex: 1,
   },
@@ -191,12 +210,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
+    color: '#fff',
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: '#aaa',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -210,7 +229,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    color: '#666',
+    color: '#aaa',
     flex: 1,
   },
 });

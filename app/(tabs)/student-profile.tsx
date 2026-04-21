@@ -128,7 +128,6 @@ export default function StudentProfileScreen() {
           </View>
 
           <Text style={styles.name}>{profile.full_name}</Text>
-          <Text style={styles.role}>{profile.roleName || "Estudiante"}</Text>
         </View>
 
         {/* Información del estudiante */}

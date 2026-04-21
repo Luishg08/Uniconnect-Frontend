@@ -17,7 +17,7 @@ export const useConnections = () => {
   });
 
   // Obtener conexiones aceptadas (deshabilitado por ahora - endpoint no implementado)
-  const myConnections = [];
+  const myConnections: any[] = [];
   // const { data: myConnections = [] } = useQuery({
   //   queryKey: ['my-connections'],
   //   queryFn: connectionService.getMyConnections,
@@ -56,6 +56,8 @@ export const useConnections = () => {
     mutationFn: connectionService.sendConnectionRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'not-connected'] });
       showToast.success('Éxito', 'Solicitud de conexión enviada');
     },
     onError: (error: any) => {
@@ -70,6 +72,8 @@ export const useConnections = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-status'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'not-connected'] });
       showToast.success('Éxito', 'Solicitud aceptada');
     },
     onError: (error: any) => {
@@ -84,6 +88,8 @@ export const useConnections = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-status'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'not-connected'] });
       showToast.success('Éxito', 'Solicitud rechazada');
     },
     onError: (error: any) => {
@@ -151,6 +157,8 @@ export const useConnectionStatus = (userId: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connection-status', userId] });
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'not-connected'] });
       showToast.success('Éxito', 'Solicitud aceptada');
     },
     onError: (error: any) => {
@@ -164,6 +172,8 @@ export const useConnectionStatus = (userId: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connection-status', userId] });
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
+      queryClient.invalidateQueries({ queryKey: ['community', 'not-connected'] });
       showToast.success('Éxito', 'Solicitud rechazada');
     },
     onError: (error: any) => {

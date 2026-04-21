@@ -186,7 +186,6 @@ export default function ProfileScreen() {
           <Text style={styles.name}>
             {profile?.full_name || "Nombre no disponible"}
           </Text>
-          <Text style={styles.role}>{profile?.roleName || "N/A"}</Text>
         </View>
 
         {/* About You */}

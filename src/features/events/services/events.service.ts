@@ -160,6 +160,59 @@ export class EventsService {
   }
 
   /**
+   * Get a single event by ID
+   * @param id_event - Event ID
+   * @returns Promise with FEN formatted response containing event
+   */
+  async getEventById(id_event: number): Promise<FENResponse<Event>> {
+    try {
+      // Make HTTP GET request
+      const response = await api.get(EVENTS_ENDPOINTS.GET_EVENT_BY_ID(id_event));
+
+      // Validate FEN response format
+      const validatedResponse = this.validateFENResponse<Event>(response.data);
+
+      return validatedResponse;
+    } catch (error: any) {
+      // Log error with context
+      this.logError(error, 'getEventById', { id_event });
+
+      // Handle network errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        throw new Error('Error de conexión. La solicitud ha excedido el tiempo de espera.');
+      }
+
+      if (!error.response) {
+        throw new Error('Error de conexión. Verifica tu conexión a internet.');
+      }
+
+      // Handle HTTP errors
+      if (error.response?.data) {
+        const errorResponse = error.response.data;
+
+        // If backend returns FEN format error, validate and return it
+        if (this.isFENFormat(errorResponse)) {
+          return this.validateFENResponse<Event>(errorResponse);
+        }
+
+        // Handle 404 specifically
+        if (error.response.status === 404) {
+          throw new Error('Evento no encontrado');
+        }
+
+        // Otherwise, extract error message
+        throw new Error(
+          errorResponse.message || 
+          errorResponse.error?.message || 
+          'Error al obtener el evento'
+        );
+      }
+
+      throw new Error('Error inesperado al obtener el evento');
+    }
+  }
+
+  /**
    * ⭐ NUEVO: Create a new event
    * @param payload - Event data (without id_program, extracted from JWT)
    * @returns Promise with FEN formatted response containing created event

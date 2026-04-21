@@ -508,6 +508,27 @@ class GroupsService {
       throw error;
     }
   }
+
+  /**
+   * Transferir propiedad del grupo a otro miembro
+   */
+  async transferOwnership(groupId: number, newOwnerId: number, token: string): Promise<any> {
+    try {
+      const response = await axios.patch(
+        groupJoinRequestsEndpoints.transferOwnership(groupId, newOwnerId),
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error al transferir propiedad:', error);
+      throw error;
+    }
+  }
 }
 
 export const groupsService = new GroupsService();

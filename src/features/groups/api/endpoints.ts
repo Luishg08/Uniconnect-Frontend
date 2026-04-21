@@ -115,4 +115,8 @@ export const groupJoinRequestsEndpoints = {
   // Abandonar grupo
   leaveGroup: (groupId: number) =>
     `${API_BASE_URL}/groups/${groupId}/leave`,
+
+  // Transferir propiedad del grupo
+  transferOwnership: (groupId: number, newOwnerId: number) =>
+    `${API_BASE_URL}/groups/${groupId}/transfer-ownership/${newOwnerId}`,
 };
