@@ -1,6 +1,37 @@
 import { makeAutoObservable } from 'mobx';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { User } from '../types/user.types';
+
+// ============================================================================
+// Secure Storage Utility - Platform-aware persistence
+// Web:    sessionStorage (cleared on tab close, mitigates XSS persistence)
+// Mobile: expo-secure-store (AES-256 via Keychain/Keystore)
+// ============================================================================
+const secureStorage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return sessionStorage.getItem(key);
+    }
+    return SecureStore.getItemAsync(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      sessionStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+
+  async removeItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      sessionStorage.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
 
 export class AuthStore {
   accessToken: string | null = null;
@@ -130,7 +161,7 @@ export class AuthStore {
 
   private async initializeFromStorage() {
     try {
-      const storedAuth = await AsyncStorage.getItem('uniconnect-auth');
+      const storedAuth = await secureStorage.getItem('uniconnect-auth');
       if (storedAuth) {
         const authData = JSON.parse(storedAuth);
         
@@ -166,7 +197,7 @@ export class AuthStore {
         needsOnboarding: this.needsOnboarding,
       };
       
-      await AsyncStorage.setItem('uniconnect-auth', JSON.stringify(authData));
+      await secureStorage.setItem('uniconnect-auth', JSON.stringify(authData));
       console.log('Auth state persisted to storage');
     } catch (error) {
       console.error('Failed to persist auth state to storage:', error);
@@ -175,7 +206,7 @@ export class AuthStore {
 
   private async clearFromStorage() {
     try {
-      await AsyncStorage.removeItem('uniconnect-auth');
+      await secureStorage.removeItem('uniconnect-auth');
       console.log('Auth state cleared from storage');
     } catch (error) {
       console.error('Failed to clear auth state from storage:', error);

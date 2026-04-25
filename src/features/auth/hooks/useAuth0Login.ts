@@ -76,51 +76,68 @@ export function useAuth0Login() {
 
   // Handle the authentication response
   useEffect(() => {
+    if (!response) return;
+
     console.log('useAuth0Login: Response received', {
-      type: response?.type,
-      params: response?.type === 'success' || response?.type === 'error' ? response?.params : undefined,
+      type: response.type,
+      params: response.type === 'success' || response.type === 'error' ? response.params : undefined,
       redirectUri,
     });
 
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      
-      console.log('Authorization code received:', code);
-      
-      if (code && pkce?.codeVerifier) {
-        console.log('Sending code and code_verifier to AuthController...');
-        // Delegate to AuthController (MVC Local pattern), passing code_verifier
-        authController.handleAuthorizationCode(code, redirectUri, pkce.codeVerifier);
-      } else {
-        const missingItems = [];
-        if (!code) missingItems.push('code');
-        if (!pkce?.codeVerifier) missingItems.push('code_verifier');
-        console.log('Missing required parameters:', missingItems);
-        authStore.setError(`Missing required parameters: ${missingItems.join(', ')}`);
-        // No mostrar toast - puede ser resultado de cancelación
-      }
-    } else if (response?.type === 'error') {
-      const errorCode = response.params?.error;
-      const errorMessage = response.params?.error_description || response.params?.error || 'Error en la autenticación';
-      
-      console.log('Auth0 Error:', {
-        error: response.params?.error,
-        error_description: response.params?.error_description,
-      });
-      
-      // No mostrar toast si el usuario simplemente no autorizó o canceló
-      if (errorCode === 'access_denied') {
-        console.log('User declined authorization');
+    try {
+      if (response.type === 'success') {
+        const { code } = response.params;
+
+        console.log('Authorization code received:', code);
+
+        if (code && pkce?.codeVerifier) {
+          console.log('Sending code and code_verifier to AuthController...');
+          // handleAuthorizationCode gestiona setLoading(false) internamente
+          authController.handleAuthorizationCode(code, redirectUri, pkce.codeVerifier);
+        } else {
+          // Parámetros incompletos — no es un éxito real, detener carga
+          const missingItems: string[] = [];
+          if (!code) missingItems.push('code');
+          if (!pkce?.codeVerifier) missingItems.push('code_verifier');
+          console.log('Missing required parameters:', missingItems);
+          authStore.setError(`Missing required parameters: ${missingItems.join(', ')}`);
+          authStore.setLoading(false); // BUG FIX: faltaba esta llamada
+        }
+
+      } else if (response.type === 'error') {
+        const errorCode = response.params?.error;
+        const errorMessage =
+          response.params?.error_description ||
+          response.params?.error ||
+          'Error en la autenticación';
+
+        console.log('Auth0 Error:', {
+          error: response.params?.error,
+          error_description: response.params?.error_description,
+        });
+
+        if (errorCode === 'access_denied') {
+          // El usuario rechazó los permisos — acción voluntaria, sin toast
+          console.log('User declined authorization');
+          authStore.clearError();
+          authStore.setLoading(false);
+        } else {
+          // Error técnico real
+          authStore.setError(errorMessage);
+          authStore.setLoading(false);
+          showToast.error('Error de Auth0', errorMessage);
+        }
+
+      } else if (response.type === 'cancel' || response.type === 'dismiss') {
+        // BUG FIX: 'dismiss' ocurre en Android (botón atrás) y en web (cerrar popup)
+        console.log(`User ${response.type}ed authentication`);
+        authStore.clearError();
         authStore.setLoading(false);
-      } else {
-        // Solo mostrar errores técnicos reales
-        authStore.setError(errorMessage);
-        showToast.error('Error de Auth0', errorMessage);
       }
-    } else if (response?.type === 'cancel') {
-      console.log('User cancelled authentication');
+    } catch (error) {
+      // Garantía final: cualquier excepción inesperada no deja el botón colgado
+      console.error('useAuth0Login: Unexpected error handling response:', error);
       authStore.setLoading(false);
-      // No mostrar toast - es una acción voluntaria del usuario
     }
   }, [response, redirectUri, pkce?.codeVerifier]);
 
@@ -165,9 +182,14 @@ export function useAuth0Login() {
   // Return the prompt function and loading state
   return {
     promptAsync: () => {
-      authStore.setLoading(true);
-      authStore.clearError();
-      promptAsync();
+      try {
+        authStore.setLoading(true);
+        authStore.clearError();
+        promptAsync();
+      } catch (error) {
+        console.error('useAuth0Login: Failed to launch promptAsync:', error);
+        authStore.setLoading(false);
+      }
     },
     switchAccount,
     logoutFromAuth0,
