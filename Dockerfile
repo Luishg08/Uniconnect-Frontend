@@ -39,6 +39,6 @@ COPY --from=builder /app/dist .
 RUN chown -R nginx:nginx /etc/nginx/html && \
     chmod -R 755 /etc/nginx/html
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
