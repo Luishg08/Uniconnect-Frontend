@@ -54,6 +54,10 @@ export function useAcceptJoinRequest() {
       queryClient.invalidateQueries({
         queryKey: ['pending-join-requests'],
       });
+      // Invalidar solicitudes del grupo específico
+      queryClient.invalidateQueries({
+        queryKey: ['group-join-requests', groupId],
+      });
       // Invalidar info del grupo
       queryClient.invalidateQueries({
         queryKey: ['group-info', groupId],
@@ -61,6 +65,10 @@ export function useAcceptJoinRequest() {
       // Invalidar miembros del grupo
       queryClient.invalidateQueries({
         queryKey: ['group-members', groupId],
+      });
+      // Invalidar "Mis Grupos" para que aparezca el nuevo miembro
+      queryClient.invalidateQueries({
+        queryKey: ['myGroups'],
       });
     },
   });

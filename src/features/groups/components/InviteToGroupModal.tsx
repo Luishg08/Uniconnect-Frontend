@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { GroupMembership } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { groupsService } from '../services/groups.service';
 import { useGroupInfo } from '../hooks/useGroupInfo';
 import { useConnections } from '@/src/features/connections/hooks/useConnections';
@@ -53,6 +53,7 @@ export const InviteToGroupModal = ({
   const insets = useSafeAreaInsets();
   const token = authStore.accessToken || '';
   const userId = authStore.user?.id_user || 0;
+  const queryClient = useQueryClient();
 
   // Obtener información del grupo para conocer la materia
   const { data: groupInfo, isLoading: groupLoading } = useGroupInfo(groupId);
@@ -100,13 +101,9 @@ export const InviteToGroupModal = ({
       );
     },
     onSuccess: () => {
-      Alert.alert('Éxito', 'Invitación enviada correctamente');
-    },
-    onError: (error: unknown) => {
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al enviar invitación'
-        : 'Error al enviar invitación';
-      Alert.alert('Error', errorMessage);
+      // Invalidar las invitaciones pendientes de todos los usuarios
+      queryClient.invalidateQueries({ queryKey: ['pending-group-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['sent-group-invitations'] });
     },
   });
 
@@ -130,12 +127,16 @@ export const InviteToGroupModal = ({
     try {
       const count = selectedUsers.length;
       let successCount = 0;
+      let errorCount = 0;
+      let lastError = '';
 
       for (const inviteeId of selectedUsers) {
         try {
           await sendInvitationMutation.mutateAsync(inviteeId);
           successCount++;
-        } catch (err) {
+        } catch (err: any) {
+          errorCount++;
+          lastError = err?.response?.data?.message || err?.message || 'Error desconocido';
           console.error('Error invitando usuario:', err);
         }
       }
@@ -143,14 +144,25 @@ export const InviteToGroupModal = ({
       setSelectedUsers([]);
       setSearchQuery('');
 
-      setTimeout(() => {
+      // Mostrar resultado final
+      if (successCount > 0 && errorCount === 0) {
         Alert.alert('Éxito', `${successCount} invitación(es) enviada(s) correctamente`);
-      }, 300);
-
-      setTimeout(() => {
-        onSuccess?.();
-        onClose();
-      }, 500);
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+        }, 300);
+      } else if (successCount > 0 && errorCount > 0) {
+        Alert.alert(
+          'Parcialmente completado',
+          `${successCount} invitación(es) enviada(s) correctamente.\n${errorCount} fallaron.`
+        );
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+        }, 300);
+      } else {
+        Alert.alert('Error', lastError || 'No se pudo enviar ninguna invitación');
+      }
     } catch (error) {
       console.error('Error en handleSendInvitations:', error);
       Alert.alert('Error', 'Hubo un error al enviar las invitaciones');

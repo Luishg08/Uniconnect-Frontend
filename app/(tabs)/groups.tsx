@@ -71,8 +71,7 @@ export default function GroupsScreen() {
     createGroup(groupData, {
       onSuccess: () => {
         setCreateModalVisible(false);
-        reloadMyGroups();
-        reloadDiscover();
+        // React Query invalidará automáticamente las queries
       },
     });
   };
@@ -89,7 +88,7 @@ export default function GroupsScreen() {
         onSuccess: () => {
           setEditModalVisible(false);
           setSelectedGroup(null);
-          reloadMyGroups();
+          // React Query invalidará automáticamente las queries
         },
       },
     );
@@ -106,8 +105,7 @@ export default function GroupsScreen() {
           style: "destructive",
           onPress: () => {
             deleteGroup(group.id_group);
-            reloadMyGroups();
-            reloadDiscover();
+            // React Query invalidará automáticamente las queries
           },
         },
       ]

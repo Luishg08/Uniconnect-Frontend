@@ -1,4 +1,4 @@
-import { makeObservable, observable, action, runInAction, computed } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
 import { eventsService, EventsService } from '../services/events.service';
 import {
   Event,
@@ -12,27 +12,30 @@ import {
  * EventsStore - Model layer using MobX
  * Manages state for events, filters, loading, and errors
  * Follows MVC pattern with complete decoupling from View layer
+ * 
+ * Uses makeAutoObservable pattern (MobX 6+) instead of decorators
+ * for compatibility with Expo/Metro bundler without Babel plugins
  */
 export class EventsStore {
-  // Observable state
-  @observable events: Event[] = [];
-  @observable loading: boolean = false;
-  @observable error: string | null = null;
-  @observable filters: EventFilters = {
+  // Observable state (automatically inferred by makeAutoObservable)
+  events: Event[] = [];
+  loading: boolean = false;
+  error: string | null = null;
+  filters: EventFilters = {
     date: null,
     type: null,
     startDate: null,
     endDate: null,
   };
-  @observable metadata: Metadata | null = null;
+  metadata: Metadata | null = null;
   
   // ⭐ NUEVO: Estado para creación de eventos
-  @observable isCreating: boolean = false;
-  @observable createError: string | null = null;
+  isCreating: boolean = false;
+  createError: string | null = null;
 
   // ⭐ NUEVO: Estado para actualización de eventos
-  @observable isUpdating: boolean = false;
-  @observable updateError: string | null = null;
+  isUpdating: boolean = false;
+  updateError: string | null = null;
 
   // Service dependency
   private eventsService: EventsService;
@@ -40,15 +43,14 @@ export class EventsStore {
   constructor(service: EventsService = eventsService) {
     this.eventsService = service;
 
-    // Make properties observable
-    makeObservable(this);
+    // Make properties observable automatically (no decorators needed)
+    makeAutoObservable(this);
   }
 
   /**
    * Load events from API with current filters
    * Sets loading state, handles errors, and updates events
    */
-  @action
   async loadEvents(): Promise<void> {
     this.setLoading(true);
     this.setError(null);
@@ -90,7 +92,6 @@ export class EventsStore {
    * @param payload - Event data (without id_program, extracted from JWT)
    * @returns Promise<boolean> - true if successful, false otherwise
    */
-  @action
   async createEvent(payload: CreateEventPayload): Promise<boolean> {
     this.setIsCreating(true);
     this.setCreateError(null);
@@ -147,7 +148,6 @@ export class EventsStore {
    * @param payload - Event data to update
    * @returns Promise<boolean> - true if successful, false otherwise
    */
-  @action
   async updateEvent(id: number, payload: UpdateEventPayload): Promise<boolean> {
     this.setIsUpdating(true);
     this.setUpdateError(null);
@@ -203,7 +203,6 @@ export class EventsStore {
    * @param id_event - Event ID (number)
    * @returns Promise<void>
    */
-  @action
   async deleteEvent(id_event: number): Promise<void> {
     try {
       const deleted = await this.eventsService.deleteEvent(id_event);
@@ -231,7 +230,6 @@ export class EventsStore {
    * @param filterType - Type of filter (date, type, startDate, endDate)
    * @param value - Filter value
    */
-  @action
   setFilter(filterType: keyof EventFilters, value: any): void {
     this.filters[filterType] = value;
     this.loadEvents();
@@ -240,7 +238,6 @@ export class EventsStore {
   /**
    * Clear all filters and reload events
    */
-  @action
   clearFilters(): void {
     this.filters = {
       date: null,
@@ -254,7 +251,6 @@ export class EventsStore {
   /**
    * ⭐ NUEVO: Clear create error
    */
-  @action
   clearCreateError(): void {
     this.createError = null;
   }
@@ -262,7 +258,6 @@ export class EventsStore {
   /**
    * ⭐ NUEVO: Clear update error
    */
-  @action
   clearUpdateError(): void {
     this.updateError = null;
   }
@@ -271,7 +266,6 @@ export class EventsStore {
    * Update events array
    * @private
    */
-  @action
   private setEvents(events: Event[]): void {
     this.events = events;
   }
@@ -280,7 +274,6 @@ export class EventsStore {
    * Update loading state
    * @private
    */
-  @action
   private setLoading(loading: boolean): void {
     this.loading = loading;
   }
@@ -289,7 +282,6 @@ export class EventsStore {
    * Update error state
    * @private
    */
-  @action
   private setError(error: string | null): void {
     this.error = error;
   }
@@ -298,7 +290,6 @@ export class EventsStore {
    * Update metadata
    * @private
    */
-  @action
   private setMetadata(metadata: Metadata): void {
     this.metadata = metadata;
   }
@@ -307,7 +298,6 @@ export class EventsStore {
    * ⭐ NUEVO: Update isCreating state
    * @private
    */
-  @action
   private setIsCreating(isCreating: boolean): void {
     this.isCreating = isCreating;
   }
@@ -316,7 +306,6 @@ export class EventsStore {
    * ⭐ NUEVO: Update createError state
    * @private
    */
-  @action
   private setCreateError(error: string | null): void {
     this.createError = error;
   }
@@ -325,7 +314,6 @@ export class EventsStore {
    * ⭐ NUEVO: Update isUpdating state
    * @private
    */
-  @action
   private setIsUpdating(isUpdating: boolean): void {
     this.isUpdating = isUpdating;
   }
@@ -334,7 +322,6 @@ export class EventsStore {
    * ⭐ NUEVO: Update updateError state
    * @private
    */
-  @action
   private setUpdateError(error: string | null): void {
     this.updateError = error;
   }
@@ -342,7 +329,6 @@ export class EventsStore {
   /**
    * ⭐ NUEVO: Computed - Get upcoming events (future events only)
    */
-  @computed
   get upcomingEvents(): Event[] {
     const now = new Date();
     return this.events.filter(event => new Date(event.date) >= now);

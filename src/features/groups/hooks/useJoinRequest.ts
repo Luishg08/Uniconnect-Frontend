@@ -18,10 +18,10 @@ export function useJoinRequest() {
     onSuccess: (_data, groupId) => {
       // Invalidar queries relacionadas al grupo
       queryClient.invalidateQueries({
-        queryKey: ['group-detail', groupId],
+        queryKey: ['groupDetail', groupId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['discover-groups'],
+        queryKey: ['discoverGroups'],
       });
     },
   });

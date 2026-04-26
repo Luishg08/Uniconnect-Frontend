@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,14 @@ import {
   useLeaveGroup,
 } from '../hooks/useGroupInfo';
 import { GroupInfo } from '../types';
+import { TransferOwnershipModal } from './TransferOwnershipModal';
 
 interface GroupMembersTabProps {
   groupInfo: GroupInfo;
 }
 
 export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
+  const [transferModalVisible, setTransferModalVisible] = useState(false);
   const removeMemberMutation = useRemoveMember();
   const makeAdminMutation = useMakeMemberAdmin();
   const leaveGroupMutation = useLeaveGroup();
@@ -77,10 +79,8 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
 
   const handleLeaveGroup = () => {
     if (groupInfo.isOwner) {
-      Alert.alert(
-        'No puedes abandonar',
-        'Como owner del grupo, debes transferir la propiedad antes de abandonarlo.'
-      );
+      // Abrir modal para transferir propiedad
+      setTransferModalVisible(true);
       return;
     }
 
@@ -223,6 +223,20 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
           />
         </>
       )}
+
+      {/* Modal de transferir propiedad */}
+      <TransferOwnershipModal
+        groupId={groupInfo.id_group}
+        groupName={groupInfo.name}
+        members={groupInfo.memberships || []}
+        currentOwnerId={groupInfo.owner.id_user}
+        visible={transferModalVisible}
+        onClose={() => setTransferModalVisible(false)}
+        onSuccess={() => {
+          setTransferModalVisible(false);
+          // El modal ya invalida las queries necesarias
+        }}
+      />
     </View>
   );
 };

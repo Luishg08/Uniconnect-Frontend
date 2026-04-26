@@ -53,7 +53,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
         setSelectedFiles(result.assets);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error selecting files';
+      const errorMessage = err instanceof Error ? err.message : 'Error al seleccionar archivos';
       setError(errorMessage);
     }
   };
@@ -63,7 +63,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
    */
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
-      setError('Please select at least one file');
+      setError('Por favor selecciona al menos un archivo');
       return;
     }
 
@@ -90,12 +90,12 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       }
 
       // Mostrar mensaje de éxito
-      Alert.alert('Success', `${result.data.length} file(s) uploaded successfully`);
+      Alert.alert('Éxito', `${result.data.length} archivo(s) subido(s) correctamente`);
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : (err as FileUploadError).message || 'Upload failed';
+          : (err as FileUploadError).message || 'Error al subir archivos';
 
       setError(errorMessage);
 
@@ -124,8 +124,8 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   const renderUploadedFile = ({ item }: { item: FileData }) => (
     <View style={styles.fileCard}>
       <Text style={styles.fileName}>{item.file_name}</Text>
-      <Text style={styles.fileInfo}>Size: {(item.size / 1024 / 1024).toFixed(2)} MB</Text>
-      <Text style={styles.fileInfo}>Type: {item.mime_type}</Text>
+      <Text style={styles.fileInfo}>Tamaño: {(item.size / 1024 / 1024).toFixed(2)} MB</Text>
+      <Text style={styles.fileInfo}>Tipo: {item.mime_type}</Text>
       <Text style={styles.fileUrl} numberOfLines={1}>
         {item.url}
       </Text>
@@ -147,8 +147,8 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Text style={styles.title}>Upload Files</Text>
-      <Text style={styles.subtitle}>Group ID: {id_group}</Text>
+      <Text style={styles.title}>Subir Archivos</Text>
+      <Text style={styles.subtitle}>ID del Grupo: {id_group}</Text>
 
       {/* Selector de archivos */}
       <View style={styles.selectorSection}>
@@ -161,14 +161,14 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
         </TouchableOpacity>
 
         {selectedFiles.length > 0 && (
-          <Text style={styles.selectedCount}>{selectedFiles.length} file(s) selected</Text>
+          <Text style={styles.selectedCount}>{selectedFiles.length} archivo(s) seleccionado(s)</Text>
         )}
       </View>
 
       {/* Lista de archivos seleccionados */}
       {selectedFiles.length > 0 && (
         <View style={styles.selectedFilesSection}>
-          <Text style={styles.sectionTitle}>Selected Files:</Text>
+          <Text style={styles.sectionTitle}>Archivos Seleccionados:</Text>
           <FlatList
             data={selectedFiles}
             renderItem={renderSelectedFile}
@@ -193,21 +193,21 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.uploadButtonText}>Upload</Text>
+          <Text style={styles.uploadButtonText}>Subir</Text>
         )}
       </TouchableOpacity>
 
       {/* Botón de limpiar selección */}
       {selectedFiles.length > 0 && !isLoading && (
         <TouchableOpacity style={styles.clearButton} onPress={handleClearSelection}>
-          <Text style={styles.clearButtonText}>Clear Selection</Text>
+          <Text style={styles.clearButtonText}>Limpiar Selección</Text>
         </TouchableOpacity>
       )}
 
       {/* Archivos subidos exitosamente */}
       {showSuccess && uploadedFiles.length > 0 && (
         <View style={styles.uploadedSection}>
-          <Text style={styles.sectionTitle}>✓ Files uploaded successfully:</Text>
+          <Text style={styles.sectionTitle}>✓ Archivos subidos correctamente:</Text>
           <FlatList
             data={uploadedFiles}
             renderItem={renderUploadedFile}
