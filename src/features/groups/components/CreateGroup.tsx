@@ -14,7 +14,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { courseService } from "@/src/features/courses/services/courses.service";
 import { Course } from "@/src/features/courses/types";
-import { authStore } from "@/src/features/auth";
 import { showToast } from "@/src/lib/toast";
 
 interface CreateGroupModalProps {
@@ -24,7 +23,6 @@ interface CreateGroupModalProps {
     name: string;
     description: string;
     id_course: number;
-    owner_id: number;
   }) => void;
 }
 
@@ -33,7 +31,6 @@ export const CreateGroupModal = ({
   onClose,
   onSave,
 }: CreateGroupModalProps) => {
-  const user = authStore.user;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
@@ -62,16 +59,10 @@ export const CreateGroupModal = ({
       return;
     }
 
-    if (!user?.id_user) {
-      showToast.error("Error", "No se pudo identificar al usuario");
-      return;
-    }
-
     onSave({
       name: name.trim(),
       description: description.trim(),
       id_course: selectedCourseId,
-      owner_id: user.id_user,
     });
 
     handleClose();

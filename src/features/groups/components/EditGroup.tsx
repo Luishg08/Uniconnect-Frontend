@@ -21,12 +21,10 @@ interface EditGroupModalProps {
   visible: boolean;
   group: Group | null;
   onClose: () => void;
-  onSave: (groupData: {
-    id_group: number;
+  onSave: (groupId: number, groupData: {
     name: string;
     description: string;
     id_course: number;
-    owner_id: number;
   }) => void;
   isLoading?: boolean;
 }
@@ -80,12 +78,10 @@ export const EditGroupModal = ({
       return;
     }
 
-    onSave({
-      id_group: group.id_group,
+    onSave(group.id_group, {
       name: name.trim(),
       description: description.trim(),
       id_course: selectedCourseId,
-      owner_id: group.owner_id,
     });
   };
 
