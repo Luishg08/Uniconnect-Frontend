@@ -54,14 +54,12 @@ export interface CreateGroupData {
   name: string;
   description: string;
   id_course: number;
-  owner_id: number;
 }
 
 export interface UpdateGroupData {
   name: string;
   description: string;
   id_course: number;
-  owner_id: number;
 }
 
 export interface GroupMembership {
@@ -119,7 +117,6 @@ export interface GroupCreateRequest {
   name: string;
   description: string;
   id_course: number;
-  owner_id: number;
 }
 
 export interface GroupInvitationRequest {

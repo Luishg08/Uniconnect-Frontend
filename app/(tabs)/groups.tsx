@@ -81,14 +81,13 @@ export default function GroupsScreen() {
     setEditModalVisible(true);
   };
 
-  const handleUpdateGroup = (groupData: any) => {
+  const handleUpdateGroup = (groupId: number, groupData: { name: string; description: string; id_course: number }) => {
     updateGroup(
-      { id: groupData.id_group, data: groupData },
+      { id: groupId, data: groupData },
       {
         onSuccess: () => {
           setEditModalVisible(false);
           setSelectedGroup(null);
-          // React Query invalidará automáticamente las queries
         },
       },
     );
