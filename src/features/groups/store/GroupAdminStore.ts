@@ -122,12 +122,19 @@ export class GroupAdminStore {
     try {
       await groupsService.acceptJoinRequest(groupId, requestId, token);
       console.log(`[GroupAdminStore] Request ${requestId} accepted ✅`);
-    } catch (err) {
-      // Rollback
+    } catch (err: unknown) {
+      const message = (() => {
+        if (err instanceof Error) return err.message;
+        if (err && typeof err === 'object' && 'response' in err) {
+          const axiosErr = err as { response?: { data?: { message?: string } } };
+          return axiosErr.response?.data?.message ?? 'No se pudo aceptar la solicitud.';
+        }
+        return 'No se pudo aceptar la solicitud.';
+      })();
+
       runInAction(() => {
         this._restoreSnapshot(groupId, snapshot);
-        this.error =
-          err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.';
+        this.error = message;
       });
       console.error('[GroupAdminStore] acceptRequest rollback:', err);
     }

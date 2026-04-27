@@ -26,9 +26,9 @@ class GroupsService {
         },
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear grupo:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'No se pudo crear el grupo');
     }
   }
 
