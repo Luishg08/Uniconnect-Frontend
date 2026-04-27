@@ -8,3 +8,4 @@ export { GroupMembersTab } from './GroupMembersTab';
 export { GroupInfoHeader } from './GroupInfoHeader';
 export { GroupInfoModal } from './GroupInfoModal';
 export { InviteToGroupModal } from './InviteToGroupModal';
+export { GroupAdminPanel } from './GroupAdminPanel';
