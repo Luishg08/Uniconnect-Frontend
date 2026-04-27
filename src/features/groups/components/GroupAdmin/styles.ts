@@ -269,4 +269,38 @@ export const adminStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
+
+  // ── Transferencia de ownership ─────────────────────────────────────────────
+  transferBtn: {
+    borderColor: '#A78BFA',
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+  },
+  transferPendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  transferPendingText: {
+    fontSize: 11,
+    color: '#A78BFA',
+    fontWeight: '500',
+    flexShrink: 1,
+  },
+  cancelTransferBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.4)',
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+  },
+  cancelTransferText: {
+    fontSize: 10,
+    color: '#A78BFA',
+    fontWeight: '600',
+  },
 });

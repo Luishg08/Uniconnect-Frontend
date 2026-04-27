@@ -27,6 +27,9 @@ export class GroupAdminStore {
   isMembersLoading: boolean = false;
   error: string | null = null;
 
+  pendingTransferCandidateId: number | null = null;
+  isTransferLoading: boolean = false;
+
   constructor() {
     makeAutoObservable(this);
   }
@@ -189,6 +192,68 @@ export class GroupAdminStore {
     }
   }
 
+  /**
+   * Solicita la transferencia de ownership al candidato.
+   * POST /groups/:id/request-ownership-transfer/:candidateId
+   */
+  async requestOwnershipTransfer(groupId: number, candidateId: number): Promise<void> {
+    const token = authStore.accessToken;
+    if (!token) return;
+
+    runInAction(() => {
+      this.isTransferLoading = true;
+      this.error = null;
+    });
+
+    try {
+      await groupsService.requestOwnershipTransfer(groupId, candidateId, token);
+
+      runInAction(() => {
+        this.pendingTransferCandidateId = candidateId;
+        this.isTransferLoading = false;
+      });
+
+      console.log(`[GroupAdminStore] Ownership transfer requested → candidate ${candidateId} ✅`);
+    } catch (err) {
+      runInAction(() => {
+        this.error = err instanceof Error ? err.message : 'No se pudo solicitar la transferencia.';
+        this.isTransferLoading = false;
+      });
+      console.error('[GroupAdminStore] requestOwnershipTransfer error:', err);
+    }
+  }
+
+  /**
+   * Cancela la transferencia de ownership pendiente.
+   * DELETE /groups/:id/cancel-ownership-transfer
+   */
+  async cancelOwnershipTransfer(groupId: number): Promise<void> {
+    const token = authStore.accessToken;
+    if (!token) return;
+
+    runInAction(() => {
+      this.isTransferLoading = true;
+      this.error = null;
+    });
+
+    try {
+      await groupsService.cancelOwnershipTransfer(groupId, token);
+
+      runInAction(() => {
+        this.pendingTransferCandidateId = null;
+        this.isTransferLoading = false;
+      });
+
+      console.log(`[GroupAdminStore] Ownership transfer cancelled ✅`);
+    } catch (err) {
+      runInAction(() => {
+        this.error = err instanceof Error ? err.message : 'No se pudo cancelar la transferencia.';
+        this.isTransferLoading = false;
+      });
+      console.error('[GroupAdminStore] cancelOwnershipTransfer error:', err);
+    }
+  }
+
   /** Limpia el estado al salir del panel de admin */
   reset() {
     this.groupsWithRequests = [];
@@ -197,6 +262,8 @@ export class GroupAdminStore {
     this.isLoading = false;
     this.isMembersLoading = false;
     this.error = null;
+    this.pendingTransferCandidateId = null;
+    this.isTransferLoading = false;
   }
 
   // ---------------------------------------------------------------------------

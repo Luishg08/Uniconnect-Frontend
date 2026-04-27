@@ -207,3 +207,22 @@ export interface DirectMessageResponse {
   isNew: boolean;
   group: Group;
 }
+
+// ==================== OWNERSHIP TRANSFER ====================
+
+export interface OwnershipTransferResponse {
+  message: string;
+  group?: {
+    id_group: number;
+    name: string | null;
+    owner_id: number | null;
+    pending_owner_id: number | null;
+  };
+  candidate?: {
+    id_user: number;
+    full_name: string;
+    email: string;
+  };
+  previous_owner_id?: number;
+  new_owner_id?: number;
+}
