@@ -172,14 +172,15 @@ export interface GroupInfo {
     picture?: string;
   };
   created_at: string;
-  
+  pending_owner_id?: number | null;
+
   // Permisos y rol
   userRole: 'owner' | 'admin' | 'member' | 'none';
   canManage: boolean;
   canManageMembers: boolean;
   isMember: boolean;
   isOwner: boolean;
-  
+
   // Miembros
   memberships: GroupMembership[];
 }

@@ -29,6 +29,7 @@ export class GroupAdminStore {
 
   pendingTransferCandidateId: number | null = null;
   isTransferLoading: boolean = false;
+  isAcceptingTransfer: boolean = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -261,6 +262,71 @@ export class GroupAdminStore {
     }
   }
 
+  /**
+   * El candidato acepta la transferencia de ownership.
+   * PATCH /groups/:id/accept-ownership-transfer
+   */
+  async acceptOwnershipTransfer(groupId: number): Promise<boolean> {
+    const token = authStore.accessToken;
+    if (!token) return false;
+
+    runInAction(() => {
+      this.isAcceptingTransfer = true;
+      this.error = null;
+    });
+
+    try {
+      await groupsService.acceptOwnershipTransfer(groupId, token);
+
+      runInAction(() => {
+        this.isAcceptingTransfer = false;
+      });
+
+      console.log(`[GroupAdminStore] Ownership transfer accepted ✅`);
+      return true;
+    } catch (err) {
+      runInAction(() => {
+        this.error = err instanceof Error ? err.message : 'No se pudo aceptar la transferencia.';
+        this.isAcceptingTransfer = false;
+      });
+      console.error('[GroupAdminStore] acceptOwnershipTransfer error:', err);
+      return false;
+    }
+  }
+
+  /**
+   * El candidato rechaza la transferencia (usa cancelOwnershipTransfer del owner
+   * o simplemente ignora — aquí lo implementamos como cancelación desde el candidato).
+   * DELETE /groups/:id/cancel-ownership-transfer
+   */
+  async rejectOwnershipTransfer(groupId: number): Promise<boolean> {
+    const token = authStore.accessToken;
+    if (!token) return false;
+
+    runInAction(() => {
+      this.isAcceptingTransfer = true;
+      this.error = null;
+    });
+
+    try {
+      await groupsService.cancelOwnershipTransfer(groupId, token);
+
+      runInAction(() => {
+        this.isAcceptingTransfer = false;
+      });
+
+      console.log(`[GroupAdminStore] Ownership transfer rejected ✅`);
+      return true;
+    } catch (err) {
+      runInAction(() => {
+        this.error = err instanceof Error ? err.message : 'No se pudo rechazar la transferencia.';
+        this.isAcceptingTransfer = false;
+      });
+      console.error('[GroupAdminStore] rejectOwnershipTransfer error:', err);
+      return false;
+    }
+  }
+
   /** Limpia el estado al salir del panel de admin */
   reset() {
     this.groupsWithRequests = [];
@@ -271,6 +337,7 @@ export class GroupAdminStore {
     this.error = null;
     this.pendingTransferCandidateId = null;
     this.isTransferLoading = false;
+    this.isAcceptingTransfer = false;
   }
 
   // ---------------------------------------------------------------------------
