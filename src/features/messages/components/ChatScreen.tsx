@@ -144,7 +144,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const handleFilesSelected = async (files: any[]) => {
     try {
       setUploadingFiles(true);
-      console.log(`[ChatScreen] Subiendo ${files.length} archivos...`);
+      console.log(`[ChatScreen] Iniciando subida de ${files.length} archivo(s):`, files.map(f => ({ name: f.name, size: f.size, type: f.mimeType })));
 
       const uploadedFiles = await filesService.uploadFiles(
         files,
@@ -152,13 +152,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         token
       );
 
-      console.log(`[ChatScreen] Archivos subidos:`, uploadedFiles.length);
-      // El backend crea el mensaje automaticamente y lo emite por WebSocket.
-      // No necesitamos enviar un mensaje de texto adicional.
-
+      console.log(`[ChatScreen] ✅ Subida exitosa. Archivos:`, uploadedFiles.length);
       setShowFilePicker(false);
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 300);
     } catch (error: any) {
-      console.error(`[ChatScreen] Error al subir archivos:`, error.message);
+      console.error(`[ChatScreen] ❌ Error en subida:`, error.message, error.response?.status);
       Alert.alert('Error', error.message || 'Error al subir los archivos. Intenta de nuevo.');
     } finally {
       setUploadingFiles(false);

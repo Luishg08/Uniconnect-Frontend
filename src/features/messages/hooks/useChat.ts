@@ -73,11 +73,10 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
 
     // Escuchar nuevos mensajes
     const handleNewMessage = (rawMessage: any) => {
-      // WEBSOCKET TRACKER
-      console.log('[WebSocket Tracker] Nuevo mensaje recibido por WS:', JSON.stringify(rawMessage, null, 2));
-      console.log('[WebSocket Tracker] Tiene files?:', !!rawMessage.files, '| Cantidad:', rawMessage.files?.length || 0);
+      console.log('[WS] message:new recibido — id:', rawMessage.id_message, '| files:', rawMessage.files?.length ?? 0, '| text:', rawMessage.text_content?.slice(0, 30));
 
-      // Normalizar: el gateway emite { user, group, files } pero la UI espera { membership: { user, group }, files }
+      // Si tiene archivos pero no texto, es un mensaje de archivo puro — siempre agregar
+      const hasFiles = (rawMessage.files?.length ?? 0) > 0;
       const message: Message = {
         id_message: rawMessage.id_message,
         id_membership: rawMessage.id_membership,
@@ -96,6 +95,12 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       };
 
       const textContent = (message.text_content || '').trim();
+
+      // Mensajes con archivos (texto vacío) nunca son optimistas — siempre agregar directamente
+      if (hasFiles && !textContent) {
+        setMessages((prev) => [...prev, message]);
+        return;
+      }
 
       // Si es un mensaje que ya agregamos optimísticamente, no lo duplicamos
       if (textContent && pendingMessagesRef.current.has(textContent)) {
