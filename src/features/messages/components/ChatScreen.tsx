@@ -101,10 +101,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     error,
     isConnected,
     typingUsers,
+    hasMore,
+    isLoadingMore,
     sendMessage,
     editMessage,
     deleteMessage,
     emitTyping,
+    loadMoreMessages,
     downloadFile,
   } = useChat({
     groupId,
@@ -293,6 +296,21 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        // Paginación infinita: scroll hacia arriba carga mensajes más antiguos
+        onEndReached={loadMoreMessages}
+        onEndReachedThreshold={0.3}
+        ListHeaderComponent={
+          isLoadingMore ? (
+            <View style={styles.loadingMoreContainer}>
+              <ActivityIndicator size="small" color="#D9B97E" />
+            </View>
+          ) : hasMore ? (
+            <View style={styles.loadingMoreContainer}>
+              <Text style={styles.loadingMoreText}>Scroll para ver más</Text>
+            </View>
+          ) : null
+        }
+        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
       />
 
       {renderTypingIndicator()}
@@ -432,6 +450,14 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
     backgroundColor: '#363636',
+  },
+  loadingMoreContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  loadingMoreText: {
+    fontSize: 12,
+    color: '#6B7280',
   },
   typingIndicator: {
     paddingHorizontal: 16,

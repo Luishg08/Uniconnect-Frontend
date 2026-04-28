@@ -8,6 +8,7 @@ import { groupsService } from '../../services/groups.service';
 import { authStore } from '@/src/features/auth/store/AuthStore';
 import { GroupMembership } from '../../types';
 import { adminStyles as s } from './styles';
+import { useDirectMessage } from '../../hooks/useDirectMessage';
 
 interface MemberRowProps {
   member: GroupMembership;
@@ -23,6 +24,8 @@ export const MemberRow = observer(
     const queryClient = useQueryClient();
     const token = authStore.accessToken ?? '';
     const currentUserId = authStore.user?.id_user;
+    const { openDirectMessage, loadingUserId } = useDirectMessage();
+    const isDmLoading = loadingUserId === member.id_user;
 
     const isOwner = member.id_user === ownerId;
     const isAdmin = member.role === 'admin';
@@ -178,46 +181,65 @@ export const MemberRow = observer(
           </View>
         </View>
 
-        {/* Columna derecha: botones de acción (solo si canManage y no es el owner) */}
-        {canManage && !isOwner && (
-          <View style={s.rowActions}>
-            {/* Botón "Transferir admin" — solo visible para el owner autenticado */}
-            {currentUserIsOwner && !isPendingCandidate && (
-              <TouchableOpacity
-                style={[s.iconBtn, s.transferBtn]}
-                onPress={handleRequestTransfer}
-                disabled={groupAdminStore.isTransferLoading}
-                accessibilityLabel="Transferir administración"
-              >
-                {groupAdminStore.isTransferLoading ? (
-                  <ActivityIndicator size="small" color="#A78BFA" />
-                ) : (
-                  <Ionicons name="swap-horizontal-outline" size={16} color="#A78BFA" />
-                )}
-              </TouchableOpacity>
-            )}
-
-            {/* Promover a admin (solo si aún no lo es) */}
-            {!isAdmin && (
-              <TouchableOpacity
-                style={[s.iconBtn, s.adminBtn]}
-                onPress={handleMakeAdmin}
-                accessibilityLabel="Hacer administrador"
-              >
-                <Ionicons name="shield-outline" size={16} color="#D9B97E" />
-              </TouchableOpacity>
-            )}
-
-            {/* Sacar del grupo */}
+        {/* Columna derecha: botones de acción */}
+        <View style={s.rowActions}>
+          {/* Botón DM — visible para cualquier miembro que no sea el usuario actual */}
+          {member.id_user !== currentUserId && (
             <TouchableOpacity
-              style={[s.iconBtn, s.rejectBtn]}
-              onPress={handleRemove}
-              accessibilityLabel="Sacar del grupo"
+              style={[s.iconBtn, s.dmBtn]}
+              onPress={() => openDirectMessage(member.id_user)}
+              disabled={isDmLoading}
+              accessibilityLabel="Mensaje privado"
             >
-              <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+              {isDmLoading ? (
+                <ActivityIndicator size="small" color="#38BDF8" />
+              ) : (
+                <Ionicons name="chatbubble-outline" size={16} color="#38BDF8" />
+              )}
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+
+          {/* Acciones de gestión — solo si canManage y no es el owner */}
+          {canManage && !isOwner && (
+            <>
+              {/* Botón "Transferir admin" — solo visible para el owner autenticado */}
+              {currentUserIsOwner && !isPendingCandidate && (
+                <TouchableOpacity
+                  style={[s.iconBtn, s.transferBtn]}
+                  onPress={handleRequestTransfer}
+                  disabled={groupAdminStore.isTransferLoading}
+                  accessibilityLabel="Transferir administración"
+                >
+                  {groupAdminStore.isTransferLoading ? (
+                    <ActivityIndicator size="small" color="#A78BFA" />
+                  ) : (
+                    <Ionicons name="swap-horizontal-outline" size={16} color="#A78BFA" />
+                  )}
+                </TouchableOpacity>
+              )}
+
+              {/* Promover a admin (solo si aún no lo es) */}
+              {!isAdmin && (
+                <TouchableOpacity
+                  style={[s.iconBtn, s.adminBtn]}
+                  onPress={handleMakeAdmin}
+                  accessibilityLabel="Hacer administrador"
+                >
+                  <Ionicons name="shield-outline" size={16} color="#D9B97E" />
+                </TouchableOpacity>
+              )}
+
+              {/* Sacar del grupo */}
+              <TouchableOpacity
+                style={[s.iconBtn, s.rejectBtn]}
+                onPress={handleRemove}
+                accessibilityLabel="Sacar del grupo"
+              >
+                <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
     );
   },

@@ -270,6 +270,12 @@ export const adminStyles = StyleSheet.create({
     color: '#fff',
   },
 
+  // ── Mensaje directo (US-W03) ───────────────────────────────────────────────
+  dmBtn: {
+    borderColor: '#38BDF8',
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+  },
+
   // ── Transferencia de ownership ─────────────────────────────────────────────
   transferBtn: {
     borderColor: '#A78BFA',
