@@ -119,14 +119,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     serverUrl,
   });
 
-  // Auto-scroll al final cuando llegan mensajes nuevos
+  // Con inverted FlatList no necesitamos scroll manual — ya empieza abajo
+  // Solo hacemos scroll al recibir el primer lote de mensajes
   useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+    if (messages.length > 0 && !loading) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
     }
-  }, [messages]);
+  }, [loading]);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -154,9 +153,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
       console.log(`[ChatScreen] ✅ Subida exitosa. Archivos:`, uploadedFiles.length);
       setShowFilePicker(false);
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 300);
     } catch (error: any) {
       console.error(`[ChatScreen] ❌ Error en subida:`, error.message, error.response?.status);
       Alert.alert('Error', error.message || 'Error al subir los archivos. Intenta de nuevo.');
@@ -283,12 +279,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           renderItem={renderMessage}
           keyExtractor={(item) => item.id_message.toString()}
           contentContainerStyle={styles.messagesList}          style={styles.flatList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          inverted
           onEndReached={loadMoreMessages}
           onEndReachedThreshold={0.3}
-          ListHeaderComponent={
+          ListFooterComponent={
             isLoadingMore ? (
               <View style={styles.loadingMoreContainer}>
                 <ActivityIndicator size="small" color="#D9B97E" />
@@ -299,7 +295,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               </View>
             ) : null
           }
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         />
 
         {renderTypingIndicator()}

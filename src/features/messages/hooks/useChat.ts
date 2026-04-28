@@ -33,9 +33,10 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       console.log(`[useChat] Cargando mensajes del grupo ${groupId}...`);
       const { messages: data, hasMore: more } = await messagesService.getRecentMessages(groupId, 50, token);
       console.log(`[useChat] ✅ Mensajes cargados: ${data?.length || 0}, hasMore: ${more}`);
-      setMessages(data || []);
+      // inverted FlatList: el índice 0 debe ser el más nuevo → invertir el array
+      setMessages(data ? [...data].reverse() : []);
       setHasMore(more);
-      // Guardar el cursor: id del mensaje más antiguo
+      // Cursor: id del mensaje más antiguo = el último del array original (antes de invertir)
       if (data && data.length > 0) {
         oldestMessageIdRef.current = data[0].id_message;
       }
@@ -98,14 +99,13 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
 
       // Mensajes con archivos (texto vacío) nunca son optimistas — siempre agregar directamente
       if (hasFiles && !textContent) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => [message, ...prev]);
         return;
       }
 
       // Si es un mensaje que ya agregamos optimísticamente, no lo duplicamos
       if (textContent && pendingMessagesRef.current.has(textContent)) {
         pendingMessagesRef.current.delete(textContent);
-        // Reemplazar el mensaje temporal con el del servidor (tiene id_message real)
         setMessages((prev) => {
           const tempIndex = prev.findIndex(
             (msg) => msg.id_message < 0 && msg.text_content === message.text_content
@@ -115,11 +115,10 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
             newMessages[tempIndex] = message;
             return newMessages;
           }
-          return [...prev, message];
+          return [message, ...prev];
         });
       } else {
-        // Mensaje de otro usuario, mensaje de archivos, o mensaje que no fue optimista
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => [message, ...prev]);
       }
     };
 
@@ -222,8 +221,8 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       },
     };
 
-    // Agregar mensaje optimista a la UI inmediatamente
-    setMessages((prev) => [...prev, optimisticMessage]);
+    // Agregar mensaje optimista al inicio (índice 0 = más nuevo con inverted)
+    setMessages((prev) => [optimisticMessage, ...prev]);
     
     // Marcar este mensaje como pendiente
     pendingMessagesRef.current.add(text.trim());
@@ -289,8 +288,8 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       console.log(`[useChat] loadMore: ${older.length} mensajes más antiguos, hasMore: ${more}`);
 
       if (older.length > 0) {
-        // Prepend: los mensajes más antiguos van al inicio del array
-        setMessages((prev) => [...older, ...prev]);
+        // Con inverted: los más antiguos van al FINAL del array
+        setMessages((prev) => [...prev, ...older.reverse()]);
         oldestMessageIdRef.current = older[0].id_message;
       }
       setHasMore(more);
