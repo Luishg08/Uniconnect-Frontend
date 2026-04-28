@@ -154,6 +154,22 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
     websocketService.onMessageDeleted(handleMessageDeleted);
     websocketService.onUserTyping(handleUserTyping);
 
+    // Escuchar menciones al usuario actual
+    const handleMention = (data: {
+      id_message: number;
+      mentioned_user_id: number;
+      sender_name: string;
+      text_content: string;
+      id_group: number;
+    }) => {
+      if (data.mentioned_user_id === userId) {
+        console.log(`[useChat] 🔔 Mención recibida de ${data.sender_name}: "${data.text_content}"`);
+        // El resaltado visual lo maneja WithMentions en MessageBubble.
+        // Aquí se puede disparar una notificación push o badge en el futuro.
+      }
+    };
+    websocketService.on('message:mention', handleMention);
+
     // Cargar mensajes iniciales
     loadMessages();
 
@@ -164,6 +180,7 @@ export const useChat = ({ groupId, userId, token, userFullName, serverUrl }: Use
       websocketService.off('message:edited', handleMessageEdited);
       websocketService.off('message:deleted', handleMessageDeleted);
       websocketService.off('user:typing', handleUserTyping);
+      websocketService.off('message:mention', handleMention);
     };
   }, [groupId, userId, token, serverUrl, loadMessages]);
 

@@ -298,6 +298,13 @@ class WebSocketService {
   }
 
   /**
+   * Suscribirse a cualquier evento del socket (genérico)
+   */
+  on(event: string, callback: (...args: any[]) => void) {
+    this.socket?.on(event, callback);
+  }
+
+  /**
    * Remover listener de evento específico
    */
   off(event: string, callback?: (...args: any[]) => void) {

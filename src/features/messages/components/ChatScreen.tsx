@@ -14,6 +14,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MessageBubble } from './MessageBubble';
 import { FilePickerModal } from './FilePickerModal';
@@ -72,6 +73,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const insets = useSafeAreaInsets();
 
   // Determinar si es un chat privado
   const isDirectMessage = group?.is_direct_message ?? false;
@@ -125,22 +127,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       }, 100);
     }
   }, [messages]);
-
-  // Scroll al final cuando aparece el teclado
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-    };
-  }, []);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -273,85 +259,90 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   console.log(`[ChatScreen] Renderizando componentes: FlatList + InputContainer`);
 
   return (
-    <View style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-      {!isConnected && (
-        <View style={styles.connectionBanner}>
-          <Ionicons name="cloud-offline" size={16} color="#fff" />
-          <Text style={styles.connectionText}>Reconectando...</Text>
-        </View>
-      )}
+    // Raíz: KeyboardAvoidingView con behavior='padding' en ambas plataformas
+    // En Android con edgeToEdgeEnabled, 'padding' + offset empuja el contenido
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#363636' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : -10}
+    >
+      {/* Contenedor interno flex:1 que distribuye FlatList + input */}
+      <View style={{ flex: 1 }}>
 
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id_message.toString()}
-        contentContainerStyle={styles.messagesList}
-        style={styles.flatList}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        // Paginación infinita: scroll hacia arriba carga mensajes más antiguos
-        onEndReached={loadMoreMessages}
-        onEndReachedThreshold={0.3}
-        ListHeaderComponent={
-          isLoadingMore ? (
-            <View style={styles.loadingMoreContainer}>
-              <ActivityIndicator size="small" color="#D9B97E" />
-            </View>
-          ) : hasMore ? (
-            <View style={styles.loadingMoreContainer}>
-              <Text style={styles.loadingMoreText}>Scroll para ver más</Text>
-            </View>
-          ) : null
-        }
-        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-      />
+        {!isConnected && (
+          <View style={styles.connectionBanner}>
+            <Ionicons name="cloud-offline" size={16} color="#fff" />
+            <Text style={styles.connectionText}>Reconectando...</Text>
+          </View>
+        )}
 
-      {renderTypingIndicator()}
-
-      <View style={styles.inputContainer}>
-        
-        <TouchableOpacity 
-          style={styles.emojiButton}
-          onPress={() => setShowEmojiPicker(!showEmojiPicker)}
-        >
-          <Ionicons name="happy-outline" size={24} color="#D9B97E" />
-        </TouchableOpacity>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Escribe un mensaje..."
-          placeholderTextColor="#6B7280"
-          value={inputText}
-          onChangeText={handleTextChange}
-          multiline
-          maxLength={1000}
+        {/* FlatList ocupa todo el espacio disponible */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id_message.toString()}
+          contentContainerStyle={styles.messagesList}          style={styles.flatList}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onEndReached={loadMoreMessages}
+          onEndReachedThreshold={0.3}
+          ListHeaderComponent={
+            isLoadingMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator size="small" color="#D9B97E" />
+              </View>
+            ) : hasMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <Text style={styles.loadingMoreText}>Scroll para ver más</Text>
+              </View>
+            ) : null
+          }
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         />
 
-        <TouchableOpacity 
-          style={styles.attachButton}
-          onPress={() => setShowFilePicker(true)}
-        >
-          <Ionicons name="attach" size={24} color="#D9B97E" />
-        </TouchableOpacity>
+        {renderTypingIndicator()}
 
-        <TouchableOpacity
-          style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
-          onPress={handleSend}
-          disabled={!inputText.trim()}
-        >
-          <Ionicons
-            name="send"
-            size={20}
-            color={inputText.trim() ? '#D9B97E' : '#6B7280'}
+        {/* Input — flujo natural flexbox, SIN position absolute */}
+        <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <TouchableOpacity
+            style={styles.emojiButton}
+            onPress={() => setShowEmojiPicker(!showEmojiPicker)}
+          >
+            <Ionicons name="happy-outline" size={24} color="#D9B97E" />
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Escribe un mensaje..."
+            placeholderTextColor="#6B7280"
+            value={inputText}
+            onChangeText={handleTextChange}
+            multiline
+            maxLength={1000}
           />
-        </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.attachButton}
+            onPress={() => setShowFilePicker(true)}
+          >
+            <Ionicons name="attach" size={24} color="#D9B97E" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={!inputText.trim()}
+          >
+            <Ionicons
+              name="send"
+              size={20}
+              color={inputText.trim() ? '#D9B97E' : '#6B7280'}
+            />
+          </TouchableOpacity>
+        </View>
+
       </View>
 
       {/* Emoji Picker Modal */}
@@ -368,8 +359,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               <Ionicons name="close" size={24} color="#D9B97E" />
             </TouchableOpacity>
           </View>
-          
-          <ScrollView 
+          <ScrollView
             style={styles.emojiPickerContent}
             contentContainerStyle={styles.emojiGrid}
           >
@@ -397,7 +387,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         loading={uploadingFiles}
       />
     </KeyboardAvoidingView>
-    </View>
   );
 };
 
@@ -473,7 +462,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 8,
-    paddingVertical: 12,
+    paddingTop: 12,
     backgroundColor: '#363636',
     borderTopWidth: 1,
     borderTopColor: '#2a2a2a',
