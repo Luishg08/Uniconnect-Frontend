@@ -28,7 +28,10 @@ class GroupsService {
       return response.data;
     } catch (error: any) {
       console.error('Error al crear grupo:', error);
-      throw new Error(error.response?.data?.message || 'No se pudo crear el grupo');
+      // NestJS puede devolver message como string o array
+      const raw = error.response?.data?.message;
+      const message = Array.isArray(raw) ? raw[0] : raw || 'No se pudo crear el grupo';
+      throw new Error(message);
     }
   }
 
