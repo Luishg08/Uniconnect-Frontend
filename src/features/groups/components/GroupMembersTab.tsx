@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -50,6 +49,8 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
 
   const handleLeaveGroup = () => {
     if (groupInfo.isOwner) {
+      // Si ya hay una transferencia pendiente, no abrir el modal
+      if (groupInfo.pending_owner_id) return;
       setTransferModalVisible(true);
       return;
     }
@@ -203,10 +204,10 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
                 <TouchableOpacity
                   style={[
                     styles.leaveButton,
-                    groupInfo.isOwner && styles.leaveButtonDisabled,
+                    (groupInfo.isOwner && !!groupInfo.pending_owner_id) && styles.leaveButtonDisabled,
                   ]}
                   onPress={handleLeaveGroup}
-                  disabled={leaveGroupMutation.isPending}
+                  disabled={leaveGroupMutation.isPending || (groupInfo.isOwner && !!groupInfo.pending_owner_id)}
                 >
                   {leaveGroupMutation.isPending ? (
                     <ActivityIndicator size="small" color="#ff6b6b" />
@@ -214,7 +215,11 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
                     <Ionicons name="exit-outline" size={18} color="#ff6b6b" />
                   )}
                   <Text style={styles.leaveButtonText}>
-                    {groupInfo.isOwner ? 'Transferir propiedad' : 'Abandonar grupo'}
+                    {groupInfo.isOwner
+                      ? groupInfo.pending_owner_id
+                        ? 'Transferencia pendiente...'
+                        : 'Transferir propiedad'
+                      : 'Abandonar grupo'}
                   </Text>
                 </TouchableOpacity>
               ) : null

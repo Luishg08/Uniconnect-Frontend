@@ -585,6 +585,23 @@ class GroupsService {
       throw new Error(error.response?.data?.message || 'No se pudo aceptar la transferencia.');
     }
   }
+
+  /**
+   * DELETE /groups/:id/decline-ownership-transfer
+   * El candidato declina la propuesta.
+   */
+  async declineOwnershipTransfer(groupId: number, token: string): Promise<{ message: string }> {
+    try {
+      const response = await axios.delete(
+        groupJoinRequestsEndpoints.declineOwnershipTransfer(groupId),
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('[GroupsService] declineOwnershipTransfer error:', error);
+      throw new Error(error.response?.data?.message || 'No se pudo declinar la transferencia.');
+    }
+  }
 }
 
 export const groupsService = new GroupsService();

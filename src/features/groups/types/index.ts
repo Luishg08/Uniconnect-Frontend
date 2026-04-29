@@ -181,6 +181,7 @@ export interface GroupInfo {
   isMember: boolean;
   isOwner: boolean;
   hasPendingRequest?: boolean;
+  hasActiveInvitation?: boolean;
 
   // Miembros
   memberships: GroupMembership[];

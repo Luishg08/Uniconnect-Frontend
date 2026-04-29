@@ -7,20 +7,18 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
   Image,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { GroupMembership } from '../types';
-import { useTransferOwnership } from '../hooks/useTransferOwnership';
-import { useLeaveGroup } from '../hooks/useGroupInfo';
+import { groupAdminStore } from '../store/GroupAdminStore';
 import { ConfirmModal } from '@/src/components/ConfirmModal';
 
 interface TransferOwnershipModalProps {
   groupId: number;
-  groupName: string;
+  groupName?: string;
   members: GroupMembership[];
   currentOwnerId: number;
   visible: boolean;
@@ -30,7 +28,6 @@ interface TransferOwnershipModalProps {
 
 export const TransferOwnershipModal = ({
   groupId,
-  groupName,
   members,
   currentOwnerId,
   visible,
@@ -40,8 +37,7 @@ export const TransferOwnershipModal = ({
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const insets = useSafeAreaInsets();
-  const transferMutation = useTransferOwnership();
-  const leaveGroupMutation = useLeaveGroup();
+  const queryClient = useQueryClient();
 
   // Filtrar miembros: excluir al owner actual
   const eligibleMembers = members.filter(m => m.id_user !== currentOwnerId);
@@ -55,12 +51,13 @@ export const TransferOwnershipModal = ({
     if (!selectedMemberId) return;
     setShowConfirm(false);
     try {
-      await transferMutation.mutateAsync({ groupId, newOwnerId: selectedMemberId });
-      await leaveGroupMutation.mutateAsync(groupId);
+      // Usar requestOwnershipTransfer (US-W02): envía solicitud al candidato
+      // El candidato debe aceptar antes de que el cambio sea efectivo
+      await groupAdminStore.requestOwnershipTransfer(groupId, selectedMemberId, queryClient);
       onSuccess?.();
       onClose();
-    } catch (error: any) {
-      // El error se maneja silenciosamente — el modal se cierra solo si hay éxito
+    } catch {
+      // error ya manejado en el store
     }
   };
 
@@ -71,7 +68,7 @@ export const TransferOwnershipModal = ({
       transparent={false}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Transferir Propiedad</Text>
@@ -88,7 +85,7 @@ export const TransferOwnershipModal = ({
         <View style={styles.infoContainer}>
           <Ionicons name="information-circle" size={24} color="#D9B97E" />
           <Text style={styles.infoText}>
-            Selecciona un miembro para transferirle la propiedad. Saldrás del grupo automáticamente.
+            Selecciona un miembro para proponerle la administración. Recibirá una notificación y deberá aceptar antes de que el cambio sea efectivo. No podrás salir del grupo hasta que acepte.
           </Text>
         </View>
 
@@ -170,25 +167,24 @@ export const TransferOwnershipModal = ({
                 !selectedMemberId && styles.transferButtonDisabled,
               ]}
               onPress={handleTransfer}
-              disabled={!selectedMemberId || transferMutation.isPending}
+              disabled={!selectedMemberId || groupAdminStore.isTransferLoading}
               activeOpacity={0.7}
             >
-              {transferMutation.isPending ? (
+              {groupAdminStore.isTransferLoading ? (
                 <ActivityIndicator size="small" color="#1a1a1a" />
               ) : (
-                <Text style={styles.transferButtonText}>Transferir Propiedad</Text>
+                <Text style={styles.transferButtonText}>Proponer administrador</Text>
               )}
             </TouchableOpacity>
           </View>
         )}
-      </SafeAreaView>
+      </View>
 
       <ConfirmModal
         visible={showConfirm}
-        title="Transferir propiedad"
-        message={`¿Transferir la propiedad de "${groupName}" a ${members.find(m => m.id_user === selectedMemberId)?.user?.full_name ?? ''}?\n\nSaldrás del grupo automáticamente.`}
-        confirmText="Transferir y salir"
-        destructive
+        title="Proponer administrador"
+        message={`¿Proponer a ${members.find(m => m.id_user === selectedMemberId)?.user?.full_name ?? ''} como nuevo administrador?\n\nRecibirá una notificación. No podrás salir del grupo hasta que acepte.`}
+        confirmText="Enviar propuesta"
         onConfirm={doTransfer}
         onCancel={() => setShowConfirm(false)}
       />
