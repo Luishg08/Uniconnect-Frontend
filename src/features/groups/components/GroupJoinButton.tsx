@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -25,6 +25,8 @@ export const GroupJoinButton = ({
   disabled = false,
 }: GroupJoinButtonProps) => {
   const joinMutation = useJoinRequest();
+  // Estado local persistente durante la sesión de la pantalla
+  const [requestSent, setRequestSent] = useState(false);
 
   // Determinar el estado del botón
   const buttonState = useMemo(() => {
@@ -36,25 +38,35 @@ export const GroupJoinButton = ({
       return { label: 'Eres miembro', icon: 'checkmark-circle', enabled: false };
     }
 
-    if (groupInfo.userRole === 'none') {
-      // Si no es miembro, podría haber un join request pendiente
-      // Por ahora asumimos que si no es miembro, puede solicitar
-      return { label: 'Solicitar acceso', icon: 'add-circle-outline', enabled: true };
+    // Solicitud ya enviada (viene del backend o del estado local)
+    if (groupInfo.hasPendingRequest || requestSent) {
+      return { label: 'Solicitud enviada', icon: 'time-outline', enabled: false };
     }
 
     return { label: 'Solicitar acceso', icon: 'add-circle-outline', enabled: true };
-  }, [groupInfo]);
+  }, [groupInfo, requestSent]);
 
   const handlePress = async () => {
     try {
       await joinMutation.mutateAsync(groupId);
+      setRequestSent(true);
       Alert.alert('Éxito', 'Solicitud de acceso enviada al grupo.');
       onSuccess?.();
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error 
         ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al solicitar acceso'
         : 'Error al solicitar acceso';
-      Alert.alert('Error', errorMessage);
+
+      // Si el error es "ya enviaste solicitud" o "ya eres miembro", marcar como enviada
+      if (typeof errorMessage === 'string' && (
+        errorMessage.toLowerCase().includes('pendiente') ||
+        errorMessage.toLowerCase().includes('ya eres miembro') ||
+        errorMessage.toLowerCase().includes('already')
+      )) {
+        setRequestSent(true);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
     }
   };
 

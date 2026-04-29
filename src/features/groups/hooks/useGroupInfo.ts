@@ -16,7 +16,7 @@ export function useGroupInfo(groupId: number) {
       return groupsService.getGroupInfo(groupId, token);
     },
     enabled: !!token && !!groupId,
-    staleTime: 3 * 60 * 1000, // 3 minutos
+    staleTime: 0, // Siempre refetch para tener hasPendingRequest actualizado
   });
 }
 

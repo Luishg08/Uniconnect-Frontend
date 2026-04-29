@@ -8,13 +8,15 @@ import {
   FlatList,
   ActivityIndicator,
   SafeAreaView,
-  Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GroupMembership } from '../types';
 import { useTransferOwnership } from '../hooks/useTransferOwnership';
+import { useLeaveGroup } from '../hooks/useGroupInfo';
+import { ConfirmModal } from '@/src/components/ConfirmModal';
 
 interface TransferOwnershipModalProps {
   groupId: number;
@@ -36,42 +38,30 @@ export const TransferOwnershipModal = ({
   onSuccess,
 }: TransferOwnershipModalProps) => {
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const insets = useSafeAreaInsets();
   const transferMutation = useTransferOwnership();
+  const leaveGroupMutation = useLeaveGroup();
 
   // Filtrar miembros: excluir al owner actual
   const eligibleMembers = members.filter(m => m.id_user !== currentOwnerId);
 
-  const handleTransfer = async () => {
-    if (!selectedMemberId) {
-      Alert.alert('Error', 'Selecciona un miembro para transferir la propiedad');
-      return;
-    }
+  const handleTransfer = () => {
+    if (!selectedMemberId) return;
+    setShowConfirm(true);
+  };
 
-    const selectedMember = members.find(m => m.id_user === selectedMemberId);
-    
-    Alert.alert(
-      'Confirmar transferencia',
-      `¿Estás seguro de que deseas transferir la propiedad del grupo "${groupName}" a ${selectedMember?.user?.full_name}?\n\nPerderás los privilegios de propietario, pero seguirás siendo administrador.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Transferir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await transferMutation.mutateAsync({ groupId, newOwnerId: selectedMemberId });
-              Alert.alert('¡Éxito!', 'La propiedad del grupo ha sido transferida correctamente');
-              onSuccess?.();
-              onClose();
-            } catch (error: any) {
-              const errorMessage = error?.response?.data?.message || error?.message || 'No se pudo transferir la propiedad';
-              Alert.alert('Error', errorMessage);
-            }
-          },
-        },
-      ]
-    );
+  const doTransfer = async () => {
+    if (!selectedMemberId) return;
+    setShowConfirm(false);
+    try {
+      await transferMutation.mutateAsync({ groupId, newOwnerId: selectedMemberId });
+      await leaveGroupMutation.mutateAsync(groupId);
+      onSuccess?.();
+      onClose();
+    } catch (error: any) {
+      // El error se maneja silenciosamente — el modal se cierra solo si hay éxito
+    }
   };
 
   return (
@@ -98,7 +88,7 @@ export const TransferOwnershipModal = ({
         <View style={styles.infoContainer}>
           <Ionicons name="information-circle" size={24} color="#D9B97E" />
           <Text style={styles.infoText}>
-            Selecciona un miembro para transferirle la propiedad del grupo. Seguirás siendo administrador.
+            Selecciona un miembro para transferirle la propiedad. Saldrás del grupo automáticamente.
           </Text>
         </View>
 
@@ -192,6 +182,16 @@ export const TransferOwnershipModal = ({
           </View>
         )}
       </SafeAreaView>
+
+      <ConfirmModal
+        visible={showConfirm}
+        title="Transferir propiedad"
+        message={`¿Transferir la propiedad de "${groupName}" a ${members.find(m => m.id_user === selectedMemberId)?.user?.full_name ?? ''}?\n\nSaldrás del grupo automáticamente.`}
+        confirmText="Transferir y salir"
+        destructive
+        onConfirm={doTransfer}
+        onCancel={() => setShowConfirm(false)}
+      />
     </Modal>
   );
 };
