@@ -138,6 +138,22 @@ export const useUserNotifications = ({ token }: UseUserNotificationsOptions) => 
           router.push('/(tabs)/groups');
         }
         break;
+
+      case 'admin_transfer_requested':
+        // El candidato recibe esto: ir al grupo con el modal de info abierto para aceptar/rechazar
+        if (notification.related_entity_id) {
+          router.push({
+            pathname: '/groups/[id]',
+            params: {
+              id: String(notification.related_entity_id),
+              autoOpenInfo: 'true',
+              autoOpenAccept: 'true',
+            },
+          } as any);
+        } else {
+          router.push('/(tabs)/groups');
+        }
+        break;
     }
   }, [router, markAsRead]);
 
