@@ -282,19 +282,30 @@ export default function GroupsScreen() {
               </View>
               <TouchableOpacity
                 onPress={() => handleRequestJoin(item.id_group)}
-                disabled={joinMutation.isPending && joinMutation.variables === item.id_group || pendingRequests.has(item.id_group)}
+                disabled={
+                  (joinMutation.isPending && joinMutation.variables === item.id_group) ||
+                  pendingRequests.has(item.id_group) ||
+                  item.user_request_status === 'join_requested' ||
+                  item.user_request_status === 'invited'
+                }
                 style={[
                   styles.joinButton,
-                  pendingRequests.has(item.id_group) && styles.joinButtonSent
+                  (pendingRequests.has(item.id_group) || item.user_request_status === 'join_requested') && styles.joinButtonSent,
+                  item.user_request_status === 'invited' && styles.joinButtonInvited,
                 ]}
                 accessibilityLabel="Solicitar unirse al grupo"
               >
                 {joinMutation.isPending && joinMutation.variables === item.id_group ? (
                   <ActivityIndicator size={16} color="#D9B97E" />
-                ) : pendingRequests.has(item.id_group) ? (
+                ) : item.user_request_status === 'invited' ? (
+                  <>
+                    <Ionicons name="mail-outline" size={16} color="#aaa" />
+                    <Text style={styles.joinButtonTextSent}>Invitación pendiente</Text>
+                  </>
+                ) : pendingRequests.has(item.id_group) || item.user_request_status === 'join_requested' ? (
                   <>
                     <Ionicons name="checkmark-outline" size={16} color="#aaa" />
-                    <Text style={styles.joinButtonTextSent}>Enviada</Text>
+                    <Text style={styles.joinButtonTextSent}>Solicitud enviada</Text>
                   </>
                 ) : (
                   <>
@@ -657,6 +668,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(217, 185, 126, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(217, 185, 126, 0.3)',
+  },
+  joinButtonInvited: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
   },
   joinButtonText: {
     color: '#1a1a1a',

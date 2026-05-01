@@ -455,6 +455,14 @@ class GroupsService {
     return response.data;
   }
 
+  async getGroupJoinRequests(groupId: number, token: string): Promise<{ id_user: number }[]> {
+    const response = await axios.get(
+      groupJoinRequestsEndpoints.getGroupPendingRequests(groupId),
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
+
   async acceptGroupInvitation(groupId: number, invitationId: number, token: string) {
     const res = await axios.patch(
       groupInvitationsEndpoints.acceptGroupInvitation(groupId, invitationId),
