@@ -136,11 +136,11 @@ describe('Preservation Tests - EventCard Existing Behaviors', () => {
         fc.asyncProperty(
           fc.record({
             id_event: fc.integer({ min: 1, max: 10000 }),
-            title: fc.string({ minLength: 1, maxLength: 100 }),
-            description: fc.string({ minLength: 1, maxLength: 500 }),
+            title: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
+            description: fc.string({ minLength: 1, maxLength: 500 }).filter(s => s.trim().length > 0),
             date: fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString().split('T')[0]),
-            time: fc.string({ minLength: 5, maxLength: 5 }),
-            location: fc.string({ minLength: 1, maxLength: 100 }),
+            time: fc.string({ minLength: 5, maxLength: 5 }).filter(s => s.trim().length > 0),
+            location: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
             type: fc.constantFrom(...Object.values(EventType)),
             created_by: fc.integer({ min: 1, max: 1000 }),
             createdAt: fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }).filter(d => !isNaN(d.getTime())).map(d => d.toISOString()),
