@@ -77,13 +77,13 @@ const RootNavigationWrapper = observer(() => {
     try {
       // Solo navegar si realmente necesitamos cambiar de ruta
       if (!token && !inAuthGroup) {
-        console.log('No authenticated, redirecting to login...');
+        
         router.replace('/(auth)/login');
       } else if (token && needsOnboarding && !inOnboarding) {
-        console.log('Needs onboarding, redirecting...');
+        
         router.replace('/(auth)/onboarding');
       } else if (token && !needsOnboarding && inAuthGroup) {
-        console.log('Authenticated and onboarded, redirecting to tabs...');
+        
         router.replace('/(tabs)');
       }
     } catch (error) {
@@ -96,7 +96,7 @@ const RootNavigationWrapper = observer(() => {
     async function getExpoToken() {
       if (Platform.OS === 'web') return;
       if (!Device.isDevice) {
-        console.log('Usa un dispositivo físico');
+        
         return;
       }
 
@@ -112,13 +112,13 @@ const RootNavigationWrapper = observer(() => {
       }
 
       if (finalStatus !== 'granted') {
-        console.log("Permiso denegado");
+        
         return;
       }
 
       //const token = (await Notifications.getExpoPushTokenAsync()).data;
 
-      //console.log('EXPO PUSH TOKEN:', token);
+      //
     }
 
     getExpoToken();
@@ -132,7 +132,7 @@ const RootNavigationWrapper = observer(() => {
     if (Platform.OS === 'web' || !isRouterReady) return;
 
     const handleNotificationData = (data: Record<string, unknown>) => {
-      console.log('[PushNotification] Procesando data:', data);
+      
 
       const screen = data?.screen as string | undefined;
       const params = data?.params as Record<string, unknown> | undefined;
@@ -141,7 +141,7 @@ const RootNavigationWrapper = observer(() => {
         const groupId = Number(params.groupId);
         const autoOpenAccept = params.autoOpenAccept === true;
 
-        console.log('[PushNotification] Navegando a grupo:', groupId, 'autoOpenAccept:', autoOpenAccept);
+        
 
         routerRef.current.push({
           pathname: '/groups/[id]',

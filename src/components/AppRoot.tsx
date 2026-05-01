@@ -20,7 +20,7 @@ export const AppRoot: React.FC<AppRootProps> = ({ children }) => {
   useRegisterPushToken(authStore.accessToken ?? '');
 
   const handleForceReset = () => {
-    console.log('🔄 Force reset triggered by user');
+    
     authStore.clearAuth();
     setTimeout(() => {
       router.replace('/(auth)/login');

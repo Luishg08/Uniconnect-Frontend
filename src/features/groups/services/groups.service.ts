@@ -219,13 +219,6 @@ class GroupsService {
       const endpoint = groupInvitationsEndpoints.respondToInvitation(invitationId);
       const payload = { status: response };
       
-      console.log('[GroupsService] Responding to invitation', { 
-        invitationId, 
-        response, 
-        endpoint, 
-        payload 
-      });
-      
       const res = await axios.patch(
         endpoint,
         payload, // Corregido: backend espera 'status', no 'response'

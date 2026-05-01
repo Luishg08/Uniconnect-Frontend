@@ -124,7 +124,7 @@ export class GroupAdminStore {
 
     try {
       await groupsService.acceptJoinRequest(groupId, requestId, token);
-      console.log(`[GroupAdminStore] Request ${requestId} accepted ✅`);
+      
     } catch (err: unknown) {
       const message = (() => {
         if (err instanceof Error) return err.message;
@@ -159,7 +159,7 @@ export class GroupAdminStore {
 
     try {
       await groupsService.rejectJoinRequest(groupId, requestId, token);
-      console.log(`[GroupAdminStore] Request ${requestId} rejected ✅`);
+      
     } catch (err) {
       // Rollback
       runInAction(() => {
@@ -231,7 +231,7 @@ export class GroupAdminStore {
         queryClient.invalidateQueries({ queryKey: ['createdGroups'] });
       }
 
-      console.log(`[GroupAdminStore] Ownership transfer requested → candidate ${candidateId} ✅`);
+      
     } catch (err) {
       runInAction(() => {
         this.error = err instanceof Error ? err.message : 'No se pudo solicitar la transferencia.';
@@ -262,7 +262,7 @@ export class GroupAdminStore {
         this.isTransferLoading = false;
       });
 
-      console.log(`[GroupAdminStore] Ownership transfer cancelled ✅`);
+      
     } catch (err) {
       runInAction(() => {
         this.error = err instanceof Error ? err.message : 'No se pudo cancelar la transferencia.';
@@ -292,7 +292,7 @@ export class GroupAdminStore {
         this.isAcceptingTransfer = false;
       });
 
-      console.log(`[GroupAdminStore] Ownership transfer accepted ✅`);
+      
       return true;
     } catch (err) {
       runInAction(() => {
@@ -324,7 +324,7 @@ export class GroupAdminStore {
         this.isDecliningTransfer = false;
       });
 
-      console.log(`[GroupAdminStore] Ownership transfer declined ✅`);
+      
       return true;
     } catch (err) {
       runInAction(() => {

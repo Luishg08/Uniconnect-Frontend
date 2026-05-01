@@ -309,7 +309,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
     fontSize: 16,
-    color: '#fff',
   },
   borderError: { borderColor: '#ef5350' },
   fieldError: { alignSelf: 'flex-start', fontSize: 12, color: '#ef5350', marginTop: 4 },

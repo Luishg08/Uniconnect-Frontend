@@ -143,15 +143,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const handleFilesSelected = async (files: any[]) => {
     try {
       setUploadingFiles(true);
-      console.log(`[ChatScreen] Iniciando subida de ${files.length} archivo(s):`, files.map(f => ({ name: f.name, size: f.size, type: f.mimeType })));
-
       const uploadedFiles = await filesService.uploadFiles(
         files,
         groupId,
         token
       );
 
-      console.log(`[ChatScreen] ✅ Subida exitosa. Archivos:`, uploadedFiles.length);
+      
       setShowFilePicker(false);
     } catch (error: any) {
       console.error(`[ChatScreen] ❌ Error en subida:`, error.message, error.response?.status);
@@ -198,7 +196,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         onEdit={() => {
           // Implementar lógica de edición (abrir modal con input)
           // Por ahora solo lo dejamos preparado
-          console.log('Editar mensaje:', item.id_message);
+          
         }}
         onDelete={() => deleteMessage(item.id_message)}
         onFilePress={downloadFile}
@@ -227,13 +225,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   // Debug logs
   useEffect(() => {
-    console.log(`[ChatScreen] Estado actual:`, {
-      loading,
-      error,
-      messagesCount: messages.length,
-      isConnected,
-      typingUsersCount: typingUsers.length,
-    });
   }, [loading, error, messages.length, isConnected, typingUsers.length]);
 
   if (loading) {
@@ -256,8 +247,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     );
   }
 
-  console.log(`[ChatScreen] ✅ Renderizando chat con ${messages.length} mensajes`);
-  console.log(`[ChatScreen] Renderizando componentes: FlatList + InputContainer`);
+  
+  
 
   return (
     // Raíz: KeyboardAvoidingView con behavior='padding' en ambas plataformas

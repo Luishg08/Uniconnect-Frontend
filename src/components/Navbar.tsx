@@ -36,7 +36,7 @@ export const Navbar = () => {
       const data = await notificationsService.getUnreadCount(token);
       setUnreadCount(data.count);
     } catch (error) {
-      console.log('Error cargando conteo de notificaciones:', error);
+      
     }
   };
 

@@ -120,18 +120,18 @@ export const useUserNotifications = ({ token }: UseUserNotificationsOptions) => 
         }
         break;
 
-      case 'group_join_request':
+      case 'join_request':
         // El owner recibe esto: ir a la pantalla de grupos para gestionar solicitudes
         router.push('/(tabs)/groups');
         break;
 
-      case 'group_join_request_accepted':
-        // El solicitante fue aceptado: ir a Mis Grupos
+      case 'member_accepted':
+        // El owner aceptó tu solicitud: ir a Mis Grupos
         router.push('/(tabs)/groups');
         break;
 
-      case 'group_join_request_rejected':
-        // El solicitante fue rechazado: mostrar mensaje y quedarse en Grupos
+      case 'member_removed':
+        // El owner eliminó tu membresía: ir a Mis Grupos
         router.push('/(tabs)/groups');
         break;
 
