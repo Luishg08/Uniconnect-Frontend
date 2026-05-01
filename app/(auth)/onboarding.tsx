@@ -182,7 +182,7 @@ export default observer(function OnboardingScreen() {
                   style={styles.picker}
                   dropdownIconColor="#D9B97E"
                 >
-                  <Picker.Item label=" Selecciona tu programa " value={null} color="#999" />
+                  <Picker.Item label=" Selecciona tu programa " value={null} color="#888" />
                   {programs?.map((p) => (
                     <Picker.Item key={p.id_program} label={p.name} value={p.id_program} color="#1a1a1a" />
                   ))}
@@ -296,10 +296,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(217,185,126,0.45)',
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     overflow: 'hidden',
   },
-  picker: { height: 52, color: '#fff', width: '100%' },
+  picker: { height: 52, color: '#1a1a1a', width: '100%' },
   input: {
     width: '100%',
     borderWidth: 1,
