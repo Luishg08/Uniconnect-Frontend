@@ -76,16 +76,9 @@ export function useLeaveGroup() {
       return groupsService.leaveGroup(groupId, token);
     },
     onSuccess: (_data, groupId) => {
-      // Invalidar varios queries relacionados
-      queryClient.invalidateQueries({
-        queryKey: ['group-info', groupId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['member-groups'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['discover-groups'],
-      });
+      queryClient.invalidateQueries({ queryKey: ['group-info', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['myGroups'] });
+      queryClient.invalidateQueries({ queryKey: ['discoverGroups'] });
     },
   });
 }

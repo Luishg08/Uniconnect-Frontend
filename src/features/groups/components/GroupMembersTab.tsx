@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import {
   useRemoveMember,
   useMakeMemberAdmin,
@@ -27,6 +28,7 @@ interface GroupMembersTabProps {
 }
 
 export const GroupMembersTab = ({ groupInfo, onClose }: GroupMembersTabProps) => {
+  const router = useRouter();
   const [transferModalVisible, setTransferModalVisible] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const [makingAdminId, setMakingAdminId] = useState<number | null>(null);
@@ -88,6 +90,8 @@ export const GroupMembersTab = ({ groupInfo, onClose }: GroupMembersTabProps) =>
   const doLeaveGroup = async () => {
     setConfirmLeave(false);
     await leaveGroupMutation.mutateAsync(groupInfo.id_group);
+    onClose?.();
+    router.replace('/(tabs)/groups');
   };
 
   const showActions = groupInfo.canManageMembers || groupInfo.isMember;
