@@ -26,7 +26,7 @@ interface GroupMembersTabProps {
   onClose?: () => void;
 }
 
-export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
+export const GroupMembersTab = ({ groupInfo, onClose }: GroupMembersTabProps) => {
   const [transferModalVisible, setTransferModalVisible] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const [makingAdminId, setMakingAdminId] = useState<number | null>(null);
@@ -154,7 +154,7 @@ export const GroupMembersTab = ({ groupInfo }: GroupMembersTabProps) => {
                 {member.id_user !== currentUserId && (
                   <TouchableOpacity
                     style={[styles.actionButton, styles.dmButton]}
-                    onPress={() => openDirectMessage(member.id_user)}
+                    onPress={() => { onClose?.(); openDirectMessage(member.id_user); }}
                     disabled={loadingUserId !== null}
                     accessibilityLabel="Mensaje privado"
                   >

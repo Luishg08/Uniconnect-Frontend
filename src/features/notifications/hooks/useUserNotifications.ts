@@ -97,7 +97,11 @@ export const useUserNotifications = ({ token }: UseUserNotificationsOptions) => 
         break;
 
       case 'message':
-        router.push('/(tabs)/groups');
+        if (notification.related_entity_id) {
+          router.push(`/groups/${notification.related_entity_id}` as any);
+        } else {
+          router.push('/(tabs)/groups');
+        }
         break;
 
       case 'group_invitation':
