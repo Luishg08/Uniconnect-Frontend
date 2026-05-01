@@ -10,7 +10,9 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChatScreen } from '@/src/features/messages/components/ChatScreen';
+import { websocketService } from '@/src/features/messages/services/websocket.service';
 import { authStore } from '@/src/features/auth';
 import { groupsService } from '@/src/features/groups/services/groups.service';
 import { Group } from '@/src/features/groups/types';
@@ -24,6 +26,7 @@ export default function GroupChatScreen() {
     autoOpenAccept?: string;
   }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,22 @@ export default function GroupChatScreen() {
 
   // Si viene de notificación push, abrir el modal una vez que el grupo haya cargado
   const pendingAutoOpen = autoOpenInfo === 'true';
+
+  // Escuchar expulsión/salida en tiempo real
+  useEffect(() => {
+    const groupId = parseInt(id as string);
+
+    const handleAccessRevoked = (data: { id_group: number; group_name: string }) => {
+      if (data.id_group !== groupId) return;
+      queryClient.invalidateQueries({ queryKey: ['myGroups'] });
+      router.replace('/(tabs)/groups');
+    };
+
+    websocketService.on('group:access_revoked', handleAccessRevoked);
+    return () => {
+      websocketService.off('group:access_revoked', handleAccessRevoked);
+    };
+  }, [id, queryClient, router]);
 
   useEffect(() => {
     const loadGroupDetail = async () => {
