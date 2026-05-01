@@ -50,7 +50,7 @@ export default observer(function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const { data: programs, isLoading: loadingPrograms, isError: programsError } = usePrograms();
-  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | undefined>(undefined);
   const [semesterText, setSemesterText] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ id_program?: string; current_semester?: string }>({});
 
@@ -68,7 +68,7 @@ export default observer(function OnboardingScreen() {
 
   const validate = (): boolean => {
     const errors: typeof fieldErrors = {};
-    if (!selectedProgramId) {
+    if (selectedProgramId === undefined) {
       errors.id_program = 'Selecciona un programa académico.';
     }
     const semester = parseInt(semesterText, 10);
@@ -182,7 +182,7 @@ export default observer(function OnboardingScreen() {
                   style={styles.picker}
                   dropdownIconColor="#D9B97E"
                 >
-                  <Picker.Item label=" Selecciona tu programa " value={null} color="#888" />
+                  <Picker.Item label=" Selecciona tu programa " value={undefined} color="#888" />
                   {programs?.map((p) => (
                     <Picker.Item key={p.id_program} label={p.name} value={p.id_program} color="#1a1a1a" />
                   ))}
