@@ -169,12 +169,12 @@ describe('Bug Condition Exploration - EventCard Edit Button', () => {
             id_event: fc.integer({ min: 1, max: 10000 }),
             title: fc.string({ minLength: 1, maxLength: 100 }),
             description: fc.string({ minLength: 1, maxLength: 500 }),
-            date: fc.date().map(d => d.toISOString().split('T')[0]),
+            date: fc.date({ min: new Date('1970-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString().split('T')[0]),
             time: fc.string({ minLength: 5, maxLength: 5 }),
             location: fc.string({ minLength: 1, maxLength: 100 }),
             type: fc.constantFrom(...Object.values(EventType)),
-            createdAt: fc.date().map(d => d.toISOString()),
-            updatedAt: fc.date().map(d => d.toISOString()),
+            createdAt: fc.date({ min: new Date('1970-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString()),
+            updatedAt: fc.date({ min: new Date('1970-01-01'), max: new Date('2099-12-31') }).map(d => d.toISOString()),
           }),
           (creatorId, superadminId, eventData) => {
             const event: Event = {
