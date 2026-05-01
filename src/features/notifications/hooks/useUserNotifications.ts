@@ -105,7 +105,7 @@ export const useUserNotifications = ({ token }: UseUserNotificationsOptions) => 
         break;
 
       case 'group_invitation':
-        router.push('/(tabs)/connections');
+        router.push('/(tabs)/connections?tab=invitaciones' as any);
         break;
 
       case 'group_invitation_accepted':
