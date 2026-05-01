@@ -144,8 +144,8 @@ export class AuthController {
         
         const logoutUrl = `https://${AUTH0_CONFIG.domain}/v2/logout?client_id=${AUTH0_CONFIG.clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
         
-        // Open Auth0 logout URL in browser (clears Auth0 session cookies)
-        await WebBrowser.openBrowserAsync(logoutUrl);
+        // Open Auth0 logout URL silently (clears Auth0 session cookies without popup)
+        await fetch(logoutUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {});
         
         console.log('Auth0 session terminated successfully');
       } catch (auth0Error) {
