@@ -73,7 +73,7 @@ export default observer(function OnboardingScreen() {
     }
     const semester = parseInt(semesterText, 10);
     if (!semesterText || isNaN(semester) || semester < 1 || !Number.isInteger(semester)) {
-      errors.current_semester = 'Ingresa un semestre válido (número entero >= 1).';
+      errors.current_semester = 'Ingresa un semestre válido';
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
