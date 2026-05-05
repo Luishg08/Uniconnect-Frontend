@@ -15,6 +15,10 @@ interface GroupInfoHeaderProps {
 
 export const GroupInfoHeader = ({ groupInfo, onJoinSuccess }: GroupInfoHeaderProps) => {
   const createdDate = new Date(groupInfo.created_at).toLocaleDateString();
+  
+  // Derivar el estado del grupo basado en pending_owner_id
+  const groupStatus = groupInfo.pending_owner_id ? 'TransferenciaAdminPendiente' : 'Activo';
+  const statusColor = groupInfo.pending_owner_id ? '#F59E0B' : '#22C55E';
 
   return (
     <View style={styles.container}>
