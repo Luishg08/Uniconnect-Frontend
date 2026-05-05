@@ -16,6 +16,7 @@ import { GroupMembersTab } from './GroupMembersTab';
 import { InviteToGroupModal } from './InviteToGroupModal';
 import { JoinRequestsList } from './JoinRequestsList';
 import { TransferInvitationBanner } from './TransferInvitationBanner';
+import { PendingTransferOwnerBanner } from './PendingTransferOwnerBanner';
 
 interface GroupInfoModalProps {
   groupId: number;
@@ -31,6 +32,17 @@ export const GroupInfoModal = ({ groupId, visible, onClose, scrollToAccept = fal
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   const bannerYRef = useRef<number>(0);
+
+  // Obtener el nombre del candidato desde memberships usando pending_owner_id
+  const getCandidateName = () => {
+    if (!groupInfo?.pending_owner_id || !groupInfo?.memberships) {
+      return undefined;
+    }
+    const candidate = groupInfo.memberships.find(
+      (member) => member.id_user === groupInfo.pending_owner_id
+    );
+    return candidate?.user?.full_name;
+  };
 
   // Cuando los datos cargan y viene de notificación, hacer scroll al banner
   useEffect(() => {
@@ -106,6 +118,11 @@ export const GroupInfoModal = ({ groupId, visible, onClose, scrollToAccept = fal
                 ownerName={groupInfo.owner?.full_name}
               />
             </View>
+
+            {/* Banner de transferencia pendiente — visible solo para el owner saliente */}
+            {groupInfo.isOwner && groupInfo.pending_owner_id && (
+              <PendingTransferOwnerBanner candidateName={getCandidateName()} />
+            )}
 
             {/* Solicitudes de unión – solo visible para el owner */}
             {groupInfo.isOwner && (

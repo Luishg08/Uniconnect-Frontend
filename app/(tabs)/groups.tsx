@@ -142,10 +142,6 @@ export default function GroupsScreen() {
     return acc;
   }, {});
 
-  const hasReachedLimit = Object.values(groupsPerCourse).some(
-    (count: any) => count >= 3
-  );
-
   const renderMisGruposTab = () => {
     if (loadingMyGroups) {
       return (
@@ -350,15 +346,6 @@ export default function GroupsScreen() {
         )}
       </View>
 
-      {/* Límite de grupos warning */}
-      {hasReachedLimit && activeTab === "misGrupos" && (
-        <View style={styles.warningBanner}>
-          <Ionicons name="information-circle" size={20} color="#D9B97E" />
-          <Text style={styles.warningText}>
-            Has alcanzado el límite de 3 grupos por materia
-          </Text>
-        </View>
-      )}
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>
@@ -415,6 +402,7 @@ export default function GroupsScreen() {
         onClose={() => setCreateModalVisible(false)}
         onSave={handleSaveNewGroup}
         isCreating={isCreating}
+        groupsPerCourse={groupsPerCourse}
       />
 
       <EditGroupModal
@@ -475,22 +463,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-  },
-  warningBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(217, 185, 126, 0.15)",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(217, 185, 126, 0.3)",
-    gap: 10,
-  },
-  warningText: {
-    fontSize: 14,
-    color: "#D9B97E",
-    fontWeight: "500",
-    flex: 1,
   },
   tabsContainer: {
     flexDirection: "row",
