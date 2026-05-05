@@ -20,4 +20,8 @@ export const notificationsEndpoints = {
   
   removeExpoPushToken: (token: string) =>
     `${API_BASE_URL}/notifications/expo-push-token/${token}`,
+
+  // Preferencias de canal
+  getPreferencias: () => `${API_BASE_URL}/notifications/preferencias`,
+  updatePreferencia: () => `${API_BASE_URL}/notifications/preferencias`,
 };

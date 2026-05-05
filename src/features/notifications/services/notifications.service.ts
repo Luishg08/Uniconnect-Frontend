@@ -2,7 +2,7 @@ import axios from 'axios';
 import { api } from '@/src/constants/api';
 import { notificationsEndpoints } from '../api/endpoints';
 import { notificationObserver } from './notification-observer.service';
-import { Notification, UnreadCountResponse, MarkAsReadResponse, MarkAllAsReadResponse, PushTokenPayload } from '../types';
+import { Notification, UnreadCountResponse, MarkAsReadResponse, MarkAllAsReadResponse, PushTokenPayload, NotificationPreference, UpdatePreferencePayload, UpdatePreferenceResponse } from '../types';
 
 class NotificationsService {
   /**
@@ -90,6 +90,23 @@ class NotificationsService {
   async removeExpoPushToken(token: string) {
     const { data } = await api.delete(notificationsEndpoints.removeExpoPushToken(token));
     return data;
+  }
+
+  async getPreferencias(token: string): Promise<NotificationPreference[]> {
+    const response = await axios.get(notificationsEndpoints.getPreferencias(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  }
+
+  async updatePreferencia(
+    payload: UpdatePreferencePayload,
+    token: string,
+  ): Promise<UpdatePreferenceResponse> {
+    const response = await axios.patch(notificationsEndpoints.updatePreferencia(), payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   }
 }
 
