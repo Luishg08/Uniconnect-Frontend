@@ -58,6 +58,13 @@ export const GroupInfoHeader = ({ groupInfo, onJoinSuccess }: GroupInfoHeaderPro
           <Ionicons name="calendar-outline" size={16} color="#D9B97E" />
           <Text style={styles.detailText}>Creado: {createdDate}</Text>
         </View>
+
+        <View style={styles.detailItem}>
+          <Ionicons name="ellipse" size={16} color={statusColor} />
+          <Text style={[styles.detailText, { color: statusColor }]}>
+            {groupStatus}
+          </Text>
+        </View>
       </View>
 
       {/* Role badge */}
