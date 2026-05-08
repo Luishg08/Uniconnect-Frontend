@@ -9,6 +9,7 @@ import {
     RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { NotificationCard } from './NotificationCard';
 import { useUserNotifications } from '../hooks/useUserNotifications';
 import { authStore } from '@/src/features/auth';
@@ -17,6 +18,7 @@ import { useNotificationsStore } from '../store/notifications.store';
 export function NotificationsList() {
     const authToken = authStore.accessToken;
     const setUnreadCount = useNotificationsStore(state => state.setUnreadCount);
+    const router = useRouter();
 
     const {
         notifications,
@@ -65,25 +67,34 @@ export function NotificationsList() {
         );
     }
 
+    const hasUnread = notifications.some(n => !n.is_read);
+
     if (!notifications.length) {
         return (
-            <View style={styles.center}>
-                <Ionicons name="notifications-off-outline" size={64} color="#666" />
-                <Text style={styles.emptyText}>
-                    No tienes notificaciones
-                </Text>
+            <View style={styles.containerEmpty}>
+                <View style={styles.header}>
+                    <View style={styles.headerSpacer} />
+                    <TouchableOpacity
+                        style={styles.settingsButton}
+                        onPress={() => router.push('/notifications/preferences' as any)}
+                    >
+                        <Ionicons name="settings-outline" size={22} color="#aaa" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.center}>
+                    <Ionicons name="notifications-off-outline" size={64} color="#666" />
+                    <Text style={styles.emptyText}>No tienes notificaciones</Text>
+                </View>
             </View>
         );
     }
 
-    const hasUnread = notifications.some(n => !n.is_read);
-
     return (
         <View style={styles.container}>
-            {/* Header con botón "Marcar todas como leídas" */}
-            {hasUnread && (
-                <View style={styles.header}>
-                    <TouchableOpacity 
+            {/* Header con acciones */}
+            <View style={styles.header}>
+                {hasUnread && (
+                    <TouchableOpacity
                         style={styles.markAllButton}
                         onPress={handleMarkAllAsRead}
                     >
@@ -92,8 +103,14 @@ export function NotificationsList() {
                             Marcar todas como leídas
                         </Text>
                     </TouchableOpacity>
-                </View>
-            )}
+                )}
+                <TouchableOpacity
+                    style={styles.settingsButton}
+                    onPress={() => router.push('/notifications/preferences' as any)}
+                >
+                    <Ionicons name="settings-outline" size={22} color="#aaa" />
+                </TouchableOpacity>
+            </View>
 
             <FlatList
                 data={notifications}
@@ -128,13 +145,27 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#363636',
     },
+    containerEmpty: {
+        flex: 1,
+        backgroundColor: '#363636',
+    },
     header: {
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#2a2a2a',
         backgroundColor: '#1a1a1a',
     },
+    headerSpacer: {
+        flex: 1,
+    },
+    settingsButton: {
+        padding: 4,
+        marginLeft: 12,
+    },
     markAllButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
