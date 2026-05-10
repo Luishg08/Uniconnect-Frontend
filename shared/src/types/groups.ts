@@ -1,5 +1,4 @@
 // Group types
-import type { Program } from './programs';
 import type { Course } from './courses';
 
 export interface Group {
@@ -172,6 +171,7 @@ export interface GroupInfo {
   };
   created_at: string;
   pending_owner_id?: number | null;
+  is_direct_message?: boolean;
   userRole: 'owner' | 'admin' | 'member' | 'none';
   canManage: boolean;
   canManageMembers: boolean;

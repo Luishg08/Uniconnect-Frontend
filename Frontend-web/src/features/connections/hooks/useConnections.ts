@@ -7,23 +7,28 @@ import { authStore } from '@/features/auth/store/AuthStore';
 export const useConnections = () => {
   const queryClient = useQueryClient();
 
-  // Obtener solicitudes pendientes — sin polling, se refresca tras cada acción
+  // Obtener solicitudes pendientes — forzar petición fresca siempre
   const { data: pendingRequests, isLoading, isError, refetch } = useQuery({
     queryKey: ['pending-connections'],
-    queryFn: connectionsService.getPendingRequests,
-    staleTime: 1000 * 60, // 1 minuto — no refetch automático
+    queryFn: async () => {
+      const result = await connectionsService.getPendingRequests();
+      return result;
+    },
+    staleTime: 0,
+    retry: 3,
+    refetchOnMount: 'always',
+    gcTime: 0,
   });
 
-  // Obtener conexiones aceptadas (deshabilitado por ahora - endpoint no implementado)
-  const myConnections: any[] = [];
-  // const { data: myConnections = [] } = useQuery({
-  //   queryKey: ['my-connections'],
-  //   queryFn: connectionService.getMyConnections,
-  //   staleTime: 1000 * 60, // 1 minuto — no refetch automático
-  // });
+  // Obtener conexiones aceptadas
+  const { data: myConnections = [], isLoading: isLoadingConnections } = useQuery({
+    queryKey: ['my-connections'],
+    queryFn: connectionsService.getMyConnections,
+    staleTime: 1000 * 60,
+  });
 
   // Abrir chat privado con un usuario
-  const openDirectMessage = async (targetUserId: number): Promise<void> => {
+  const openDirectMessage = async (targetUserId: number, navigate?: (path: string) => void): Promise<void> => {
     try {
       const token = authStore.accessToken || '';
       if (!token) {
@@ -33,8 +38,9 @@ export const useConnections = () => {
 
       const response = await groupsService.findOrCreateDirectMessage(targetUserId);
       
-      // TODO: Implementar navegación con React Router
-      console.log('Navigate to group:', response.group.id_group);
+      if (navigate) {
+        navigate('/chat/' + response.group.id_group);
+      }
     } catch (error) {
       const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Error al abrir chat';
@@ -51,7 +57,7 @@ export const useConnections = () => {
 
   // Enviar solicitud de conexión
   const sendRequestMutation = useMutation({
-    mutationFn: connectionsService.sendConnectionRequest,
+    mutationFn: (data) => connectionsService.sendConnectionRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       queryClient.invalidateQueries({ queryKey: ['community', 'connected'] });
@@ -66,7 +72,7 @@ export const useConnections = () => {
 
   // Aceptar solicitud
   const acceptRequestMutation = useMutation({
-    mutationFn: connectionsService.acceptConnectionRequest,
+    mutationFn: (id) => connectionsService.acceptConnectionRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-status'] });
@@ -82,7 +88,7 @@ export const useConnections = () => {
 
   // Rechazar solicitud
   const rejectRequestMutation = useMutation({
-    mutationFn: connectionsService.rejectConnectionRequest,
+    mutationFn: (id) => connectionsService.rejectConnectionRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-status'] });
@@ -100,6 +106,7 @@ export const useConnections = () => {
     pendingRequests: pendingRequests || [],
     myConnections,
     isLoading,
+    isLoadingConnections,
     isError,
     refetch,
     sendConnectionRequest: sendRequestMutation.mutate,
@@ -120,13 +127,12 @@ export const useConnectionStatus = (userId: number) => {
     queryKey: ['connection-status', userId],
     queryFn: () => connectionsService.getConnectionStatus(userId),
     enabled: !!userId,
-    staleTime: 1000 * 60, // 1 minuto — no refetch automático
+    staleTime: 1000 * 60,
   });
 
   const sendRequestMutation = useMutation({
-    mutationFn: connectionsService.sendConnectionRequest,
+    mutationFn: (data) => connectionsService.sendConnectionRequest(data),
     onMutate: async () => {
-      // Actualización optimista: muestra "Solicitud pendiente" al instante
       await queryClient.cancelQueries({ queryKey: ['connection-status', userId] });
       const prev = queryClient.getQueryData(['connection-status', userId]);
       queryClient.setQueryData(['connection-status', userId], {
@@ -137,7 +143,6 @@ export const useConnectionStatus = (userId: number) => {
       return { prev };
     },
     onError: (error: any, _vars, context: any) => {
-      // Revierte si falla
       queryClient.setQueryData(['connection-status', userId], context?.prev);
       const message = error.response?.data?.message || 'Error al enviar solicitud';
       showToast.error('Error', message);
@@ -151,7 +156,7 @@ export const useConnectionStatus = (userId: number) => {
   });
 
   const acceptRequestMutation = useMutation({
-    mutationFn: connectionsService.acceptConnectionRequest,
+    mutationFn: (id) => connectionsService.acceptConnectionRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connection-status', userId] });
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
@@ -166,7 +171,7 @@ export const useConnectionStatus = (userId: number) => {
   });
 
   const rejectRequestMutation = useMutation({
-    mutationFn: connectionsService.rejectConnectionRequest,
+    mutationFn: (id) => connectionsService.rejectConnectionRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connection-status', userId] });
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });

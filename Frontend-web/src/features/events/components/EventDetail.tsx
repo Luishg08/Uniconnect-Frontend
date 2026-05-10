@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, AlertTriangle, Pencil, Trash2, FileText, Calendar, MapPin } from 'lucide-react';
 import type { Event } from '@uniconnect/shared';
 import { EventType } from '@uniconnect/shared';
 import { eventsService } from '../services';
 import { authStore } from '@/features/auth/store/AuthStore';
 import { EditEventModal } from './EditEventModal';
+import { LoadingSpinner } from '@/components/elements';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { showToast } from '@/lib/toast';
 import styles from './EventDetail.module.css';
 
 export const EventDetail: React.FC = () => {
@@ -15,6 +19,7 @@ export const EventDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const userId = authStore.user?.id_user;
   const userRole = authStore.user?.role?.name || authStore.user?.roleName;
@@ -60,17 +65,21 @@ export const EventDetail: React.FC = () => {
     setEditModalVisible(true);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!event) return;
+    setShowDeleteConfirm(true);
+  };
 
-    if (window.confirm('¿Estás seguro? Esta acción no se puede deshacer')) {
-      try {
-        await eventsService.deleteEvent(event.id_event);
-        window.alert('Evento eliminado correctamente');
-        navigate(-1);
-      } catch (error: any) {
-        window.alert(error.message || 'No se pudo eliminar el evento');
-      }
+  const confirmDeleteEvent = async () => {
+    if (!event) return;
+    try {
+      await eventsService.deleteEvent(event.id_event);
+      showToast.success('Evento eliminado correctamente');
+      navigate(-1);
+    } catch (error: any) {
+      showToast.error('Error', error.message || 'No se pudo eliminar el evento');
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -82,12 +91,12 @@ export const EventDetail: React.FC = () => {
       if (response.success && response.data) {
         setEditModalVisible(false);
         setEvent(response.data);
-        window.alert('Evento actualizado correctamente');
+        showToast.success('Evento actualizado correctamente');
       } else {
-        window.alert(response.error?.message || 'No se pudo actualizar el evento');
+        showToast.error('Error', response.error?.message || 'No se pudo actualizar el evento');
       }
     } catch (error: any) {
-      window.alert(error.message || 'No se pudo actualizar el evento');
+      showToast.error('Error', error.message || 'No se pudo actualizar el evento');
     } finally {
       setIsUpdating(false);
     }
@@ -117,7 +126,7 @@ export const EventDetail: React.FC = () => {
 
   const getEventTypeColor = (type: EventType): string => {
     const colors: Record<EventType, string> = {
-      [EventType.CONFERENCIA]: '#0056b3',
+      [EventType.CONFERENCIA]: '#D9B97E',
       [EventType.TALLER]: '#28a745',
       [EventType.SEMINARIO]: '#6f42c1',
       [EventType.COMPETENCIA]: '#fd7e14',
@@ -132,14 +141,11 @@ export const EventDetail: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <button onClick={handleGoBack} className={styles.backButton}>
-            ← Volver
+            <ArrowLeft size={20} /> Volver
           </button>
           <h1 className={styles.headerTitle}>Cargando...</h1>
         </div>
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p className={styles.loadingText}>Cargando evento...</p>
-        </div>
+        <LoadingSpinner size="lg" label="Cargando evento..." />
       </div>
     );
   }
@@ -149,12 +155,12 @@ export const EventDetail: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <button onClick={handleGoBack} className={styles.backButton}>
-            ← Volver
+            <ArrowLeft size={20} /> Volver
           </button>
           <h1 className={styles.headerTitle}>Error</h1>
         </div>
         <div className={styles.errorContainer}>
-          <span className={styles.errorIcon}>⚠️</span>
+          <AlertTriangle size={48} className={styles.errorIcon} />
           <p className={styles.errorText}>{error || 'Evento no encontrado'}</p>
           <button className={styles.retryButton} onClick={handleGoBack}>
             Volver
@@ -168,21 +174,21 @@ export const EventDetail: React.FC = () => {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <button onClick={handleGoBack} className={styles.backButton}>
-          ← Volver
-        </button>
-        <h1 className={styles.headerTitle}>Detalle del Evento</h1>
-        
-        {canEdit && (
-          <div className={styles.headerActions}>
-            <button onClick={handleEdit} className={styles.headerAction}>
-              ✏️
-            </button>
-            <button onClick={handleDelete} className={styles.headerActionDelete}>
-              🗑️
-            </button>
-          </div>
-        )}
+          <button onClick={handleGoBack} className={styles.backButton}>
+            <ArrowLeft size={20} /> Volver
+          </button>
+          <h1 className={styles.headerTitle}>Detalle del Evento</h1>
+          
+          {canEdit && (
+            <div className={styles.headerActions}>
+              <button onClick={handleEdit} className={styles.headerAction}>
+                <Pencil size={20} />
+              </button>
+              <button onClick={handleDelete} className={styles.headerActionDelete}>
+                <Trash2 size={20} />
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Content */}
@@ -198,7 +204,7 @@ export const EventDetail: React.FC = () => {
         {/* Description */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>📄</span>
+            <FileText size={20} className={styles.sectionIcon} />
             <h3 className={styles.sectionTitle}>Descripción</h3>
           </div>
           <p className={styles.description}>{event.description}</p>
@@ -207,7 +213,7 @@ export const EventDetail: React.FC = () => {
         {/* Date and Time */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>📅</span>
+            <Calendar size={20} className={styles.sectionIcon} />
             <h3 className={styles.sectionTitle}>Fecha y Hora</h3>
           </div>
           <p className={styles.detailText}>{formatDate(event.date)}</p>
@@ -217,7 +223,7 @@ export const EventDetail: React.FC = () => {
         {/* Location */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>📍</span>
+            <MapPin size={20} className={styles.sectionIcon} />
             <h3 className={styles.sectionTitle}>Ubicación</h3>
           </div>
           <p className={styles.detailText}>{event.location}</p>
@@ -231,6 +237,18 @@ export const EventDetail: React.FC = () => {
         onClose={() => setEditModalVisible(false)}
         onSave={handleSave}
         isSubmitting={isUpdating}
+      />
+
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Eliminar evento"
+        message="¿Estás seguro? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={confirmDeleteEvent}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>
   );

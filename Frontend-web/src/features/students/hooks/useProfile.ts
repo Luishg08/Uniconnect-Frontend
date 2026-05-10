@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { authStore } from "../../auth";
+import { authStore } from "../../auth/store/AuthStore";
 import { studentsService } from "../services";
-import { UpdateProfileData } from "../types";
+import { coursesService } from "@/features/courses/services";
+import type { UpdateProfileData } from '@uniconnect/shared';
 import { showToast } from "@/lib/toast";
 
 
@@ -14,16 +15,18 @@ export function useProfile() {
     queryFn: () => studentsService.getProfile(),
   });
 
-  // Query para obtener cursos
+  // Query para obtener cursos del usuario (solo inscritos)
   const coursesQuery = useQuery({
-    queryKey: ['courses'],
-    queryFn: () => studentsService.getCourses(),
+    queryKey: ['my-courses'],
+    queryFn: () => coursesService.getOwnCourses(),
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: UpdateProfileData) => studentsService.updateProfile(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['my-courses'] });
       if (data.picture && authStore.user) {
         // Update the user in AuthStore
         authStore.updateUser({ ...authStore.user, picture: data.picture });

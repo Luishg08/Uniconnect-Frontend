@@ -1,4 +1,5 @@
 import React from 'react';
+import { Users, User, MessageCircle } from 'lucide-react';
 import styles from './MemberList.module.css';
 
 interface Member {
@@ -17,17 +18,23 @@ interface MemberListProps {
   memberships: Member[];
   canManage: boolean;
   ownerId?: number;
+  currentUserId?: number;
+  loadingUserId?: number | null;
+  onDirectMessage?: (userId: number) => void;
 }
 
 export const MemberList: React.FC<MemberListProps> = ({
   memberships,
   canManage,
   ownerId,
+  currentUserId,
+  loadingUserId,
+  onDirectMessage,
 }) => {
   if (memberships.length === 0) {
     return (
       <div className={styles.emptyContainer}>
-        <span className={styles.emptyIcon}>👥</span>
+        <Users size={48} className={styles.emptyIcon} />
         <p className={styles.emptyText}>No hay miembros aún</p>
       </div>
     );
@@ -46,7 +53,7 @@ export const MemberList: React.FC<MemberListProps> = ({
               />
             ) : (
               <div className={styles.avatarPlaceholder}>
-                <span className={styles.avatarIcon}>👤</span>
+                <User size={40} className={styles.avatarIcon} />
               </div>
             )}
 
@@ -66,6 +73,23 @@ export const MemberList: React.FC<MemberListProps> = ({
                 <span className={styles.email}>{member.user.email}</span>
               )}
             </div>
+            {onDirectMessage && member.id_user && member.id_user !== currentUserId && (
+              <button
+                className={styles.dmButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDirectMessage(member.id_user!);
+                }}
+                disabled={loadingUserId === member.id_user}
+                title="Enviar mensaje"
+              >
+                {loadingUserId === member.id_user ? (
+                  <span className={styles.dmSpinner} />
+                ) : (
+                  <MessageCircle size={18} />
+                )}
+              </button>
+            )}
           </div>
         </div>
       ))}

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ConnectionRequest as ConnectionRequestType } from '@uniconnect/shared';
 import { connectionsService } from '../services';
+import { showToast } from '@/lib/toast';
+import { Check, X } from 'lucide-react';
 import styles from './ConnectionRequest.module.css';
 
 interface ConnectionRequestProps {
@@ -43,11 +45,11 @@ export const ConnectionRequest: React.FC<ConnectionRequestProps> = ({ request, o
     try {
       setIsAccepting(true);
       await connectionsService.acceptConnectionRequest(request.id_connection);
-      window.alert(`¡Solicitud aceptada! ${request.requester.full_name} ahora es tu conexión.`);
+      showToast.success('Conexión aceptada', `${request.requester.full_name} ahora es tu conexión.`);
       onUpdated?.();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
-      window.alert(err?.response?.data?.message || 'No se pudo aceptar la solicitud.');
+      showToast.error('Error', err?.response?.data?.message || 'No se pudo aceptar la solicitud.');
     } finally {
       setIsAccepting(false);
     }
@@ -57,11 +59,11 @@ export const ConnectionRequest: React.FC<ConnectionRequestProps> = ({ request, o
     try {
       setIsRejecting(true);
       await connectionsService.rejectConnectionRequest(request.id_connection);
-      window.alert(`Has rechazado la solicitud de ${request.requester.full_name}.`);
+      showToast.success('Conexión rechazada', `Has rechazado la solicitud de ${request.requester.full_name}.`);
       onUpdated?.();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
-      window.alert(err?.response?.data?.message || 'No se pudo rechazar la solicitud.');
+      showToast.error('Error', err?.response?.data?.message || 'No se pudo rechazar la solicitud.');
     } finally {
       setIsRejecting(false);
     }
@@ -94,7 +96,7 @@ export const ConnectionRequest: React.FC<ConnectionRequestProps> = ({ request, o
               <span className={styles.spinner} />
             ) : (
               <>
-                <span className={styles.icon}>✓</span>
+                <Check size={16} className={styles.icon} />
                 <span>Aceptar</span>
               </>
             )}
@@ -109,7 +111,7 @@ export const ConnectionRequest: React.FC<ConnectionRequestProps> = ({ request, o
               <span className={styles.spinner} />
             ) : (
               <>
-                <span className={styles.icon}>✕</span>
+                <X size={16} className={styles.icon} />
                 <span>Rechazar</span>
               </>
             )}

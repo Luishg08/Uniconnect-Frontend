@@ -1,24 +1,27 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { notificationsStore } from '../store/notifications.store';
+import { Bell } from 'lucide-react';
 import styles from './NotificationBadge.module.css';
 
 interface NotificationBadgeProps {
   onPress: () => void;
   color?: string;
   size?: number;
+  className?: string;
 }
 
 export const NotificationBadge = observer(function NotificationBadge({
   onPress,
   color = '#fff',
   size = 28,
+  className = '',
 }: NotificationBadgeProps) {
   const unreadCount = notificationsStore.unreadCount;
 
   return (
     <button
-      className={styles.container}
+      className={`${styles.container} ${className}`.trim()}
       onClick={onPress}
       aria-label="Notificaciones"
     >
@@ -26,7 +29,7 @@ export const NotificationBadge = observer(function NotificationBadge({
         className={styles.icon}
         style={{ color, fontSize: `${size}px` }}
       >
-        🔔
+        <Bell size={20} />
       </span>
 
       {unreadCount > 0 && (

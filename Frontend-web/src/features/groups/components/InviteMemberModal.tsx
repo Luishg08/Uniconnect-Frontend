@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import styles from './InviteMemberModal.module.css';
 
 interface InviteMemberModalProps {
@@ -51,7 +52,7 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
         <div className={styles.header}>
           <h2 className={styles.title}>Invitar Miembro</h2>
           <button onClick={handleClose} className={styles.closeButton}>
-            ✕
+            <X size={20} />
           </button>
         </div>
 
@@ -67,11 +68,19 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
               disabled={isInviting}
             >
               <option value="">Selecciona un usuario</option>
-              {availableUsers.map((user) => (
-                <option key={user.id_user} value={user.id_user}>
-                  {user.full_name} {user.email ? `(${user.email})` : ''}
-                </option>
-              ))}
+              {availableUsers.map((user) => {
+                const label = user.email
+                  ? `${user.full_name} (${user.email})`
+                  : user.full_name;
+                const truncated = label.length > 50
+                  ? label.substring(0, 47) + '...'
+                  : label;
+                return (
+                  <option key={user.id_user} value={user.id_user} title={label}>
+                    {truncated}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

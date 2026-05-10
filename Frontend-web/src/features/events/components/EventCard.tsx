@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
 import type { Event, User } from '@uniconnect/shared';
 import { EventType } from '@uniconnect/shared';
 import styles from './EventCard.module.css';
@@ -36,9 +37,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
   };
 
   const handleDelete = (): void => {
-    if (window.confirm('¿Estás seguro? Esta acción no se puede deshacer')) {
-      onDelete?.(event.id_event);
-    }
+    onDelete?.(event.id_event);
   };
 
   const formatDate = (dateString: string): string => {
@@ -65,7 +64,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
 
   const getEventTypeColor = (type: EventType): string => {
     const colors: Record<EventType, string> = {
-      [EventType.CONFERENCIA]: '#0056b3',
+      [EventType.CONFERENCIA]: '#D9B97E',
       [EventType.TALLER]: '#28a745',
       [EventType.SEMINARIO]: '#6f42c1',
       [EventType.COMPETENCIA]: '#fd7e14',
@@ -93,7 +92,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
           aria-label="Editar evento"
           data-testid="edit-button"
         >
-          ✏️
+          <Pencil size={16} />
         </button>
       )}
 
@@ -108,7 +107,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
           aria-label="Eliminar evento"
           data-testid="delete-button"
         >
-          🗑️
+          <Trash2 size={16} />
         </button>
       )}
 
@@ -122,19 +121,19 @@ export const EventCard: React.FC<EventCardProps> = ({ event, currentUser, onEdit
       <div className={styles.detailsContainer}>
         {/* Date */}
         <div className={styles.detailRow}>
-          <span className={styles.icon}>📅</span>
+          <Calendar size={18} className={styles.icon} />
           <span className={styles.detailText}>{formatDate(event.date)}</span>
         </div>
 
         {/* Time */}
         <div className={styles.detailRow}>
-          <span className={styles.icon}>🕐</span>
+          <Clock size={18} className={styles.icon} />
           <span className={styles.detailText}>{event.time}</span>
         </div>
 
         {/* Location */}
         <div className={styles.detailRow}>
-          <span className={styles.icon}>📍</span>
+          <MapPin size={18} className={styles.icon} />
           <span className={styles.detailText}>{event.location}</span>
         </div>
       </div>
